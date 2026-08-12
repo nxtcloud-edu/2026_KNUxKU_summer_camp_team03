@@ -32,7 +32,7 @@ export default function ParallelViews({ view }: { view: DivergentView }) {
                   )
                 }
               >
-                근거 원문 보기
+                근거 원문
               </button>
             </div>
           )

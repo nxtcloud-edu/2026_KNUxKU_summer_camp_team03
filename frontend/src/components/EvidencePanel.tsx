@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { reportById } from '../lib/mock'
-import { IconArrowRight, IconBook, IconDoc } from './icons'
+import { IconArrowRight, IconBook } from './icons'
 
 export default function EvidencePanel({ cited }: { cited: string[] }) {
   const [open, setOpen] = useState<string | null>(null)
@@ -46,14 +46,15 @@ export default function EvidencePanel({ cited }: { cited: string[] }) {
         </div>
       ) : (
         <div className="evi-list">
-          {cited.map((id) => {
+          {cited.map((id, n) => {
             const r = reportById(id)
             if (!r) return null
             const isOpen = open === id
             return (
               <div className={`evi-item${isOpen ? ' open' : ''}`} key={id}>
                 <button className="evi-top" onClick={() => setOpen(isOpen ? null : id)}>
-                  <IconDoc size={15} style={{ color: 'var(--gold)', flex: 'none' }} />
+                  {/* 대화의 각주 번호와 같은 번호. 눈으로 이어 따라갈 수 있게 */}
+                  <span className="evi-num">{n + 1}</span>
                   <span className="grow" style={{ minWidth: 0 }}>
                     <span className="evi-house">
                       {r.house} · {r.date}

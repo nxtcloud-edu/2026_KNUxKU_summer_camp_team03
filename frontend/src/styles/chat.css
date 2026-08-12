@@ -153,39 +153,58 @@
   margin-top: 3px;
 }
 
-/* 인용 칩 — 답변 아래 */
+/* ── 인용 — 답변 아래 각주 ──────────────────────────────────
+   알약 칩을 걷어냈다. 칩은 개수가 늘어날수록 색 덩어리가 되어
+   정작 읽어야 할 답변보다 시끄러워진다.
+   책의 각주처럼 번호·발행처·제목의 조판만으로 위계를 만든다.
+   칸을 나누는 선도 쓰지 않는다. 골드 헤어라인 하나로 구분한다. */
 .cite-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: var(--sp-4);
+  margin-top: var(--sp-5);
   padding-top: var(--sp-4);
-  border-top: 1px solid var(--line);
+  /* 양끝이 사라지는 헤어라인 — 상자를 만들지 않는다 */
+  background: var(--gold-hairline) top / 100% 1px no-repeat;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 .cite {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  max-width: 100%;
-  background: var(--surface-sunken);
-  color: var(--ink-2);
-  border-radius: var(--r-full);
-  padding: 5px 13px 5px 7px;
-  font-size: var(--t-xs);
-  line-height: 1.5;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
   text-align: left;
-  transition: background 0.16s var(--ease);
+  background: none;
+  padding: 5px 2px;
+  border-radius: var(--r-sm);
+  transition: background 0.18s var(--ease);
 }
 .cite:hover {
-  background: var(--surface-active);
+  background: var(--surface-sunken);
+}
+/* 각주 번호 — 명조로 앉혀야 각주처럼 읽힌다 */
+.cite-num {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold);
+  width: 14px;
 }
 .cite-house {
   flex: none;
-  background: var(--gold-soft);
-  color: var(--gold-deep);
-  border-radius: var(--r-full);
-  padding: 1px 8px;
-  font-weight: 640;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--ink-4);
+  white-space: nowrap;
+}
+.cite-title {
+  font-size: var(--t-xs);
+  line-height: 1.6;
+  color: var(--ink-2);
+  word-break: keep-all;
+}
+.cite:hover .cite-title {
+  color: var(--ink);
 }
 
 /* 배분 카드가 답변 안에 들어갈 때 */
@@ -395,9 +414,10 @@
   width: 82px;
 }
 
-/* ── 오른쪽 · 근거 패널 ──────────────────────────────────── */
+/* ── 오른쪽 · 근거 패널 ────────────────────────────────────
+   상자를 겹치지 않는다. 카드마다 테두리와 그림자를 주면 목록이 아니라
+   블록 더미가 된다. 여백과 아주 옅은 바탕색만으로 나눈다. */
 .evi-panel {
-  border-left: 1px solid var(--line);
   background: var(--paper);
   display: flex;
   flex-direction: column;
@@ -409,108 +429,132 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--sp-5) var(--sp-5) var(--sp-4);
-  border-bottom: 1px solid var(--line);
 }
 .evi-empty {
-  padding: var(--sp-8) var(--sp-5);
-  text-align: left;
+  padding: var(--sp-6) var(--sp-5);
 }
 .evi-list {
   flex: 1;
   overflow-y: auto;
-  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  padding: 0 var(--sp-3) var(--sp-5);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+}
+/* 항목 사이는 선이 아니라 헤어라인. 첫 항목 위에는 긋지 않는다 */
+.evi-item + .evi-item {
+  background: var(--gold-hairline) top / 100% 1px no-repeat;
 }
 .evi-item {
-  background: var(--surface);
   border-radius: var(--r-md);
-  box-shadow: var(--shadow-xs);
-  overflow: hidden;
-  transition: box-shadow 0.18s var(--ease);
+  transition: background 0.18s var(--ease);
 }
 .evi-item.open {
-  box-shadow: var(--shadow-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  /* 펼친 항목은 위 헤어라인을 지운다 — 상자 안에 선이 남으면 지저분하다 */
+  background-image: none;
 }
 .evi-top {
   display: flex;
-  gap: 10px;
-  align-items: flex-start;
+  gap: 11px;
+  align-items: baseline;
   width: 100%;
   text-align: left;
-  padding: 12px 14px;
+  padding: 14px 14px 13px;
+}
+/* 번호 — 각주와 같은 조판을 쓴다. 대화와 패널이 같은 언어로 읽히도록 */
+.evi-num {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold);
+  width: 14px;
 }
 .evi-house {
   display: block;
-  font-size: var(--t-xs);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
   color: var(--ink-4);
 }
 .evi-title {
   display: block;
-  font-size: var(--t-sm);
-  font-weight: 640;
-  line-height: 1.5;
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
   word-break: keep-all;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 .evi-body {
-  padding: 0 14px 14px;
+  padding: 0 14px 16px 39px;
 }
 .evi-sec {
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: 7px;
+  letter-spacing: 0.16em;
+  color: var(--ink-4);
+  margin-bottom: 8px;
 }
 .evi-sum li {
   font-size: var(--t-xs);
-  line-height: 1.75;
+  line-height: 1.8;
   color: var(--ink-2);
-  padding-left: 12px;
+  padding-left: 13px;
   position: relative;
   word-break: keep-all;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
+/* 점 대신 아주 짧은 골드 선 — 목록 기호도 펜으로 그은 것처럼 */
 .evi-sum li::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 0.72em;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
+  top: 0.85em;
+  width: 6px;
+  height: 1px;
   background: var(--gold);
-  opacity: 0.55;
+  opacity: 0.6;
 }
-/* 인용 원문 — 왼쪽에 골드 선 하나. 배경을 칠하지 않는다 */
+/* 인용 원문 — 왼쪽 선을 지우고 들여쓰기와 서체로만 구분한다 */
 .evi-quote {
   font-family: var(--font-display);
   font-size: var(--t-sm);
-  line-height: 1.85;
+  line-height: 1.9;
   color: var(--ink-2);
-  border-left: 2px solid var(--gold);
-  padding-left: 12px;
   word-break: keep-all;
+  padding-left: 2px;
+}
+.evi-quote::before {
+  content: "C";
+  font-family: var(--font-display);
+  font-size: 26px;
+  line-height: 0;
+  color: var(--gold);
+  vertical-align: -0.28em;
+  margin-right: 3px;
 }
 .evi-more {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   font-size: var(--t-xs);
   font-weight: 640;
   color: var(--gold-deep);
+  transition: gap 0.18s var(--ease);
+}
+.evi-more:hover {
+  gap: 8px;
 }
 .evi-foot {
   flex: none;
-  padding: var(--sp-3) var(--sp-5) var(--sp-4);
-  font-size: 11px;
+  padding: var(--sp-4) var(--sp-5);
+  font-size: 10.5px;
   line-height: 1.7;
   color: var(--ink-4);
-  border-top: 1px solid var(--line);
   word-break: keep-all;
+  background: var(--gold-hairline) top / 100% 1px no-repeat;
 }
 
 /* ── 배분 막대 ───────────────────────────────────────────── */
@@ -769,27 +813,29 @@
   margin-top: var(--sp-3);
 }
 
-/* ── 병렬 제시 ───────────────────────────────────────────── */
+/* ── 병렬 제시 ─────────────────────────────────────────────
+   두 관점을 회색 상자에 담지 않는다. 상자를 씌우면 "인용된 자료"가 아니라
+   "UI 부품"으로 읽힌다. 가운데 헤어라인 하나로만 가르고, 나머지는 조판으로.
+   양쪽 무게는 반드시 같아야 한다 — 한쪽이 도드라지면 그 순간 판단이 된다. */
 .pv {
-  margin-top: var(--sp-4);
+  margin-top: var(--sp-5);
   padding-top: var(--sp-4);
-  border-top: 1px solid var(--line);
+  background: var(--gold-hairline) top / 100% 1px no-repeat;
 }
 .pv-head {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: baseline;
+  gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: var(--sp-3);
+  margin-bottom: var(--sp-4);
 }
+/* 알약을 걷어내고 자간을 벌린 라벨로 */
 .pv-badge {
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  background: var(--info-soft);
-  color: var(--info);
-  border-radius: var(--r-full);
-  padding: 3px 10px;
+  letter-spacing: 0.16em;
+  color: var(--gold);
+  white-space: nowrap;
 }
 .pv-topic {
   font-size: var(--t-xs);
@@ -799,44 +845,60 @@
 .pv-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--sp-3);
+  gap: var(--sp-6);
 }
-/* 두 관점은 완전히 같은 무게로 그린다. 한쪽을 강조하면 그 순간 판단이 된다 */
-.pv-col {
-  background: var(--surface-sunken);
-  border-radius: var(--r-md);
-  padding: 13px 15px;
+/* 두 번째 칸 왼쪽에만 세로 헤어라인. 위아래로 사라져 상자를 만들지 않는다 */
+.pv-col + .pv-col {
+  background: linear-gradient(
+      180deg,
+      rgba(226, 214, 186, 0) 0%,
+      rgba(226, 214, 186, 1) 22%,
+      rgba(226, 214, 186, 1) 78%,
+      rgba(226, 214, 186, 0) 100%
+    )
+    left / 1px 100% no-repeat;
+  padding-left: var(--sp-6);
 }
 .pv-house {
-  font-size: var(--t-xs);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
   color: var(--ink-4);
 }
 .pv-stance {
-  font-size: var(--t-sm);
-  font-weight: 660;
-  line-height: 1.5;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.55;
+  letter-spacing: -0.012em;
   word-break: keep-all;
-  margin-top: 3px;
+  margin-top: 4px;
 }
 .pv-ground {
   font-size: var(--t-xs);
-  line-height: 1.75;
+  line-height: 1.85;
   color: var(--ink-3);
   word-break: keep-all;
-  margin-top: 7px;
+  margin-top: 8px;
 }
 .pv-src {
   font-size: var(--t-xs);
   font-weight: 640;
   color: var(--gold-deep);
-  margin-top: 9px;
+  margin-top: 10px;
+  transition: opacity 0.16s var(--ease);
+}
+.pv-src::after {
+  content: " →";
+}
+.pv-src:hover {
+  opacity: 0.7;
 }
 .pv-foot {
   font-size: 11px;
-  line-height: 1.7;
+  line-height: 1.75;
   color: var(--ink-4);
   word-break: keep-all;
-  margin-top: var(--sp-3);
+  margin-top: var(--sp-4);
 }
 
 /* ── 알림 ────────────────────────────────────────────────── */

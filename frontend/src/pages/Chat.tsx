@@ -356,7 +356,7 @@ export default function Chat() {
 
                       {m.done && !!m.data?.evidence.length && (
                         <div className="cite-row">
-                          {m.data.evidence.map((id) => {
+                          {m.data.evidence.map((id, n) => {
                             const r = reportById(id)
                             if (!r) return null
                             return (
@@ -369,8 +369,9 @@ export default function Chat() {
                                   )
                                 }
                               >
+                                <span className="cite-num">{n + 1}</span>
                                 <span className="cite-house">{r.house}</span>
-                                {r.title}
+                                <span className="cite-title">{r.title}</span>
                               </button>
                             )
                           })}
