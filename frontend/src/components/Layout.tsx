@@ -27,16 +27,16 @@ export function SiteHeader() {
 
         <nav className="nav">
           <NavLink to="/" end>
-            홈
+            대화
           </NavLink>
+          <NavLink to="/portfolio">내 포트폴리오</NavLink>
           <NavLink to="/library">리포트 서재</NavLink>
-          {diagnosis && <NavLink to="/result">내 포트폴리오</NavLink>}
         </nav>
 
         <span className="spacer" />
 
-        <Link className="btn btn-primary btn-sm" to={diagnosis ? '/result' : '/survey'}>
-          {diagnosis ? '내 결과 보기' : '3분 성향 진단'}
+        <Link className="btn btn-primary btn-sm" to="/onboarding">
+          {diagnosis ? '조건 다시 잡기' : '성향 진단'}
           <IconArrowRight size={15} />
         </Link>
       </div>
@@ -93,6 +93,19 @@ export function SiteFooter() {
         </p>
       </div>
     </footer>
+  )
+}
+
+/** 대화 화면 전용 셸 — 헤더만 두고 푸터와 떠 있는 챗 버튼은 뺀다.
+ *  대화가 메인인 화면에서 챗 버튼을 또 띄우면 같은 기능이 두 번 보인다. */
+export function ChatLayout() {
+  return (
+    <>
+      <SiteHeader />
+      <main>
+        <Outlet />
+      </main>
+    </>
   )
 }
 

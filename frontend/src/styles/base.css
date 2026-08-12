@@ -60,23 +60,23 @@ table {
   background: var(--brand-soft);
 }
 
-/* 스크롤바 — 종이 톤에 맞춘 베이지 */
+/* 스크롤바 — 중립 회색. 골드는 스크롤바에 쓰지 않는다 */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #ded2bd transparent;
+  scrollbar-color: #cfcdc6 transparent;
 }
 *::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 *::-webkit-scrollbar-thumb {
-  background: #ded2bd;
+  background: #cfcdc6;
   border-radius: 99px;
   border: 3px solid transparent;
   background-clip: padding-box;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: #cbbb9d;
+  background: #b6b3aa;
   background-clip: padding-box;
 }
 *::-webkit-scrollbar-track {
@@ -107,20 +107,42 @@ h4 {
 }
 
 /* 만년필 필체 — 영문 Italianno · 한글 나눔손글씨 펜.
-   두 서체 모두 em 박스 대비 글자가 작게 앉으므로 쓰는 자리마다 크기를 키워 준다.
-   획이 얇아 28px 아래로는 절대 쓰지 않는다(가독성이 먼저다). */
-.script {
-  font-family: var(--font-script);
+   두 서체는 획 굵기가 달라 같은 줄에 섞으면 인상이 깨진다.
+   영문은 .script-en, 한글은 .script-ko로 자리를 나눠 앉힌다.
+   em 박스 대비 글자가 작게 앉으므로 쓰는 자리마다 크기를 키운다.
+   획이 얇아 30px 아래로는 쓰지 않는다(가독성이 먼저다). */
+.script,
+.script-en,
+.script-ko {
   font-weight: 400;
-  line-height: 1.16;
-  letter-spacing: 0.004em;
+  line-height: 1.14;
   word-break: keep-all;
   color: var(--ink);
 }
+/* 영문 — 커퍼플레이트. 기울기가 있어 자간을 조금 벌려야 붙지 않는다 */
+.script-en,
+.script {
+  font-family: var(--font-script-en);
+  letter-spacing: 0.014em;
+}
+/* 한글 — 펜글씨. 세로로 길어 행간을 조금 더 준다 */
+.script-ko {
+  font-family: var(--font-script-ko);
+  letter-spacing: 0.006em;
+  line-height: 1.3;
+}
 /* 필체 안에서 한 구절만 눌러 쓴 듯 진하게 */
-.script em {
+.script em,
+.script-en em,
+.script-ko em {
   font-style: normal;
-  color: var(--brand);
+  color: var(--gold);
+}
+/* 서명 — 골드 헤어라인을 밑에 깐다. 워드마크와 맺음말에만 */
+.script-sign {
+  display: inline-block;
+  padding-bottom: 6px;
+  background: var(--gold-hairline) bottom / 100% 1px no-repeat;
 }
 
 /* 만년필 명조 — 중간 크기 제목과 인용. 본문에 쓰면 읽는 속도가 떨어진다 */
@@ -131,14 +153,14 @@ h4 {
   line-height: 1.24;
   word-break: keep-all;
 }
-/* 손글씨 — 과외쌤이 여백에 적어 준 메모. 한 화면에 두세 번을 넘기지 않는다 */
+/* 손글씨 메모 — 여백에 적어 준 한 줄. 한 화면에 한 번만 */
 .hand {
-  font-family: var(--font-hand);
+  font-family: var(--font-script-ko);
   font-weight: 400;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.008em;
   line-height: 1.4;
-  color: var(--brand);
-  font-size: 1.42em;
+  color: var(--gold);
+  font-size: 1.5em;
 }
 .hand-note {
   position: relative;
@@ -382,7 +404,8 @@ h4 {
   height: 42px;
   padding: 0 20px;
   border: 0;
-  border-radius: var(--r-full);
+  /* 알약에서 조인 사각으로. 경계선은 여전히 없지만 도구답게 각을 준다 */
+  border-radius: var(--r-md);
   background: var(--surface-band);
   color: var(--ink-2);
   font-size: var(--t-base);
@@ -407,12 +430,12 @@ h4 {
 }
 .btn-primary {
   background: var(--brand-grad);
-  color: #fffdf8;
+  color: #f7f6f3;
   box-shadow: var(--shadow-brand);
 }
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(168deg, #a37f3c 0%, #8a6a32 55%, #6b5024 100%);
-  color: #fffdf8;
+  background: linear-gradient(168deg, #b8934a 0%, #a8843c 55%, #7d6029 100%);
+  color: #f7f6f3;
   box-shadow: 0 3px 8px rgba(116, 87, 42, 0.2), 0 14px 30px rgba(116, 87, 42, 0.22);
   transform: translateY(-1px);
 }
@@ -425,7 +448,7 @@ h4 {
   color: var(--brand-hover);
 }
 .btn-soft:hover:not(:disabled) {
-  background: #f0e6d0;
+  background: #ece3cf;
   color: var(--brand-deep);
 }
 .btn-plain {
@@ -617,7 +640,7 @@ h4 {
 }
 .chip[aria-pressed="true"] {
   background: var(--brand);
-  color: #fffdf8;
+  color: #f7f6f3;
   box-shadow: var(--shadow-brand);
 }
 
@@ -727,7 +750,7 @@ h4 {
   to { transform: rotate(360deg); }
 }
 .skeleton {
-  background: linear-gradient(90deg, #f2ebdd 25%, #f9f4ea 50%, #f2ebdd 75%);
+  background: linear-gradient(90deg, #edece7 25%, #f5f4f0 50%, #edece7 75%);
   background-size: 220% 100%;
   animation: shimmer 1.3s ease-in-out infinite;
   border-radius: var(--r-sm);
@@ -849,8 +872,8 @@ h4 {
   max-width: 420px;
   padding: 12px 20px;
   border-radius: var(--r-full);
-  background: #2b241a;
-  color: #fdf9f0;
+  background: #16181c;
+  color: #f7f6f3;
   box-shadow: var(--shadow-md);
   font-size: var(--t-sm);
   animation: toast-in 0.26s var(--ease-out);

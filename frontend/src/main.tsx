@@ -15,10 +15,13 @@ import '@fontsource/italianno/latin-400.css'
 import './styles/tokens.css'
 import './styles/base.css'
 import './styles/app.css'
+import './styles/chat.css'
+import './styles/onboarding.css'
 import './styles/admin.css'
 
 import App from './App'
 import { ProfileProvider } from './lib/store'
+import { CopilotProvider } from './lib/copilot'
 import { ToastProvider } from './components/ui'
 
 createRoot(document.getElementById('root')!).render(
@@ -26,7 +29,9 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <ToastProvider>
         <ProfileProvider>
-          <App />
+          <CopilotProvider>
+            <App />
+          </CopilotProvider>
         </ProfileProvider>
       </ToastProvider>
     </BrowserRouter>

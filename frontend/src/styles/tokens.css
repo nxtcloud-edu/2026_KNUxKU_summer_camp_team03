@@ -1,91 +1,109 @@
 /* ─────────────────────────────────────────────────────────────
-   디자인 토큰 — 미색 종이 위의 골드 브라운
-   · 바탕은 순백이 아니라 아주 옅은 미색이다. 종이 위에 쓴 글처럼 보이게.
-   · 골드 브라운은 이 제품의 주 강조색이다. 다만 넓은 면을 칠하는 데는
-     버튼·활성 표시·수치 강조까지만 쓰고, 배경 전체를 물들이지 않는다.
-   · 경계선은 최대한 지운다. 구조는 선이 아니라 여백과 그림자로 만든다.
+   디자인 토큰 — 차가운 아이보리 위의 먹색, 강조는 골드
+   · 바탕에서 노란기를 뺀다. 종이가 아니라 조용한 금융 도구로 읽혀야 한다.
+   · 글자는 먹색. 회색으로 흐리지 않는다. 판단하는 화면이라 가시성이 먼저다.
+   · 골드는 면으로 칠하지 않는다. 선·수치·활성 표시·1차 버튼까지만.
+     고급스러움은 금색 면적이 아니라 여백·정렬·선 굵기에서 나온다. (10점 중 3점)
    ───────────────────────────────────────────────────────────── */
 :root {
   /* ── 표면 ── */
-  --paper: #fffcf6;
+  --paper: #f7f6f3;
   --surface: #ffffff;
-  --surface-sunken: #fcf8f0;
-  --surface-band: #f8f2e6;
-  --surface-hover: #f6efe1;
-  --surface-active: #efe6d4;
-  --overlay: rgba(38, 30, 18, 0.3);
+  --surface-sunken: #f2f1ed;
+  --surface-band: #edece7;
+  --surface-hover: #eceae4;
+  --surface-active: #e3e1da;
+  --overlay: rgba(22, 24, 28, 0.34);
+
+  /* 대화 영역 — 본문보다 반 톤 낮춰 읽는 자리를 구분한다 */
+  --chat-bg: #f4f3ef;
+  --bubble-user: #16181c;
+  --bubble-user-ink: #f7f6f3;
+  --bubble-agent: #ffffff;
 
   /* ── 선 — 있는 줄 모를 만큼만 ── */
-  --line: #ede4d3;
-  --line-soft: #f4eee1;
-  --line-strong: #dfd2b8;
+  --line: #e6e4de;
+  --line-soft: #eeece7;
+  --line-strong: #d4d1c8;
 
-  /* ── 글자 — 차가운 회색 대신 따뜻한 먹 ── */
-  --ink: #241f17;
-  --ink-2: #4b4335;
-  --ink-3: #7c7263;
-  --ink-4: #a99e8b;
-  --ink-invert: #fffdf8;
+  /* ── 글자 — 먹색 ── */
+  --ink: #16181c;
+  --ink-2: #3a3d44;
+  --ink-3: #6b6e76;
+  --ink-4: #9c9ea5;
+  --ink-invert: #f7f6f3;
 
-  /* ── 브랜드 — 골드 브라운. 대비 4.9:1 (미색 종이 기준, AA) ── */
-  --brand: #8a6a32;
-  --brand-hover: #74572a;
-  --brand-deep: #5c4420;
-  --brand-tint: #fbf6ec;
-  --brand-soft: #f6efdf;
-  --brand-line: #e4d6b9;
-  --brand-grad: linear-gradient(168deg, #9a7838 0%, #8a6a32 55%, #74572a 100%);
-
-  /* ── 브라스 — 선·밑줄·서명에만. 면으로 칠하지 않는다 ── */
-  --gold: #b08d57;
-  --gold-bright: #d9be7e;
-  --gold-grad: linear-gradient(100deg, #a8813f 0%, #dcc188 46%, #a8813f 100%);
+  /* ── 골드 — 강조색. 아이보리 기준 대비 4.6:1 (AA) ── */
+  --gold: #a8843c;
+  --gold-hover: #8f6f2f;
+  --gold-deep: #6f5622;
+  --gold-bright: #c9a758;
+  --gold-tint: #faf7f0;
+  --gold-soft: #f3ecdd;
+  --gold-line: #e2d6ba;
+  --gold-grad: linear-gradient(168deg, #b38e43 0%, #a8843c 55%, #8f6f2f 100%);
   --gold-hairline: linear-gradient(
     90deg,
-    rgba(176, 141, 87, 0) 0%,
-    rgba(176, 141, 87, 0.5) 20%,
-    rgba(217, 190, 126, 0.85) 50%,
-    rgba(176, 141, 87, 0.5) 80%,
-    rgba(176, 141, 87, 0) 100%
+    rgba(168, 132, 60, 0) 0%,
+    rgba(168, 132, 60, 0.42) 18%,
+    rgba(201, 167, 88, 0.9) 50%,
+    rgba(168, 132, 60, 0.42) 82%,
+    rgba(168, 132, 60, 0) 100%
   );
 
-  /* ── 상태 — 채도를 낮춰 종이색과 싸우지 않게 ── */
-  --ok: #3f7a5c;
-  --ok-soft: #eef5f0;
-  --warn: #a8781c;
-  --warn-soft: #fdf6e7;
-  --danger: #b0463a;
-  --danger-soft: #fbf1ef;
-  --info: #2c6e8f;
-  --info-soft: #eef4f8;
+  /* ── 구 토큰 별칭 ──
+     개편 전 CSS가 --brand 계열을 쓰고 있다. 이름만 골드로 옮겨 잇는다.
+     새로 쓰는 코드는 --gold 쪽을 쓴다. */
+  --brand: var(--gold);
+  --brand-hover: var(--gold-hover);
+  --brand-deep: var(--gold-deep);
+  --brand-tint: var(--gold-tint);
+  --brand-soft: var(--gold-soft);
+  --brand-line: var(--gold-line);
+  --brand-grad: var(--gold-grad);
+  --shadow-brand: var(--shadow-gold);
+  --a1: var(--a-cash);
+  --a2: #cfc9bb;
+  --a3: #c9a758;
+  --a4: var(--a-etf);
+  --a5: #5a6270;
+  --a6: var(--a-bond);
 
-  /* ── 자산 배분 계열색 ──
-     부분-전체(도넛·스택)는 색상환이 아니라 브라스 명도 사다리로 표현한다.
-     명도만으로 순서가 읽히므로 색각 이상에서도 순서가 무너지지 않는다.
-     벤치마크만 유일하게 다른 색상(청)으로 떼어 낸다. */
-  --a1: #e2d3ae; /* 현금성 */
-  --a2: #c6a877; /* 단기 국채 */
-  --a3: #a9854a; /* 장기 국채 */
-  --a4: #8a6a32; /* 회사채 */
-  --a5: #6b5024; /* 패시브 ETF */
-  --a6: #4a3717; /* 액티브 ETF */
-  --bench: #2c6e8f; /* 벤치마크 — 선으로만 */
-  --c-grid: #f1ebde;
-  --c-axis: #a99e8b;
+  /* ── 상태 — 골드와 충돌하지 않게 색상을 벌린다 ──
+     경고를 골드 계열로 두면 강조색에 묻힌다. 금융 화면에서 그건 위험하다. */
+  --ok: #2f6b4f;
+  --ok-soft: #eaf2ed;
+  --warn: #b3541e;
+  --warn-soft: #fbefe7;
+  --danger: #a8322b;
+  --danger-soft: #faecea;
+  --info: #2b5f86;
+  --info-soft: #eaf1f7;
 
-  /* ── 그림자 — 회색이 아니라 갈색 계열로 떨어뜨린다 ── */
-  --shadow-xs: 0 1px 2px rgba(84, 64, 32, 0.05);
-  --shadow-sm: 0 1px 2px rgba(84, 64, 32, 0.05), 0 2px 6px rgba(84, 64, 32, 0.05);
-  --shadow-md: 0 2px 6px rgba(84, 64, 32, 0.05), 0 10px 26px rgba(84, 64, 32, 0.08);
-  --shadow-lg: 0 6px 14px rgba(84, 64, 32, 0.07), 0 26px 56px rgba(84, 64, 32, 0.12);
-  --shadow-brand: 0 2px 6px rgba(116, 87, 42, 0.16), 0 10px 24px rgba(116, 87, 42, 0.18);
+  /* ── 자산 3분류 — 명도와 색상을 동시에 벌려 한눈에 갈린다 ── */
+  --a-cash: #b9b6ad; /* 현금성 — 무채색 */
+  --a-etf: #a8843c; /* ETF — 골드 */
+  --a-bond: #3f4753; /* 채권 — 슬레이트 */
+  --a-cash-soft: #e8e6e0;
+  --a-etf-soft: #f2e9d6;
+  --a-bond-soft: #e3e5e9;
+  --bench: #2b5f86;
+  --c-grid: #ebe9e3;
+  --c-axis: #9c9ea5;
 
-  /* ── 모서리 — 경계감을 줄이려 전반적으로 크게 ── */
-  --r-xs: 8px;
-  --r-sm: 10px;
-  --r-md: 14px;
-  --r-lg: 20px;
-  --r-xl: 28px;
+  /* ── 그림자 — 갈색기를 빼고 중립 먹색으로 ── */
+  --shadow-xs: 0 1px 2px rgba(22, 24, 28, 0.04);
+  --shadow-sm: 0 1px 2px rgba(22, 24, 28, 0.04), 0 2px 6px rgba(22, 24, 28, 0.05);
+  --shadow-md: 0 2px 6px rgba(22, 24, 28, 0.05), 0 10px 26px rgba(22, 24, 28, 0.07);
+  --shadow-lg: 0 6px 14px rgba(22, 24, 28, 0.06), 0 26px 56px rgba(22, 24, 28, 0.1);
+  --shadow-gold: 0 2px 6px rgba(143, 111, 47, 0.16), 0 10px 24px rgba(143, 111, 47, 0.16);
+
+  /* ── 모서리 — 도구답게 조인다. 알약 모양은 칩·토글에만 ── */
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 18px;
   --r-full: 999px;
 
   /* ── 간격 ── */
@@ -104,48 +122,55 @@
   --sp-32: 128px;
 
   /* ── 글자 — 3단 구성 ──
-     script  만년필 필체. 영문 Italianno + 한글 나눔손글씨 펜.
-             둘 다 가는 펜촉이라 획 굵기가 맞는 조합이다.
-             획이 얇아 작게 쓰면 무너지므로 28px 이상에서만 쓴다.
-     display 고운바탕. 만년필로 눌러 쓴 명조. 중간 크기 제목과 수치를 맡는다.
-     font    Pretendard. 본문과 UI는 전부 여기로. 가독성은 여기서 지킨다.  */
-  --font-script: "Italianno", "Nanum Pen Script", "Gowun Batang", cursive;
+     만년필체는 남긴다. 다만 "도서 느낌"이 났던 건 서체 탓이 아니라
+     아무 데나 쓴 탓이었다. 자리를 좁히고 크기를 키워 서명처럼 쓴다.
+
+     script-en  Italianno.       영문 워드마크·영문 표어. 커퍼플레이트 계열.
+     script-ko  나눔손글씨 펜.    한글 강조 한 줄. 획이 얇아 30px 아래로 쓰지 않는다.
+     display    고운바탕.         큰 제목과 큰 수치. 자간을 조여 편집물처럼 앉힌다.
+     font       Pretendard.      나머지 전부. 읽는 속도는 여기서 지킨다.
+
+     두 필체는 굵기가 다르므로 같은 줄에 섞지 않는다. 영문은 영문 자리에,
+     한글은 한글 자리에 따로 앉힌다. 한 화면에 합쳐 두 번을 넘기지 않는다. */
   --font: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
     "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   --font-display: "Gowun Batang", "Nanum Myeongjo", "Apple SD Gothic Neo",
     "Batang", serif;
-  --font-hand: "Nanum Pen Script", "Italianno", cursive;
+  --font-script-en: "Italianno", "Gowun Batang", cursive;
+  --font-script-ko: "Nanum Pen Script", "Gowun Batang", cursive;
+  --font-script: var(--font-script-en);
   --font-mono: "SFMono-Regular", ui-monospace, "Cascadia Mono", Consolas,
     "D2Coding", monospace;
 
   --t-xs: 12px;
   --t-sm: 13px;
-  --t-base: 15px;
-  --t-md: 16.5px;
-  --t-lg: 19px;
-  --t-xl: 24px;
-  --t-2xl: 31px;
-  --t-3xl: 42px;
-  --t-4xl: 56px;
+  --t-base: 14.5px;
+  --t-md: 16px;
+  --t-lg: 18.5px;
+  --t-xl: 23px;
+  --t-2xl: 29px;
+  --t-3xl: 38px;
+  --t-4xl: 50px;
 
-  --lh-tight: 1.3;
+  --lh-tight: 1.28;
   --lh-snug: 1.5;
-  --lh-normal: 1.75;
+  --lh-normal: 1.72;
 
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.4, 0.5, 1);
 
-  --header-h: 68px;
-  --content-max: 1160px;
-  --read-max: 720px;
+  --header-h: 60px;
+  --content-max: 1200px;
+  --read-max: 700px;
+  --panel-w: 372px;
 }
 
 @media (max-width: 760px) {
   :root {
-    --t-3xl: 32px;
-    --t-4xl: 38px;
-    --t-2xl: 26px;
-    --header-h: 60px;
+    --t-3xl: 30px;
+    --t-4xl: 36px;
+    --t-2xl: 25px;
+    --header-h: 54px;
   }
 }
