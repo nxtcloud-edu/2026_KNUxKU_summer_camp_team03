@@ -1034,3 +1034,73 @@
     transform: rotate(-15deg);
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   본문 필기체 모드
+   · 대화 본문 자체를 펜글씨로 쓴다.
+   · 나눔손글씨 펜은 한글·영문·숫자를 모두 갖고 있어 한 손으로 이어진다.
+     Italianno는 라틴 전용이라 본문에 쓰면 숫자와 한글이 다른 손이 된다.
+     그래서 영문 필기체는 워드마크·제목 자리에 두고, 본문은 펜글씨로 통일했다.
+   · 이 서체는 em 박스 대비 글자가 작게 앉는다. 15px로 쓰면 읽을 수 없으므로
+     본문에서도 24px까지 올리고 행간을 크게 벌린다.
+   ───────────────────────────────────────────────────────────── */
+
+.chat-text.pen,
+.bubble-user.pen {
+  font-family: var(--font-script-ko);
+  font-size: 24px;
+  line-height: 1.9;
+  letter-spacing: 0.01em;
+}
+
+/* 펜글씨는 획이 얇아 밝은 바탕에서 흐리게 보인다. 조금 더 눌러 쓴다 */
+.chat-text.pen {
+  color: var(--ink);
+  -webkit-font-smoothing: auto;
+}
+
+/* 사용자 말풍선은 어두운 바탕이라 반대로 얇게 보인다. 크기를 조금 더 준다 */
+.bubble-user.pen {
+  font-size: 25px;
+  line-height: 1.7;
+}
+
+/* 필기체에서는 잉크가 마르는 시간도 늘린다. 획이 길어 천천히 앉는 편이 자연스럽다 */
+.chat-text.pen .ink-char {
+  animation-duration: 520ms;
+}
+
+/* 촉도 본문 크기에 맞춰 키운다 */
+.chat-text.pen .nib svg {
+  width: 12px;
+  height: 20px;
+}
+
+/* 토글 버튼 */
+.pen-toggle {
+  font-size: var(--t-xs);
+  font-weight: 640;
+  color: var(--ink-3);
+  background: var(--surface-band);
+  border-radius: var(--r-full);
+  padding: 4px 12px;
+  margin-left: 6px;
+  transition: background 0.16s var(--ease), color 0.16s var(--ease);
+}
+.pen-toggle:hover {
+  background: var(--surface-active);
+  color: var(--ink);
+}
+.pen-toggle.on {
+  background: var(--gold-soft);
+  color: var(--gold-deep);
+}
+
+@media (max-width: 640px) {
+  .chat-text.pen {
+    font-size: 22px;
+  }
+  .bubble-user.pen {
+    font-size: 23px;
+  }
+}

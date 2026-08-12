@@ -65,6 +65,10 @@ export default function Chat() {
   const [busy, setBusy] = useState(false)
   const [trace, setTrace] = useState<TraceStep[]>([])
   const [traceOpen, setTraceOpen] = useState(false)
+  /** 본문 필기체 모드. 기본 켬 — 끄면 Pretendard로 돌아간다 */
+  const [pen, setPen] = useState<boolean>(
+    () => localStorage.getItem('quill.pen') !== 'off',
+  )
   const scrollRef = useRef<HTMLDivElement>(null)
   const timers = useRef<number[]>([])
   /** 최신 메시지 목록. 저장할 때 setMsgs 안에서 다른 상태를 건드리지 않으려고 둔다 */
@@ -82,6 +86,10 @@ export default function Chat() {
   const [vaultBusy, setVaultBusy] = useState(false)
 
   useEffect(() => () => timers.current.forEach(clearTimeout), [])
+
+  useEffect(() => {
+    localStorage.setItem('quill.pen', pen ? 'on' : 'off')
+  }, [pen])
 
   // 새 내용이 흐를 때마다 바닥에 붙인다
   useEffect(() => {
@@ -292,7 +300,7 @@ export default function Chat() {
             {msgs.map((m) =>
               m.role === 'user' ? (
                 <div className="bubble-row user" key={m.id}>
-                  <div className="bubble bubble-user">{m.text}</div>
+                  <div className={`bubble bubble-user${pen ? ' pen' : ''}`}>{m.text}</div>
                 </div>
               ) : (
                 <div className="bubble-row agent" key={m.id}>
@@ -308,7 +316,7 @@ export default function Chat() {
                     )}
 
                     <div className="bubble bubble-agent">
-                      <p className="chat-text">
+                      <p className={`chat-text${pen ? ' pen' : ''}`}>
                         {/* 다 흐른 뒤에만 용어 풀이를 입힌다 (잘린 단어에 밑줄이 깜빡이지 않게) */}
                         {m.done ? (
                           <RichText text={m.text} />
@@ -399,13 +407,23 @@ export default function Chat() {
             </button>
           </form>
           <div className="composer-foot">
-            <button
-              className={`trace-toggle${traceOpen ? ' on' : ''}`}
-              onClick={() => setTraceOpen((v) => !v)}
-              disabled={!trace.length}
-            >
-              에이전트 트레이스 {trace.length ? `(${trace.length})` : ''}
-            </button>
+            <span className="row" style={{ gap: 0 }}>
+              <button
+                className={`trace-toggle${traceOpen ? ' on' : ''}`}
+                onClick={() => setTraceOpen((v) => !v)}
+                disabled={!trace.length}
+              >
+                에이전트 트레이스 {trace.length ? `(${trace.length})` : ''}
+              </button>
+              {/* 필기체는 읽는 속도를 떨어뜨린다. 언제든 되돌릴 수 있게 둔다 */}
+              <button
+                className={`pen-toggle${pen ? ' on' : ''}`}
+                onClick={() => setPen((v) => !v)}
+                aria-pressed={pen}
+              >
+                손글씨체 {pen ? '켬' : '끔'}
+              </button>
+            </span>
             <span className="xs faint">샘플 데이터 · 투자 권유가 아닙니다</span>
           </div>
           {traceOpen && !!trace.length && <AgentTrace steps={trace} />}
