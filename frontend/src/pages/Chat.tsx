@@ -1,19 +1,34 @@
 /**
  * 대화 화면 — 이 서비스의 메인이다.
  *
- * 왼쪽은 대화, 오른쪽은 근거 패널. 답변에 인용된 리포트가 오른쪽에 쌓이고,
- * 누르면 원문 발췌가 그 자리에서 열린다. "출처 없는 문장은 쓰지 않는다"는
- * 약속을 화면 구조 자체로 보여 주려는 배치다.
+ * 세 칸으로 나눈다.
+ *   왼쪽   대화 보관함 (확인 키를 만든 경우에만 채워진다)
+ *   가운데 대화
+ *   오른쪽 근거 패널 — 인용된 리포트가 쌓이고 그 자리에서 원문이 열린다
+ *
+ * "출처 없는 문장은 쓰지 않는다"는 약속을 화면 구조로 보여 주려는 배치다.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { answer, TODAY_REPORTS, type ChatAnswer, type TraceStep } from '../lib/chatEngine'
 import { useCopilot } from '../lib/copilot'
-import { baselineWeights, riskProfile as calcProfile, type RiskProfile } from '../lib/quant'
+import { baselineWeights, type RiskProfile } from '../lib/quant'
 import { reportById, SUGGESTS } from '../lib/mock'
+import {
+  createVault,
+  destroyVault,
+  loadConversations,
+  saveConversations,
+  unlockVault,
+  vaultExists,
+  type Conversation,
+} from '../lib/vault'
 import AllocBar from '../components/AllocBar'
 import EvidencePanel from '../components/EvidencePanel'
 import AgentTrace from '../components/AgentTrace'
+import ParallelViews from '../components/ParallelViews'
+import RichText from '../components/RichText'
+import ChatVault, { type VaultState } from '../components/ChatVault'
 import { IconArrowRight, IconQuill, IconSend, IconShield } from '../components/icons'
 
 interface Msg {
@@ -41,18 +56,136 @@ export default function Chat() {
   const [traceOpen, setTraceOpen] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const timers = useRef<number[]>([])
+  /** 최신 메시지 목록. 저장할 때 setMsgs 안에서 다른 상태를 건드리지 않으려고 둔다 */
+  const msgsRef = useRef<Msg[]>([])
+
+  /* ── 보관함 ── */
+  const [vault, setVault] = useState<VaultState>(() => (vaultExists() ? 'locked' : 'off'))
+  const [vaultKey, setVaultKey] = useState<CryptoKey | null>(null)
+  const [convos, setConvos] = useState<Conversation[]>([])
+  const [activeId, setActiveId] = useState<string | null>(null)
+  /** send()가 만든 클로저는 예전 activeId를 붙들고 있다.
+   *  같은 대화를 두 번 저장하지 않으려면 현재 값을 ref로 따로 들고 있어야 한다. */
+  const activeIdRef = useRef<string | null>(null)
+  const [vaultErr, setVaultErr] = useState<string | null>(null)
+  const [vaultBusy, setVaultBusy] = useState(false)
 
   useEffect(() => () => timers.current.forEach(clearTimeout), [])
 
   // 새 내용이 흐를 때마다 바닥에 붙인다
   useEffect(() => {
+    msgsRef.current = msgs
     const el = scrollRef.current
     if (el) el.scrollTop = el.scrollHeight
   }, [msgs])
 
-  /** 화면이 실제로 쓰는 프로필 — 슬라이더로 위험 점수를 덮어썼으면 그 값으로 다시 만든다 */
+  /** 화면이 실제로 쓰는 프로필 — 슬라이더로 위험 점수를 덮어썼으면 그 값으로 */
   const activeProfile: RiskProfile | null =
     profile && effectiveRisk !== null ? { ...profile, risk: effectiveRisk } : profile
+
+  /* ── 보관함 조작 ─────────────────────────────────── */
+
+  const createKey = async (pin: string) => {
+    setVaultBusy(true)
+    setVaultErr(null)
+    const key = await createVault(pin)
+    setVaultKey(key)
+    setConvos([])
+    setVault('open')
+    setVaultBusy(false)
+  }
+
+  const unlock = async (pin: string) => {
+    setVaultBusy(true)
+    setVaultErr(null)
+    const key = await unlockVault(pin)
+    if (!key) {
+      setVaultErr('확인 키가 맞지 않습니다.')
+      setVaultBusy(false)
+      return
+    }
+    setVaultKey(key)
+    setConvos(await loadConversations(key))
+    setVault('open')
+    setVaultBusy(false)
+  }
+
+  const lock = () => {
+    setVaultKey(null)
+    setConvos([])
+    setVault('locked')
+  }
+
+  const wipe = () => {
+    destroyVault()
+    setVaultKey(null)
+    setConvos([])
+    setActive(null)
+    setVault('off')
+    setVaultErr(null)
+  }
+
+  /** activeId는 항상 ref와 함께 움직인다 */
+  const setActive = (id: string | null) => {
+    activeIdRef.current = id
+    setActiveId(id)
+  }
+
+  const newChat = () => {
+    setMsgs([])
+    setActive(null)
+    setTrace([])
+  }
+
+  const openConvo = (id: string) => {
+    const c = convos.find((x) => x.id === id)
+    if (!c) return
+    setActive(id)
+    setTrace([])
+    setMsgs(
+      c.messages.map((m) => ({
+        id: nextId(),
+        role: m.role,
+        text: m.text,
+        shown: m.text.length,
+        done: true,
+        data: m.evidence
+          ? ({ text: m.text, evidence: m.evidence, trace: [] } as ChatAnswer)
+          : undefined,
+      })),
+    )
+  }
+
+  /** 대화가 끝날 때마다 보관함에 밀어 넣는다 (열려 있을 때만) */
+  const persist = useCallback(
+    (all: Msg[]) => {
+      if (vault !== 'open' || !vaultKey) return
+      const first = all.find((m) => m.role === 'user')
+      if (!first) return
+
+      const record: Conversation = {
+        id: activeIdRef.current ?? `c${Date.now()}`,
+        title: first.text.slice(0, 40),
+        at: new Date().toISOString(),
+        messages: all.map((m) => ({
+          role: m.role,
+          text: m.text,
+          evidence: m.data?.evidence,
+        })),
+      }
+
+      setConvos((prev) => {
+        const next = [record, ...prev.filter((c) => c.id !== record.id)]
+        void saveConversations(vaultKey, next)
+        return next
+      })
+      activeIdRef.current = record.id
+      setActiveId(record.id)
+    },
+    [vault, vaultKey],
+  )
+
+  /* ── 전송 ────────────────────────────────────────── */
 
   const send = useCallback(
     (text: string) => {
@@ -61,15 +194,18 @@ export default function Chat() {
 
       setQ('')
       setBusy(true)
-      setMsgs((m) => [
-        ...m,
-        { id: nextId(), role: 'user', text: value, shown: value.length, done: true },
-      ])
+      const userMsg: Msg = {
+        id: nextId(),
+        role: 'user',
+        text: value,
+        shown: value.length,
+        done: true,
+      }
+      setMsgs((m) => [...m, userMsg])
 
       const res = answer(value, activeProfile ?? undefined)
       setTrace(res.trace)
 
-      // 에이전트가 도구를 호출하는 동안의 지연 — 트레이스 합계만큼 기다린다
       const think = res.trace.reduce((s, t) => s + t.ms, 0)
       const id = nextId()
 
@@ -80,14 +216,13 @@ export default function Chat() {
             { id, role: 'agent', text: res.text, shown: 0, done: false, data: res },
           ])
 
-          // 한 글자씩 흘린다
           const iv = window.setInterval(() => {
             setMsgs((m) =>
-              m.map((x) => {
-                if (x.id !== id) return x
-                if (x.shown >= x.text.length) return x
-                return { ...x, shown: Math.min(x.text.length, x.shown + 2) }
-              }),
+              m.map((x) =>
+                x.id === id && x.shown < x.text.length
+                  ? { ...x, shown: Math.min(x.text.length, x.shown + 2) }
+                  : x,
+              ),
             )
           }, TICK)
 
@@ -95,8 +230,12 @@ export default function Chat() {
             window.setTimeout(
               () => {
                 clearInterval(iv)
-                setMsgs((m) => m.map((x) => (x.id === id ? { ...x, shown: x.text.length, done: true } : x)))
+                setMsgs((m) =>
+                  m.map((x) => (x.id === id ? { ...x, shown: x.text.length, done: true } : x)),
+                )
                 setBusy(false)
+                // 저장은 상태 반영이 끝난 뒤에 한다
+                timers.current.push(window.setTimeout(() => persist(msgsRef.current), 0))
               },
               (res.text.length / 2) * TICK + 120,
             ),
@@ -104,7 +243,7 @@ export default function Chat() {
         }, Math.min(think, 900)),
       )
     },
-    [activeProfile, busy],
+    [activeProfile, busy, persist],
   )
 
   // 다른 화면에서 던진 질문을 받는다
@@ -122,15 +261,29 @@ export default function Chat() {
     }
   }
 
-  const empty = msgs.length === 0
-
   return (
     <div className="chat-shell">
+      <ChatVault
+        state={vault}
+        list={convos}
+        activeId={activeId}
+        error={vaultErr}
+        busy={vaultBusy}
+        onCreate={createKey}
+        onUnlock={unlock}
+        onOpen={openConvo}
+        onNew={newChat}
+        onLock={lock}
+        onDestroy={wipe}
+      />
+
       {/* ── 대화 ─────────────────────────────────────── */}
       <section className="chat-main">
         <div className="chat-scroll" ref={scrollRef}>
           <div className="chat-inner">
-            {empty && <Opening onPick={send} hasProfile={!!input} risk={effectiveRisk} />}
+            {msgs.length === 0 && (
+              <Opening onPick={send} hasProfile={!!input} risk={effectiveRisk} />
+            )}
 
             {msgs.map((m) =>
               m.role === 'user' ? (
@@ -152,9 +305,20 @@ export default function Chat() {
 
                     <div className="bubble bubble-agent">
                       <p className="chat-text">
-                        {m.text.slice(0, m.shown)}
-                        {!m.done && <span className="caret" aria-hidden />}
+                        {/* 다 흐른 뒤에만 용어 풀이를 입힌다 (잘린 단어에 밑줄이 깜빡이지 않게) */}
+                        {m.done ? (
+                          <RichText text={m.text} />
+                        ) : (
+                          <>
+                            {m.text.slice(0, m.shown)}
+                            <span className="caret" aria-hidden />
+                          </>
+                        )}
                       </p>
+
+                      {m.done && m.data?.divergent && (
+                        <ParallelViews view={m.data.divergent} />
+                      )}
 
                       {m.done && m.data?.alloc && (
                         <div className="alloc-block">
@@ -241,15 +405,12 @@ export default function Chat() {
             >
               에이전트 트레이스 {trace.length ? `(${trace.length})` : ''}
             </button>
-            <span className="xs faint">
-              샘플 데이터 · 투자 권유가 아닙니다
-            </span>
+            <span className="xs faint">샘플 데이터 · 투자 권유가 아닙니다</span>
           </div>
           {traceOpen && !!trace.length && <AgentTrace steps={trace} />}
         </div>
       </section>
 
-      {/* ── 근거 패널 ─────────────────────────────────── */}
       <EvidencePanel cited={cited} />
     </div>
   )
@@ -301,15 +462,11 @@ function Opening({
         </div>
       ) : (
         <div className="opening-card">
-          <div className="row gap-3">
-            <div className="grow">
-              <div className="strong">아직 성향을 모릅니다</div>
-              <p className="small muted keep mt-1">
-                6개 질문에 답하면 기준 비중을 계산해 드려요. 숫자는 전부 코드가 계산하고,
-                에이전트는 근거를 들고 조정만 제안합니다.
-              </p>
-            </div>
-          </div>
+          <div className="strong">아직 성향을 모릅니다</div>
+          <p className="small muted keep mt-1">
+            6개 질문에 답하면 기준 비중을 계산해 드려요. 숫자는 전부 코드가 계산하고,
+            에이전트는 근거를 들고 조정만 제안합니다.
+          </p>
           <Link className="btn btn-primary btn-sm mt-4" to="/onboarding">
             성향 진단 시작
             <IconArrowRight size={14} />
@@ -342,13 +499,3 @@ function Opening({
     </div>
   )
 }
-
-/** 온보딩 입력이 없을 때 데모용으로 쓰는 중립 프로필 */
-export const NEUTRAL_PROFILE = calcProfile({
-  seedMoney: 10_000_000,
-  monthlyInvest: 300_000,
-  horizon: 'mid',
-  targetReturn: 'inflation',
-  drop20: 'hold',
-  mddPct: 20,
-})

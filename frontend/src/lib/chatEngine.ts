@@ -10,7 +10,7 @@
  *      받아서 문장에 끼워 넣기만 한다. 문장이 숫자를 만들면 안 된다.
  */
 
-import { CANNED, REPORTS, reportById } from './mock'
+import { CANNED, DIVERGENT, REPORTS, reportById, type DivergentView } from './mock'
 import {
   ALLOCATION_PARAMS,
   applyAdjustments,
@@ -40,6 +40,8 @@ export interface ChatAnswer {
   notice?: string
   /** 배분 카드를 함께 띄울지 */
   alloc?: AdjustResult
+  /** 리포트끼리 의견이 갈렸을 때 — 합치지 않고 나란히 보여 준다 */
+  divergent?: DivergentView
   trace: TraceStep[]
 }
 
@@ -198,11 +200,29 @@ export function answer(question: string, profile?: RiskProfile): ChatAnswer {
     ? `${rep.house} 「${rep.title}」에 따르면,\n\n${hit.text}`
     : hit.text
 
+  // 같은 주제를 두고 리포트가 갈렸는가 — 갈렸으면 우열을 가리지 않고 둘 다 붙인다
+  const divergent = DIVERGENT.find((d) => d.match.some((m) => q.includes(m)))
+
+  const trace = traceBase(true, hit.sources.length)
+  if (divergent) {
+    trace.push({
+      agent: 'Supervisor',
+      label: '상반 관점 감지',
+      detail: `같은 주제에서 관점이 ${divergent.sides.length}갈래로 갈려 병렬 제시합니다 (합치지 않음)`,
+      ms: 18,
+    })
+  }
+
   return {
     text: sanitizeOutput(attributed),
-    evidence: hit.sources,
+    evidence: divergent
+      ? [...hit.sources, ...divergent.sides.map((s) => s.reportId)].filter(
+          (v, i, a) => a.indexOf(v) === i,
+        )
+      : hit.sources,
     notice,
-    trace: traceBase(true, hit.sources.length),
+    divergent,
+    trace,
   }
 }
 

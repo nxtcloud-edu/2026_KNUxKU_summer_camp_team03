@@ -566,3 +566,106 @@ export const SUGGESTS = [
   '국채랑 회사채 중에 뭐가 안전해요?',
   '이제 막 시작하는데 뭐부터 해요?',
 ]
+
+/* ── 상반된 관점 ─────────────────────────────────────────
+   Slack의 RAG 설계 원칙: "의견이 갈리면 합치지 않고 병렬 제시한다."
+   여러 리포트의 우열을 가리는 판단은 LLM에게도 사람에게도 맡기지 않는다.
+   어느 쪽이 맞는지 고르는 대신, 갈렸다는 사실 자체를 보여 준다. */
+
+export interface DivergentView {
+  /** 어떤 주제에서 갈렸는가 */
+  topic: string
+  /** 질문에 이 말이 들어오면 병렬 제시를 띄운다 */
+  match: string[]
+  sides: {
+    reportId: string
+    /** 이 리포트의 입장을 한 줄로 */
+    stance: string
+    /** 그 근거 */
+    ground: string
+  }[]
+}
+
+export const DIVERGENT: DivergentView[] = [
+  {
+    topic: '금리 인하 국면에서 채권 만기를 어디에 둘 것인가',
+    match: ['금리', '인하', '장기', '단기', '듀레이션'],
+    sides: [
+      {
+        reportId: 'R-2608-011',
+        stance: '장기 국채로 듀레이션을 늘릴 구간이다',
+        ground:
+          '추가 2회 인하 시 국고채 10년물에 30~40bp 하락 여지가 남아 있어, 가격 상승 이익을 노릴 수 있다는 관점입니다.',
+      },
+      {
+        reportId: 'R-2608-009',
+        stance: '단기물 중심이 낫다',
+        ground:
+          '만기 1년 이내 구간은 금리가 0.5%p 올라도 가격 하락이 0.5% 수준에 그쳐, 예상이 빗나갔을 때의 손실이 제한적이라는 관점입니다.',
+      },
+    ],
+  },
+  {
+    topic: '액티브 ETF를 담을 만한가',
+    match: ['액티브', '패시브', 'etf'],
+    sides: [
+      {
+        reportId: 'R-2608-021',
+        stance: '패시브를 뼈대로 두어야 한다',
+        ground:
+          '3년 기준 국내 액티브 ETF 87개 중 지수를 이긴 것은 47%에 그쳤고 보수는 세 배 넘게 비쌉니다.',
+      },
+      {
+        reportId: 'R-2607-035',
+        stance: '채권 액티브는 예외로 볼 만하다',
+        ground:
+          '채권형은 종목 선정보다 만기·신용 배분의 영향이 커서 운용역의 개입 여지가 상대적으로 크다는 관점입니다.',
+      },
+    ],
+  },
+]
+
+/* ── 알림 ────────────────────────────────────────────────
+   ERD의 notifications 테이블에 대응한다. type은 정보/제안 두 가지뿐이고,
+   모든 알림에 근거 리포트가 붙는다(evidence_report_id). 근거 없는 알림은
+   만들지 않는다 — 알림이야말로 "카더라"가 끼어들기 쉬운 자리다. */
+
+export interface Notification {
+  id: string
+  type: '정보' | '제안'
+  title: string
+  body: string
+  evidenceReportId: string
+  at: string
+  read: boolean
+}
+
+export const NOTIFICATIONS: Notification[] = [
+  {
+    id: 'N-001',
+    type: '제안',
+    title: '보유 중인 장기 국채와 관련된 리포트가 올라왔어요',
+    body: '금리 인하 사이클 진입으로 듀레이션 확대 구간이라는 관점입니다. 회원님 비중에서 채권이 45%라 영향이 있는 항목이에요.',
+    evidenceReportId: 'R-2608-011',
+    at: '2026-08-12T09:12:00+09:00',
+    read: false,
+  },
+  {
+    id: 'N-002',
+    type: '정보',
+    title: '오늘 수집된 리포트 7건 중 2건이 회원님 태그와 겹칩니다',
+    body: '채권-장기-국채, 채권-단기-국채 태그입니다. 서재에서 3줄 요약을 확인하실 수 있어요.',
+    evidenceReportId: 'R-2608-009',
+    at: '2026-08-12T08:40:00+09:00',
+    read: false,
+  },
+  {
+    id: 'N-003',
+    type: '정보',
+    title: 'AA급 회사채 스프레드가 좁혀졌다는 분석이 나왔습니다',
+    body: '크레딧 캐리 전략이 유효하다는 관점이며, 회원님 비중의 회사채 항목과 연결됩니다.',
+    evidenceReportId: 'R-2608-014',
+    at: '2026-08-11T17:05:00+09:00',
+    read: true,
+  },
+]

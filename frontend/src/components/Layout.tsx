@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { IconArrowRight, IconQuill } from './icons'
 import ChatWidget from './ChatWidget'
+import Notifications from './Notifications'
 import { useProfile } from '../lib/store'
 import { REPORTS } from '../lib/mock'
 
@@ -34,6 +35,8 @@ export function SiteHeader() {
         </nav>
 
         <span className="spacer" />
+
+        <Notifications />
 
         <Link className="btn btn-primary btn-sm" to="/onboarding">
           {diagnosis ? '조건 다시 잡기' : '성향 진단'}

@@ -228,3 +228,11 @@ export const IconWallet = ({ size = 18, style }: P) => (
     <path d="M16.4 6.4 14 3.6 6.8 6.4" />
   </svg>
 )
+
+/** 종 — 알림. 선으로만 그린다 */
+export const IconBell = ({ size = 18, style, className }: P) => (
+  <svg {...base(size)} style={style} className={className} aria-hidden>
+    <path d="M18 8.5a6 6 0 1 0-12 0c0 5.2-2 6.5-2 6.5h16s-2-1.3-2-6.5Z" />
+    <path d="M13.7 18.5a2 2 0 0 1-3.4 0" />
+  </svg>
+)

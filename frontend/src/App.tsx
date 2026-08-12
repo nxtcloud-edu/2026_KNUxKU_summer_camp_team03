@@ -1,14 +1,16 @@
-/** 라우팅 — 고객 사이트와 관리자 콘솔(/admin)을 완전히 분리한다.
- *  관리자 셸에는 사이트 헤더도 챗봇도 들어오지 않는다. */
+/** 라우팅
+ *
+ *  대화(/)가 메인이다. 화면을 꽉 채워야 해서 푸터도 떠 있는 챗 버튼도 없는
+ *  전용 셸(ChatLayout)을 쓴다.
+ *
+ *  관리자 콘솔(/admin)은 고객 사이트와 완전히 분리된 셸이다.
+ *  사이트 헤더도 챗봇도 들어오지 않는다.
+ */
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Layout, { ChatLayout } from './components/Layout'
 import Chat from './pages/Chat'
 import Onboarding from './pages/Onboarding'
 import Portfolio from './pages/Portfolio'
-import Home from './pages/Home'
-import Survey from './pages/Survey'
-import Analysis from './pages/Analysis'
-import Result from './pages/Result'
 import Library from './pages/Library'
 import ReportPage from './pages/ReportPage'
 
@@ -25,20 +27,15 @@ import AdminQuality from './admin/AdminQuality'
 export default function App() {
   return (
     <Routes>
-      {/* ── 대화 화면 — 이 서비스의 메인.
-             화면을 꽉 채워야 해서 푸터도 떠 있는 챗 버튼도 넣지 않는다 ── */}
+      {/* ── 대화 — 메인 ─────────────────────────────── */}
       <Route element={<ChatLayout />}>
         <Route path="/" element={<Chat />} />
       </Route>
 
-      {/* ── 고객 사이트 ─────────────────────────────── */}
+      {/* ── 나머지 고객 화면 ────────────────────────── */}
       <Route element={<Layout />}>
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/portfolio" element={<Portfolio />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/survey" element={<Survey />} />
-        <Route path="/analysis" element={<Analysis />} />
-        <Route path="/result" element={<Result />} />
         <Route path="/library" element={<Library />} />
         <Route path="/library/:id" element={<ReportPage />} />
       </Route>
