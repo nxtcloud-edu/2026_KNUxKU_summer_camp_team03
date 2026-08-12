@@ -701,3 +701,12 @@
 .acct-item:hover {
   background: var(--surface-hover);
 }
+
+/* 인증 미설정 표시 — 로그인 버튼 옆의 작은 점 */
+.login-off {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--warn);
+  margin-left: 2px;
+}

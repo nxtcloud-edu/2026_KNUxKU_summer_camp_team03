@@ -28,6 +28,7 @@ import EvidencePanel from '../components/EvidencePanel'
 import AgentTrace from '../components/AgentTrace'
 import ParallelViews from '../components/ParallelViews'
 import RichText from '../components/RichText'
+import InkText from '../components/InkText'
 import ChatVault, { type VaultState } from '../components/ChatVault'
 import { IconArrowRight, IconQuill, IconSend, IconShield } from '../components/icons'
 
@@ -44,8 +45,18 @@ interface Msg {
 let seq = 0
 const nextId = () => `m${++seq}`
 
-/** 한 글자씩 흘리는 속도(ms). 실제 SSE로 바꾸면 이 값은 사라진다 */
-const TICK = 12
+/** 손글씨 리듬 — 사람이 쓰듯 고르지 않게 흘린다.
+ *  기계적으로 균일하면 아무리 꾸며도 '출력'으로 읽힌다.
+ *  실제 SSE로 바꾸면 이 함수는 사라지고 서버가 주는 토큰 간격을 그대로 쓴다. */
+function penDelay(ch: string): number {
+  // 문장을 맺고 나면 손이 잠깐 멈춘다
+  if ('.!?'.includes(ch)) return 260
+  if (ch === '\n') return 180
+  // 쉼표와 가운뎃점에서는 살짝
+  if (',·'.includes(ch)) return 95
+  // 나머지는 미세하게 흔들리는 속도
+  return 11 + Math.random() * 9
+}
 
 export default function Chat() {
   const { input, profile, effectiveRisk } = useCopilot()
@@ -216,30 +227,23 @@ export default function Chat() {
             { id, role: 'agent', text: res.text, shown: 0, done: false, data: res },
           ])
 
-          const iv = window.setInterval(() => {
-            setMsgs((m) =>
-              m.map((x) =>
-                x.id === id && x.shown < x.text.length
-                  ? { ...x, shown: Math.min(x.text.length, x.shown + 2) }
-                  : x,
-              ),
-            )
-          }, TICK)
-
-          timers.current.push(
-            window.setTimeout(
-              () => {
-                clearInterval(iv)
-                setMsgs((m) =>
-                  m.map((x) => (x.id === id ? { ...x, shown: x.text.length, done: true } : x)),
-                )
-                setBusy(false)
-                // 저장은 상태 반영이 끝난 뒤에 한다
-                timers.current.push(window.setTimeout(() => persist(msgsRef.current), 0))
-              },
-              (res.text.length / 2) * TICK + 120,
-            ),
-          )
+          // 한 글자씩, 글자마다 다른 간격으로
+          let i = 0
+          const write = () => {
+            if (i >= res.text.length) {
+              setMsgs((m) =>
+                m.map((x) => (x.id === id ? { ...x, shown: x.text.length, done: true } : x)),
+              )
+              setBusy(false)
+              // 저장은 상태 반영이 끝난 뒤에 한다
+              timers.current.push(window.setTimeout(() => persist(msgsRef.current), 0))
+              return
+            }
+            i += 1
+            setMsgs((m) => m.map((x) => (x.id === id ? { ...x, shown: i } : x)))
+            timers.current.push(window.setTimeout(write, penDelay(res.text[i - 1])))
+          }
+          write()
         }, Math.min(think, 900)),
       )
     },
@@ -309,10 +313,7 @@ export default function Chat() {
                         {m.done ? (
                           <RichText text={m.text} />
                         ) : (
-                          <>
-                            {m.text.slice(0, m.shown)}
-                            <span className="caret" aria-hidden />
-                          </>
+                          <InkText text={m.text} shown={m.shown} done={m.done} />
                         )}
                       </p>
 

@@ -1,8 +1,9 @@
 /**
  * 계정 표시 — 헤더 오른쪽
  *
- * 인증이 꺼져 있으면 아무것도 그리지 않는다. 로그인 버튼만 덩그러니 있는데
- * 눌러도 아무 일이 없으면 그게 더 혼란스럽다.
+ * 인증이 꺼져 있어도 로그인 버튼은 띄운다. 버튼이 아예 없으면 이 서비스에
+ * 로그인이 없는 것처럼 보인다. 대신 누르면 "아직 켜지지 않았다"는 사실과
+ * 켜는 방법을 그대로 알려 준다 — 되는 척하는 것보다 낫다.
  */
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -23,12 +24,15 @@ export default function AccountMenu() {
     return () => document.removeEventListener('mousedown', onDown)
   }, [open])
 
-  if (!enabled || !ready) return null
+  // 세션을 확인하는 잠깐 동안만 자리를 비워 둔다 (버튼이 깜빡이지 않게)
+  if (enabled && !ready) return null
 
   if (!user) {
     return (
-      <Link className="btn btn-ghost btn-sm" to="/login">
+      <Link className="btn btn-soft btn-sm" to="/login">
         로그인
+        {/* 아직 붙지 않았다는 표시. 시연 중 오해를 막는다 */}
+        {!enabled && <span className="login-off" title="인증 미설정" />}
       </Link>
     )
   }

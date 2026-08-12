@@ -965,3 +965,72 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   손글씨 — 만년필로 쓰는 느낌
+   · 갓 쓰인 글자는 잉크가 번진 상태로 나타나 서서히 마른다
+   · 색도 잉크처럼 앉는다: 옅은 갈색(젖음) → 먹색(마름)
+   · 촉은 쓰는 자리에 머물며 아주 살짝 흔들린다
+   본문 서체는 그대로 Pretendard다. 필기체로 쓰면 읽는 속도가 무너진다.
+   "쓰는 것처럼 보이는 것"과 "손글씨로 쓰는 것"은 다르다.
+   ───────────────────────────────────────────────────────────── */
+
+.ink-char {
+  display: inline;
+  animation: ink-settle 420ms var(--ease-out) both;
+}
+
+@keyframes ink-settle {
+  0% {
+    /* 촉이 막 닿은 순간 — 잉크가 고여 번져 있다 */
+    opacity: 0;
+    filter: blur(2.4px);
+    color: var(--gold);
+  }
+  35% {
+    opacity: 1;
+    filter: blur(1.1px);
+    color: var(--gold-deep);
+  }
+  100% {
+    /* 마른 잉크 */
+    opacity: 1;
+    filter: blur(0);
+    color: var(--ink);
+  }
+}
+
+/* 만년필 촉 — 쓰는 자리를 따라다닌다 */
+.nib {
+  display: inline-block;
+  color: var(--gold);
+  vertical-align: -0.24em;
+  margin-left: 1px;
+  transform-origin: 50% 100%;
+  animation: nib-hand 0.9s ease-in-out infinite;
+  filter: drop-shadow(0 1px 1px rgba(111, 86, 34, 0.25));
+}
+
+/* 손으로 쓸 때의 미세한 흔들림. 크게 주면 장난스러워진다 */
+@keyframes nib-hand {
+  0% {
+    transform: rotate(-15deg) translateY(0);
+  }
+  50% {
+    transform: rotate(-12.5deg) translateY(-0.7px);
+  }
+  100% {
+    transform: rotate(-15deg) translateY(0);
+  }
+}
+
+/* 애니메이션을 원치 않는 사용자에게는 번짐도 흔들림도 주지 않는다 */
+@media (prefers-reduced-motion: reduce) {
+  .ink-char {
+    animation: none;
+  }
+  .nib {
+    animation: none;
+    transform: rotate(-15deg);
+  }
+}
