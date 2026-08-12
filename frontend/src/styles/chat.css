@@ -1036,44 +1036,35 @@
 }
 
 /* ─────────────────────────────────────────────────────────────
-   본문 필기체 모드
-   · 대화 본문 자체를 펜글씨로 쓴다.
-   · 나눔손글씨 펜은 한글·영문·숫자를 모두 갖고 있어 한 손으로 이어진다.
-     Italianno는 라틴 전용이라 본문에 쓰면 숫자와 한글이 다른 손이 된다.
-     그래서 영문 필기체는 워드마크·제목 자리에 두고, 본문은 펜글씨로 통일했다.
-   · 이 서체는 em 박스 대비 글자가 작게 앉는다. 15px로 쓰면 읽을 수 없으므로
-     본문에서도 24px까지 올리고 행간을 크게 벌린다.
+   본문 만년필 모드
+   · 나눔손글씨 펜을 썼다가 물렀다. 그건 볼펜·사인펜 손글씨라
+     키울수록 귀여워지지 우아해지지 않는다. 만년필과는 다른 필기구다.
+   · 고운바탕은 만년필로 눌러 쓴 명조다. 세로획이 굵고 가로획이 얇아
+     펜촉의 필압이 그대로 남는다. 한글·영문·숫자가 한 손으로 이어진다.
+   · 크기는 본문 크기를 지킨다. 명조는 키우지 않아도 읽히고,
+     오히려 키우면 우아함이 아니라 둔함이 된다.
    ───────────────────────────────────────────────────────────── */
 
 .chat-text.pen,
 .bubble-user.pen {
-  font-family: var(--font-script-ko);
-  font-size: 24px;
-  line-height: 1.9;
+  font-family: var(--font-display);
+  font-weight: 400;
+  /* 산세리프보다 자면이 작아 보이므로 아주 조금만 올린다 */
+  font-size: 16.5px;
+  line-height: 1.95;
+  /* 명조는 자간을 살짝 벌려야 획이 숨을 쉰다 */
+  letter-spacing: 0.005em;
+}
+
+/* 어두운 바탕에서는 얇은 가로획이 날아간다. 굵기를 한 단계 올린다 */
+.bubble-user.pen {
+  font-weight: 700;
   letter-spacing: 0.01em;
 }
 
-/* 펜글씨는 획이 얇아 밝은 바탕에서 흐리게 보인다. 조금 더 눌러 쓴다 */
-.chat-text.pen {
-  color: var(--ink);
-  -webkit-font-smoothing: auto;
-}
-
-/* 사용자 말풍선은 어두운 바탕이라 반대로 얇게 보인다. 크기를 조금 더 준다 */
-.bubble-user.pen {
-  font-size: 25px;
-  line-height: 1.7;
-}
-
-/* 필기체에서는 잉크가 마르는 시간도 늘린다. 획이 길어 천천히 앉는 편이 자연스럽다 */
+/* 잉크가 앉는 시간 — 명조는 획이 정갈해서 오래 끌 필요가 없다 */
 .chat-text.pen .ink-char {
-  animation-duration: 520ms;
-}
-
-/* 촉도 본문 크기에 맞춰 키운다 */
-.chat-text.pen .nib svg {
-  width: 12px;
-  height: 20px;
+  animation-duration: 460ms;
 }
 
 /* 토글 버튼 */
@@ -1094,13 +1085,4 @@
 .pen-toggle.on {
   background: var(--gold-soft);
   color: var(--gold-deep);
-}
-
-@media (max-width: 640px) {
-  .chat-text.pen {
-    font-size: 22px;
-  }
-  .bubble-user.pen {
-    font-size: 23px;
-  }
 }

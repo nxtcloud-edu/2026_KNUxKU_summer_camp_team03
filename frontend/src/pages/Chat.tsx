@@ -421,7 +421,7 @@ export default function Chat() {
                 onClick={() => setPen((v) => !v)}
                 aria-pressed={pen}
               >
-                손글씨체 {pen ? '켬' : '끔'}
+                만년필체 {pen ? '켬' : '끔'}
               </button>
             </span>
             <span className="xs faint">샘플 데이터 · 투자 권유가 아닙니다</span>
