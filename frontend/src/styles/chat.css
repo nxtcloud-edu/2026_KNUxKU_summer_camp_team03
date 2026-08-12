@@ -976,27 +976,32 @@
    ───────────────────────────────────────────────────────────── */
 
 .ink-char {
-  display: inline;
-  animation: ink-settle 420ms var(--ease-out) both;
+  /* clip-path를 걸려면 inline이 아니라 inline-block이어야 한다 */
+  display: inline-block;
+  animation: ink-stroke 300ms var(--ease-out) both;
 }
 
-@keyframes ink-settle {
+/* 펜이 글자를 왼쪽에서 오른쪽으로 훑고 지나간다.
+   획순대로 그리려면 글자마다 획 경로 데이터가 있어야 하는데,
+   한글은 완성형만 1만 자가 넘어 현실적으로 불가능하다.
+   대신 훑는 방향과 잉크가 앉는 순서를 맞춰 '쓰는 중'으로 읽히게 했다. */
+@keyframes ink-stroke {
   0% {
-    /* 촉이 막 닿은 순간 — 잉크가 고여 번져 있다 */
-    opacity: 0;
-    filter: blur(2.4px);
+    clip-path: inset(0 100% 0 0);
+    filter: blur(1.6px);
     color: var(--gold);
+    transform: translateY(0.4px);
   }
-  35% {
-    opacity: 1;
-    filter: blur(1.1px);
+  60% {
+    clip-path: inset(0 0 0 0);
+    filter: blur(0.7px);
     color: var(--gold-deep);
   }
   100% {
-    /* 마른 잉크 */
-    opacity: 1;
+    clip-path: inset(0 0 0 0);
     filter: blur(0);
     color: var(--ink);
+    transform: translateY(0);
   }
 }
 
@@ -1036,30 +1041,23 @@
 }
 
 /* ─────────────────────────────────────────────────────────────
-   본문 만년필 모드
-   · 나눔손글씨 펜을 썼다가 물렀다. 그건 볼펜·사인펜 손글씨라
-     키울수록 귀여워지지 우아해지지 않는다. 만년필과는 다른 필기구다.
+   만년필체는 '답변'에 쓴다
+   · 질문은 사용자가 자판으로 친 글이다. 그대로 Pretendard로 둔다.
+   · 답변은 에이전트가 펜으로 써 주는 글이다. 여기에 만년필 명조를 쓴다.
+     잉크가 앉는 애니메이션과 붙어야 "쓰고 있다"는 인상이 완성된다.
    · 고운바탕은 만년필로 눌러 쓴 명조다. 세로획이 굵고 가로획이 얇아
-     펜촉의 필압이 그대로 남는다. 한글·영문·숫자가 한 손으로 이어진다.
-   · 크기는 본문 크기를 지킨다. 명조는 키우지 않아도 읽히고,
-     오히려 키우면 우아함이 아니라 둔함이 된다.
+     펜촉의 필압이 글자에 남는다.
+   · 크기는 본문 크기를 지킨다. 명조는 자면이 작아 보여 2px만 올린다.
    ───────────────────────────────────────────────────────────── */
 
-.chat-text.pen,
-.bubble-user.pen {
+.chat-text.pen {
   font-family: var(--font-display);
   font-weight: 400;
-  /* 산세리프보다 자면이 작아 보이므로 아주 조금만 올린다 */
   font-size: 16.5px;
   line-height: 1.95;
   /* 명조는 자간을 살짝 벌려야 획이 숨을 쉰다 */
   letter-spacing: 0.005em;
-}
-
-/* 어두운 바탕에서는 얇은 가로획이 날아간다. 굵기를 한 단계 올린다 */
-.bubble-user.pen {
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  color: var(--ink);
 }
 
 /* 잉크가 앉는 시간 — 명조는 획이 정갈해서 오래 끌 필요가 없다 */

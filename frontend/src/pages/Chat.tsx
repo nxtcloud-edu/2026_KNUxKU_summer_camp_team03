@@ -46,16 +46,31 @@ let seq = 0
 const nextId = () => `m${++seq}`
 
 /** 손글씨 리듬 — 사람이 쓰듯 고르지 않게 흘린다.
- *  기계적으로 균일하면 아무리 꾸며도 '출력'으로 읽힌다.
- *  실제 SSE로 바꾸면 이 함수는 사라지고 서버가 주는 토큰 간격을 그대로 쓴다. */
+ *
+ *  균일한 속도가 '출력'처럼 보이게 만드는 가장 큰 원인이다. 글자마다
+ *  쓰는 데 걸리는 시간이 실제로 다르다는 점을 그대로 반영했다.
+ *
+ *    한글 한 음절   획이 여럿이라 오래 걸린다
+ *    영문·숫자      획이 적어 빠르다
+ *    띄어쓰기       펜을 종이에서 뗀다
+ *    문장 끝        손이 멈추고 다음 문장을 생각한다
+ *
+ *  실제 SSE로 바꾸면 이 함수는 사라지고 서버가 주는 토큰 간격을 쓴다.
+ */
 function penDelay(ch: string): number {
-  // 문장을 맺고 나면 손이 잠깐 멈춘다
-  if ('.!?'.includes(ch)) return 260
-  if (ch === '\n') return 180
-  // 쉼표와 가운뎃점에서는 살짝
-  if (',·'.includes(ch)) return 95
-  // 나머지는 미세하게 흔들리는 속도
-  return 11 + Math.random() * 9
+  // 문장을 맺고 나면 손이 쉰다
+  if ('.!?'.includes(ch)) return 300 + Math.random() * 90
+  if (ch === '\n') return 200
+  if (',·'.includes(ch)) return 130 + Math.random() * 40
+  // 펜을 떼는 순간
+  if (ch === ' ') return 52 + Math.random() * 26
+
+  // 한글 음절 — 획이 많아 가장 오래 걸린다
+  if (/[가-힣]/.test(ch)) return 34 + Math.random() * 26
+  // 영문·숫자 — 획이 적다
+  if (/[a-zA-Z0-9]/.test(ch)) return 19 + Math.random() * 14
+
+  return 24 + Math.random() * 16
 }
 
 export default function Chat() {
@@ -65,7 +80,7 @@ export default function Chat() {
   const [busy, setBusy] = useState(false)
   const [trace, setTrace] = useState<TraceStep[]>([])
   const [traceOpen, setTraceOpen] = useState(false)
-  /** 본문 필기체 모드. 기본 켬 — 끄면 Pretendard로 돌아간다 */
+  /** 답변 본문을 만년필 명조로 쓸지. 질문은 사용자가 친 글이라 그대로 둔다. */
   const [pen, setPen] = useState<boolean>(
     () => localStorage.getItem('quill.pen') !== 'off',
   )
@@ -300,7 +315,7 @@ export default function Chat() {
             {msgs.map((m) =>
               m.role === 'user' ? (
                 <div className="bubble-row user" key={m.id}>
-                  <div className={`bubble bubble-user${pen ? ' pen' : ''}`}>{m.text}</div>
+                  <div className="bubble bubble-user">{m.text}</div>
                 </div>
               ) : (
                 <div className="bubble-row agent" key={m.id}>
@@ -421,7 +436,7 @@ export default function Chat() {
                 onClick={() => setPen((v) => !v)}
                 aria-pressed={pen}
               >
-                만년필체 {pen ? '켬' : '끔'}
+                답변 만년필체 {pen ? '켬' : '끔'}
               </button>
             </span>
             <span className="xs faint">샘플 데이터 · 투자 권유가 아닙니다</span>
