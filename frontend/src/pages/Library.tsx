@@ -1,0 +1,128 @@
+import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ALL_TAGS, DEMO_TODAY, REPORTS } from '../lib/mock'
+import { isPublished } from '../lib/overrides'
+import { readTag, sinceDays } from '../lib/format'
+import { Empty, Reveal } from '../components/ui'
+import { IconSearch } from '../components/icons'
+
+export default function Library() {
+  const nav = useNavigate()
+  const [q, setQ] = useState('')
+  const [tag, setTag] = useState<string | null>(null)
+
+  const list = useMemo(() => {
+    const needle = q.trim().toLowerCase()
+    return REPORTS.filter((r) => {
+      // 관리자 콘솔에서 보류한 리포트는 서재에 내보내지 않는다
+      if (!isPublished(r.id)) return false
+      if (tag && !r.tags.includes(tag)) return false
+      if (!needle) return true
+      return (
+        r.title.toLowerCase().includes(needle) ||
+        r.house.includes(needle) ||
+        r.summary.some((s) => s.toLowerCase().includes(needle))
+      )
+    }).sort((a, b) => (a.date < b.date ? 1 : -1))
+  }, [q, tag])
+
+  return (
+    <div className="container" style={{ padding: 'var(--sp-12) 0 var(--sp-24)' }}>
+      <div className="section-head">
+        <span className="eyebrow">
+          <span className="rule-gold" />
+          리포트 서재
+        </span>
+        <h2 className="mt-4">답변의 근거가 되는 자료들</h2>
+        <p>
+          수집 → 키워드 1차 필터 → 모델 태깅 → 3줄 요약을 거쳐 남은 리포트입니다. 챗봇과
+          포트폴리오가 인용하는 자료는 전부 여기 있습니다.
+        </p>
+      </div>
+
+      <div className="alert alert-warn keep mb-6" style={{ lineHeight: 1.85 }}>
+        ⚠ 아래 리포트는 화면 검증용으로 지어낸 <b>샘플</b>입니다. 실제 증권사가 발간한
+        자료가 아니며, 증권사명·애널리스트명·수치는 형식을 보여 주기 위한 가상의 값입니다.
+      </div>
+
+      <div className="row wrap gap-3 mb-6">
+        <div className="search" style={{ flex: '1 1 280px' }}>
+          <IconSearch size={17} />
+          <input
+            className="input"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="제목, 증권사, 요약에서 찾기"
+            aria-label="리포트 검색"
+          />
+        </div>
+        <span className="small muted num" style={{ flex: 'none' }}>
+          {list.length} / {REPORTS.filter((r) => isPublished(r.id)).length}건
+        </span>
+      </div>
+
+      <div className="row wrap gap-2 mb-8">
+        <button
+          className="chip"
+          aria-pressed={tag === null}
+          onClick={() => setTag(null)}
+        >
+          전체
+        </button>
+        {ALL_TAGS.map((t) => (
+          <button
+            key={t}
+            className="chip"
+            aria-pressed={tag === t}
+            onClick={() => setTag(tag === t ? null : t)}
+          >
+            {readTag(t)}
+          </button>
+        ))}
+      </div>
+
+      {list.length === 0 ? (
+        <Empty
+          title="찾는 리포트가 없습니다"
+          description="검색어를 줄이거나 태그를 풀어 보세요."
+        />
+      ) : (
+        <div className="lib-grid">
+          {list.map((r, i) => (
+            <Reveal key={r.id} delay={Math.min(i, 6) * 40}>
+              <button className="rep" onClick={() => nav(`/library/${r.id}`)}>
+                <div className="rep-meta">
+                  <span className="strong" style={{ color: 'var(--brand)' }}>
+                    {r.house}
+                  </span>
+                  <span>·</span>
+                  <span>{r.analyst}</span>
+                  <span className="spacer" />
+                  <span>{sinceDays(r.date, DEMO_TODAY)}</span>
+                </div>
+
+                <h3>{r.title}</h3>
+
+                <ul className="rep-sum col gap-1">
+                  {r.summary.slice(0, 2).map((s, j) => (
+                    <li key={j} className="clamp-2">
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="row wrap gap-1 mt-1">
+                  {r.tags.map((t) => (
+                    <span key={t} className="tag">
+                      {readTag(t)}
+                    </span>
+                  ))}
+                </div>
+              </button>
+            </Reveal>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

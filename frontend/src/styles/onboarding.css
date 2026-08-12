@@ -1,0 +1,712 @@
+/* ─────────────────────────────────────────────────────────────
+   온보딩 — 왼쪽에 질문, 오른쪽에 즉시 계산되는 결과
+   답을 하나 고칠 때마다 오른쪽이 움직이는 걸 눈으로 보게 한다.
+   "내 답이 숫자에 어떻게 닿는지"가 보여야 끝까지 채운다.
+   ───────────────────────────────────────────────────────────── */
+
+.ob-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: var(--sp-10);
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--sp-10) var(--sp-6) var(--sp-16);
+  align-items: start;
+}
+
+.ob-title {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3.2vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.36;
+  word-break: keep-all;
+  margin-top: var(--sp-4);
+}
+.ob-lead {
+  color: var(--ink-3);
+  max-width: 36em;
+  word-break: keep-all;
+  margin-top: var(--sp-4);
+  line-height: 1.85;
+}
+
+.ob-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  gap: var(--sp-4);
+  margin-top: var(--sp-8);
+}
+
+.ob-item {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-xs);
+  padding: var(--sp-5);
+  transition: box-shadow 0.2s var(--ease);
+}
+.ob-item:focus-within {
+  box-shadow: var(--shadow-sm);
+}
+/* 선택 항목 — 점선으로 필수가 아님을 알린다 */
+.ob-item.addon {
+  background: var(--gold-tint);
+  box-shadow: inset 0 0 0 1px var(--gold-line);
+}
+.ob-q {
+  font-size: var(--t-base);
+  font-weight: 660;
+  letter-spacing: -0.015em;
+}
+.ob-hint {
+  font-size: var(--t-xs);
+  color: var(--ink-4);
+  margin-top: 3px;
+  word-break: keep-all;
+  line-height: 1.6;
+}
+/* 어느 스코어로 흘러가는지 — 설계문서의 maps 칩 */
+.ob-maps {
+  display: inline-block;
+  margin-top: var(--sp-4);
+  font-size: 10.5px;
+  font-weight: 640;
+  letter-spacing: 0.02em;
+  background: var(--surface-band);
+  color: var(--ink-3);
+  border-radius: var(--r-full);
+  padding: 2px 9px;
+}
+
+/* ── 금액 입력 ── */
+.ob-money {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: var(--sp-4);
+  background: var(--surface-sunken);
+  border-radius: var(--r-md);
+  padding: 9px 14px;
+}
+.ob-money input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.ob-won {
+  flex: none;
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+}
+.ob-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+.ob-quick button {
+  font-size: 11px;
+  font-weight: 640;
+  color: var(--ink-3);
+  background: var(--surface-band);
+  border-radius: var(--r-full);
+  padding: 3px 10px;
+  transition: background 0.14s var(--ease), color 0.14s var(--ease);
+}
+.ob-quick button:hover {
+  background: var(--surface-active);
+  color: var(--ink);
+}
+
+/* ── 선택지 ── */
+.ob-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: var(--sp-4);
+}
+.ob-choice {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  text-align: left;
+  background: var(--surface-sunken);
+  border-radius: var(--r-md);
+  padding: 10px 34px 10px 14px;
+  transition: background 0.14s var(--ease), color 0.14s var(--ease);
+}
+.ob-choice:hover {
+  background: var(--surface-hover);
+}
+/* 선택됨 — 골드 면이 아니라 먹색 면. 골드는 강조 한 곳에만 쓴다 */
+.ob-choice.on {
+  background: var(--ink);
+  color: var(--ink-invert);
+}
+.ob-choice-t {
+  font-size: var(--t-sm);
+  font-weight: 640;
+}
+.ob-choice-s {
+  font-size: var(--t-xs);
+  opacity: 0.66;
+}
+.ob-choice-c {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gold-bright);
+}
+
+/* ── MDD 슬라이더 ── */
+.ob-mdd {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-top: var(--sp-4);
+}
+.ob-mdd-v {
+  flex: none;
+  width: 76px;
+  font-family: var(--font-display);
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--danger);
+}
+.ob-mdd input[type="range"],
+.pf-slider input[type="range"] {
+  flex: 1;
+  min-width: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--surface-active);
+  outline: none;
+}
+.ob-mdd input[type="range"]::-webkit-slider-thumb,
+.pf-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 0 0 1.5px var(--gold), var(--shadow-sm);
+  cursor: grab;
+  transition: transform 0.14s var(--ease-out);
+}
+.ob-mdd input[type="range"]::-webkit-slider-thumb:active,
+.pf-slider input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.12);
+  cursor: grabbing;
+}
+.ob-mdd-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--ink-4);
+  margin-top: 4px;
+  padding-left: 92px;
+}
+
+/* ── 선택 항목 묶음 ── */
+.ob-optional {
+  grid-column: 1 / -1;
+}
+.ob-opt-toggle {
+  font-size: var(--t-sm);
+  font-weight: 640;
+  color: var(--gold-deep);
+  background: var(--gold-tint);
+  border-radius: var(--r-md);
+  padding: 11px 18px;
+  width: 100%;
+  text-align: left;
+  box-shadow: inset 0 0 0 1px var(--gold-line);
+  transition: background 0.16s var(--ease);
+}
+.ob-opt-toggle:hover {
+  background: var(--gold-soft);
+}
+.ob-opt-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  gap: var(--sp-4);
+  margin-top: var(--sp-4);
+}
+
+/* ── 오른쪽 · 즉시 계산 ── */
+.ob-live {
+  position: sticky;
+  top: calc(var(--header-h) + var(--sp-6));
+}
+.ob-live-inner {
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-md);
+  padding: var(--sp-6);
+}
+.ob-scores {
+  margin-top: var(--sp-5);
+}
+.ob-score + .ob-score {
+  margin-top: var(--sp-4);
+}
+.ob-score-l {
+  font-size: var(--t-sm);
+  font-weight: 640;
+}
+.ob-score-s {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--ink-4);
+}
+.ob-score-v {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+.ob-score-bar {
+  height: 4px;
+  border-radius: 99px;
+  background: var(--surface-band);
+  overflow: hidden;
+  margin-top: 6px;
+}
+.ob-score-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: var(--ink-3);
+  transition: width 0.34s var(--ease-out);
+}
+/* 최종 점수만 골드로 — 여기가 이 화면의 결론이다 */
+.strong-row .ob-score-v {
+  color: var(--gold-deep);
+}
+.strong-row .ob-score-bar i {
+  background: var(--gold);
+}
+.ob-formula {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  background: var(--surface-sunken);
+  border-radius: var(--r-sm);
+  padding: 7px 11px;
+  text-align: center;
+  margin: var(--sp-4) 0;
+}
+.ob-warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+  border-radius: var(--r-md);
+  padding: 11px 14px;
+  font-size: var(--t-xs);
+  line-height: 1.7;
+  word-break: keep-all;
+  margin-top: var(--sp-5);
+}
+.ob-alloc {
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 1000px) {
+  .ob-shell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-6);
+  }
+  .ob-live {
+    position: static;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   포트폴리오 — 기준 비중과 조정 예시를 나란히
+   슬라이더를 움직이는 즉시 왼쪽 막대가 따라오고, 손을 뗀 뒤
+   에이전트 검토 결과가 한 박자 늦게 도착한다. 그 시차가 이 화면의 내용이다.
+   ───────────────────────────────────────────────────────────── */
+
+.pf-shell {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--sp-10) var(--sp-6) var(--sp-16);
+}
+.pf-head {
+  margin-bottom: var(--sp-8);
+}
+.pf-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: var(--sp-5);
+  align-items: start;
+}
+.pf-card {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--sp-5);
+}
+.pf-card + .pf-card {
+  margin-top: var(--sp-4);
+}
+.pf-card-t {
+  font-size: var(--t-xs);
+  font-weight: 640;
+  color: var(--ink-3);
+}
+.pf-risk {
+  font-family: var(--font-display);
+  font-size: 46px;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+  color: var(--gold-deep);
+}
+.pf-scores {
+  display: flex;
+  gap: var(--sp-5);
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+}
+.pf-scores b {
+  color: var(--ink);
+  margin-left: 4px;
+}
+.pf-slider-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--ink-4);
+  margin-top: 6px;
+}
+
+/* 에이전트 검토 중 — 한 박자 늦게 도착한다는 걸 보여 주는 자리 */
+.pf-reviewing {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: var(--sp-4);
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+}
+.pf-reasons {
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.pf-reason {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.pf-reason-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  margin-top: 7px;
+}
+/* 폐기된 제안 — 감추지 않는다. 무엇을 막았는지가 이 서비스의 증명이다 */
+.pf-rejected {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  margin-top: var(--sp-4);
+  background: var(--surface-sunken);
+  border-radius: var(--r-md);
+  padding: 11px 14px;
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+  line-height: 1.7;
+  word-break: keep-all;
+}
+.pf-rejected svg {
+  flex: none;
+  margin-top: 3px;
+}
+.pf-disc {
+  margin-top: var(--sp-4);
+  font-size: 11px;
+  color: var(--ink-4);
+  line-height: 1.7;
+  word-break: keep-all;
+}
+.pf-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+.pf-side .pf-card + .pf-card {
+  margin-top: 0;
+}
+.pf-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+.pf-pct {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+.pf-prods {
+  margin-top: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.pf-prod {
+  background: var(--surface-sunken);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+}
+.pf-params {
+  background: var(--surface-sunken);
+  border-radius: var(--r-lg);
+  padding: var(--sp-5);
+}
+.pf-param-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+  padding: 5px 0;
+}
+.pf-param-row b {
+  color: var(--ink);
+}
+
+@media (max-width: 1000px) {
+  .pf-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   로그인 · 계정
+   ───────────────────────────────────────────────────────────── */
+
+.auth-shell {
+  min-height: calc(100vh - var(--header-h));
+  display: grid;
+  place-items: center;
+  padding: var(--sp-10) var(--sp-4);
+}
+.auth-card {
+  width: 100%;
+  max-width: 396px;
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-md);
+  padding: var(--sp-8);
+}
+/* 워드마크 — 영문 만년필체가 쓰이는 두 번째이자 마지막 자리 */
+.auth-mark {
+  font-size: 42px;
+  line-height: 1;
+  color: var(--gold);
+  margin-bottom: var(--sp-5);
+}
+.auth-title {
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  word-break: keep-all;
+}
+.auth-lead {
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+  line-height: 1.8;
+  word-break: keep-all;
+  margin-top: var(--sp-3);
+}
+.auth-form {
+  margin-top: var(--sp-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.auth-field span {
+  font-size: var(--t-xs);
+  font-weight: 640;
+  color: var(--ink-2);
+}
+.auth-field input {
+  height: 44px;
+  border: 0;
+  outline: none;
+  background: var(--surface-sunken);
+  border-radius: var(--r-md);
+  padding: 0 14px;
+  font-size: var(--t-base);
+}
+.auth-field input:focus {
+  box-shadow: inset 0 0 0 1.5px var(--gold-line);
+}
+.auth-err {
+  font-size: var(--t-xs);
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+.auth-done {
+  font-size: var(--t-xs);
+  color: var(--ok);
+  background: var(--ok-soft);
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+.auth-switch {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+}
+.auth-switch button {
+  font-size: var(--t-xs);
+  color: var(--ink-3);
+}
+.auth-switch button:hover {
+  color: var(--ink);
+}
+.auth-foot {
+  font-size: 10.5px;
+  line-height: 1.7;
+  color: var(--ink-4);
+  word-break: keep-all;
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--line);
+}
+.auth-note {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  background: var(--surface-sunken);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  font-size: var(--t-xs);
+  line-height: 1.75;
+  color: var(--ink-3);
+  word-break: keep-all;
+  margin-top: var(--sp-5);
+}
+.auth-note svg {
+  flex: none;
+  margin-top: 3px;
+}
+.auth-note code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--surface-band);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.auth-wait {
+  display: grid;
+  place-items: center;
+  min-height: 50vh;
+  color: var(--ink-4);
+  font-size: var(--t-sm);
+}
+
+/* 무방비 경고 — 인증이 꺼진 채 관리자 콘솔이 열려 있을 때 */
+.open-warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: var(--t-xs);
+  line-height: 1.7;
+  padding: 10px 20px;
+  word-break: keep-all;
+  text-align: center;
+}
+
+/* ── 계정 메뉴 ── */
+.acct {
+  position: relative;
+  margin-right: var(--sp-2);
+}
+.acct-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--ink-invert);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+.acct-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 216px;
+  background: var(--surface);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+  z-index: 60;
+}
+.acct-mail {
+  font-size: var(--t-xs);
+  color: var(--ink-3);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+}
+.acct-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-size: var(--t-sm);
+  border-radius: var(--r-sm);
+  padding: 8px 10px;
+  transition: background 0.14s var(--ease);
+}
+.acct-item:hover {
+  background: var(--surface-hover);
+}
+
+/* 인증 미설정 표시 — 로그인 버튼 옆의 작은 점 */
+.login-off {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--warn);
+  margin-left: 2px;
+}
