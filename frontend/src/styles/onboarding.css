@@ -504,3 +504,200 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   로그인 · 계정
+   ───────────────────────────────────────────────────────────── */
+
+.auth-shell {
+  min-height: calc(100vh - var(--header-h));
+  display: grid;
+  place-items: center;
+  padding: var(--sp-10) var(--sp-4);
+}
+.auth-card {
+  width: 100%;
+  max-width: 396px;
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-md);
+  padding: var(--sp-8);
+}
+/* 워드마크 — 영문 만년필체가 쓰이는 두 번째이자 마지막 자리 */
+.auth-mark {
+  font-size: 42px;
+  line-height: 1;
+  color: var(--gold);
+  margin-bottom: var(--sp-5);
+}
+.auth-title {
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  word-break: keep-all;
+}
+.auth-lead {
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+  line-height: 1.8;
+  word-break: keep-all;
+  margin-top: var(--sp-3);
+}
+.auth-form {
+  margin-top: var(--sp-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.auth-field span {
+  font-size: var(--t-xs);
+  font-weight: 640;
+  color: var(--ink-2);
+}
+.auth-field input {
+  height: 44px;
+  border: 0;
+  outline: none;
+  background: var(--surface-sunken);
+  border-radius: var(--r-md);
+  padding: 0 14px;
+  font-size: var(--t-base);
+}
+.auth-field input:focus {
+  box-shadow: inset 0 0 0 1.5px var(--gold-line);
+}
+.auth-err {
+  font-size: var(--t-xs);
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+.auth-done {
+  font-size: var(--t-xs);
+  color: var(--ok);
+  background: var(--ok-soft);
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+.auth-switch {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+}
+.auth-switch button {
+  font-size: var(--t-xs);
+  color: var(--ink-3);
+}
+.auth-switch button:hover {
+  color: var(--ink);
+}
+.auth-foot {
+  font-size: 10.5px;
+  line-height: 1.7;
+  color: var(--ink-4);
+  word-break: keep-all;
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--line);
+}
+.auth-note {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  background: var(--surface-sunken);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  font-size: var(--t-xs);
+  line-height: 1.75;
+  color: var(--ink-3);
+  word-break: keep-all;
+  margin-top: var(--sp-5);
+}
+.auth-note svg {
+  flex: none;
+  margin-top: 3px;
+}
+.auth-note code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--surface-band);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.auth-wait {
+  display: grid;
+  place-items: center;
+  min-height: 50vh;
+  color: var(--ink-4);
+  font-size: var(--t-sm);
+}
+
+/* 무방비 경고 — 인증이 꺼진 채 관리자 콘솔이 열려 있을 때 */
+.open-warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: var(--t-xs);
+  line-height: 1.7;
+  padding: 10px 20px;
+  word-break: keep-all;
+  text-align: center;
+}
+
+/* ── 계정 메뉴 ── */
+.acct {
+  position: relative;
+  margin-right: var(--sp-2);
+}
+.acct-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--ink-invert);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+.acct-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 216px;
+  background: var(--surface);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+  z-index: 60;
+}
+.acct-mail {
+  font-size: var(--t-xs);
+  color: var(--ink-3);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+}
+.acct-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-size: var(--t-sm);
+  border-radius: var(--r-sm);
+  padding: 8px 10px;
+  transition: background 0.14s var(--ease);
+}
+.acct-item:hover {
+  background: var(--surface-hover);
+}

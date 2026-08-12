@@ -12,6 +12,8 @@ import Chat from './pages/Chat'
 import Onboarding from './pages/Onboarding'
 import Portfolio from './pages/Portfolio'
 import Library from './pages/Library'
+import Login from './pages/Login'
+import RequireAuth from './components/RequireAuth'
 import ReportPage from './pages/ReportPage'
 
 import AdminLayout from './admin/AdminLayout'
@@ -40,7 +42,12 @@ export default function App() {
         <Route path="/library/:id" element={<ReportPage />} />
       </Route>
 
-      {/* ── 관리자 콘솔 (별도 셸) ───────────────────── */}
+      <Route path="/login" element={<Login />} />
+
+      {/* ── 관리자 콘솔 (별도 셸) ─────────────────────
+             인증이 켜져 있으면 로그인 없이는 못 들어온다.
+             꺼져 있으면 통과시키되 무방비라는 경고를 띄운다. ── */}
+      <Route element={<RequireAuth admin />}>
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<AdminOverview />} />
         <Route path="ingest" element={<AdminIngest />} />
@@ -50,6 +57,7 @@ export default function App() {
         <Route path="products" element={<AdminProducts />} />
         <Route path="survey" element={<AdminSurvey />} />
         <Route path="quality" element={<AdminQuality />} />
+      </Route>
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { IconArrowRight, IconQuill } from './icons'
 import ChatWidget from './ChatWidget'
 import Notifications from './Notifications'
+import AccountMenu from './AccountMenu'
 import { useProfile } from '../lib/store'
 import { REPORTS } from '../lib/mock'
 
@@ -38,6 +39,8 @@ export function SiteHeader() {
 
         <Notifications />
 
+        <AccountMenu />
+
         <Link className="btn btn-primary btn-sm" to="/onboarding">
           {diagnosis ? '조건 다시 잡기' : '성향 진단'}
           <IconArrowRight size={15} />
@@ -68,7 +71,7 @@ export function SiteFooter() {
           <div className="row gap-8 wrap" style={{ alignItems: 'flex-start' }}>
             <div className="col gap-2">
               <div className="eyebrow mb-2">서비스</div>
-              <Link className="small muted" to="/survey">
+              <Link className="small muted" to="/onboarding">
                 투자 성향 진단
               </Link>
               <Link className="small muted" to="/library">

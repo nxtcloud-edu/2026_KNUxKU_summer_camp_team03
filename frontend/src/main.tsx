@@ -22,17 +22,20 @@ import './styles/admin.css'
 import App from './App'
 import { ProfileProvider } from './lib/store'
 import { CopilotProvider } from './lib/copilot'
+import { AuthProvider } from './lib/auth'
 import { ToastProvider } from './components/ui'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <ToastProvider>
+        <AuthProvider>
         <ProfileProvider>
           <CopilotProvider>
             <App />
           </CopilotProvider>
         </ProfileProvider>
+        </AuthProvider>
       </ToastProvider>
     </BrowserRouter>
   </StrictMode>
