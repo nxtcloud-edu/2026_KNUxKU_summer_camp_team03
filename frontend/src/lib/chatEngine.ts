@@ -10,7 +10,7 @@
  *      받아서 문장에 끼워 넣기만 한다. 문장이 숫자를 만들면 안 된다.
  */
 
-import { CANNED, DIVERGENT, REPORTS, reportById, type DivergentView } from './mock'
+import { CANNED, DIVERGENT, idsByTag, REPORTS, reportById, type DivergentView } from './mock'
 import {
   ALLOCATION_PARAMS,
   applyAdjustments,
@@ -48,18 +48,27 @@ export interface ChatAnswer {
 /* ── 3단계 델타 제안 (시연용 고정 제안) ──────────────────────
    실제로는 Recommendation 에이전트가 오늘 리포트를 읽고 만든다.
    근거 리포트 ID가 반드시 붙는다는 점이 핵심이라 여기서도 붙여 둔다. */
+/** 조정 이유는 지어내지 않는다. 근거 리포트의 제목을 그대로 인용한다.
+ *  실제 증권사가 하지 않은 말을 우리가 만들어 붙이면 인용이 아니라 창작이다.
+ *  실서비스에서는 Recommendation 에이전트가 본문을 읽고 쓰되, 여기서도
+ *  "리포트가 한 말"의 범위를 넘지 않는다. */
+const EVIDENCE_REASON = (() => {
+  const r = reportById(idsByTag('채권-장기-국채', 1)[0])
+  return r ? `${r.house} 「${r.title}」 관점을 반영했습니다.` : '근거 리포트 관점을 반영했습니다.'
+})()
+
 const TODAY_PROPOSALS: Adjustment[] = [
   {
     asset: 'etf',
     delta_pp: -6,
-    evidence_report_id: 'R-2608-011',
-    reason: '금리 인하 사이클 진입으로 장기 국채 매력도가 올라갔습니다.',
+    evidence_report_id: idsByTag('채권-장기-국채', 1)[0],
+    reason: EVIDENCE_REASON,
   },
   {
     asset: 'bond',
     delta_pp: 6,
-    evidence_report_id: 'R-2608-011',
-    reason: '듀레이션 확대 구간이라는 관점을 반영했습니다.',
+    evidence_report_id: idsByTag('채권-장기-국채', 1)[0],
+    reason: EVIDENCE_REASON,
   },
   {
     // 근거가 없는 제안 — 코드가 폐기하는 모습을 보여 주려고 일부러 남겨 뒀다

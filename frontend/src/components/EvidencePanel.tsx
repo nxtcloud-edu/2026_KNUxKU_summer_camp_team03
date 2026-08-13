@@ -93,7 +93,7 @@ export default function EvidencePanel({ cited }: { cited: string[] }) {
       )}
 
       <p className="evi-foot">
-        표시되는 리포트는 화면 검증용 샘플입니다. 실제 증권사 자료가 아닙니다.
+        네이버 리서치에서 수집한 실제 공개 리포트입니다. 요약과 태그는 자동 생성분입니다.
       </p>
     </aside>
   )

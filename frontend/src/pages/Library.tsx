@@ -41,8 +41,9 @@ export default function Library() {
       </div>
 
       <div className="alert alert-warn keep mb-6" style={{ lineHeight: 1.85 }}>
-        ⚠ 아래 리포트는 화면 검증용으로 지어낸 <b>샘플</b>입니다. 실제 증권사가 발간한
-        자료가 아니며, 증권사명·애널리스트명·수치는 형식을 보여 주기 위한 가상의 값입니다.
+        ⚠ 네이버 리서치에서 실제로 수집한 <b>공개 리포트</b>입니다. 제목·증권사·발행일과
+        원문 링크는 실제 값이며, 3줄 요약과 상품군 태그는 자동으로 붙인 것이라 검수 전입니다.
+        어떤 내용도 투자 권유가 아닙니다.
       </div>
 
       <div className="row wrap gap-3 mb-6">

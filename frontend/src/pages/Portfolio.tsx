@@ -23,7 +23,7 @@ import {
   type Adjustment,
   type Weights,
 } from '../lib/quant'
-import { PRODUCTS, reportById } from '../lib/mock'
+import { idsByTag, PRODUCTS, reportById } from '../lib/mock'
 import { DISCLAIMER } from '../lib/guardrails'
 import AllocBar from '../components/AllocBar'
 import { SourceList } from '../components/Evidence'
@@ -31,18 +31,27 @@ import { IconArrowRight, IconShield } from '../components/icons'
 
 /** 오늘의 델타 제안 — 실제로는 Recommendation 에이전트가 만든다.
  *  근거 없는 제안 하나를 일부러 섞어, 코드가 폐기하는 모습을 보여 준다. */
+/** 조정 이유는 지어내지 않는다. 근거 리포트의 제목을 그대로 인용한다.
+ *  실제 증권사가 하지 않은 말을 우리가 만들어 붙이면 인용이 아니라 창작이다.
+ *  실서비스에서는 Recommendation 에이전트가 본문을 읽고 쓰되, 여기서도
+ *  "리포트가 한 말"의 범위를 넘지 않는다. */
+const EVIDENCE_REASON = (() => {
+  const r = reportById(idsByTag('채권-장기-국채', 1)[0])
+  return r ? `${r.house} 「${r.title}」 관점을 반영했습니다.` : '근거 리포트 관점을 반영했습니다.'
+})()
+
 const PROPOSALS: Adjustment[] = [
   {
     asset: 'etf',
     delta_pp: -6,
-    evidence_report_id: 'R-2608-011',
-    reason: '금리 인하 사이클 진입으로 장기 국채 매력도가 올라갔습니다.',
+    evidence_report_id: idsByTag('채권-장기-국채', 1)[0],
+    reason: EVIDENCE_REASON,
   },
   {
     asset: 'bond',
     delta_pp: 6,
-    evidence_report_id: 'R-2608-011',
-    reason: '듀레이션 확대 구간이라는 관점을 반영했습니다.',
+    evidence_report_id: idsByTag('채권-장기-국채', 1)[0],
+    reason: EVIDENCE_REASON,
   },
   {
     asset: 'etf',

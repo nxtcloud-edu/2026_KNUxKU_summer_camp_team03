@@ -440,7 +440,7 @@ export default function Chat() {
                 답변 만년필체 {pen ? '켬' : '끔'}
               </button>
             </span>
-            <span className="xs faint">샘플 데이터 · 투자 권유가 아닙니다</span>
+            <span className="xs faint">실제 수집 리포트 · 투자 권유가 아닙니다</span>
           </div>
           {traceOpen && !!trace.length && <AgentTrace steps={trace} />}
         </div>

@@ -18,7 +18,7 @@ import {
   baselineWeights,
   type Adjustment,
 } from '../lib/quant'
-import { NOTIFICATIONS, reportById } from '../lib/mock'
+import { idsByTag, NOTIFICATIONS, reportById } from '../lib/mock'
 import { loadConversations, unlockVault, vaultExists, type Conversation } from '../lib/vault'
 import AllocBar from '../components/AllocBar'
 import { IconArrowRight, IconBell, IconBook, IconShield } from '../components/icons'
@@ -46,13 +46,13 @@ const PROPOSALS: Adjustment[] = [
   {
     asset: 'etf',
     delta_pp: -6,
-    evidence_report_id: 'R-2608-011',
+    evidence_report_id: idsByTag('채권-장기-국채', 1)[0],
     reason: '금리 인하 사이클 진입',
   },
   {
     asset: 'bond',
     delta_pp: 6,
-    evidence_report_id: 'R-2608-011',
+    evidence_report_id: idsByTag('채권-장기-국채', 1)[0],
     reason: '듀레이션 확대 구간',
   },
 ]
