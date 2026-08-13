@@ -189,7 +189,7 @@ def _handle_persona(req: ChatRequest) -> ChatResponse:
     news = _maybe_news(req.message, tags, reports, trace)
 
     # ── 페르소나 3명 호출 ──
-    text, used_llm = persona_agent.answer_persona(
+    personas_list, used_llm = persona_agent.answer_persona(
         req.message, reports, news=news, profile_ctx=_profile_ctx(req.profile))
     trace.append(_step("Analysis", "페르소나 3명 의견",
                        f"근거 {len(evidence)}건 · 뉴스 {len(news) if news else 0}건 · "
@@ -197,10 +197,11 @@ def _handle_persona(req: ChatRequest) -> ChatResponse:
 
     # ── STM 기록 ──
     store.append(sess, "user", req.message, "persona")
-    store.append(sess, "assistant", text, "persona", evidence)
+    store.append(sess, "assistant", "", "persona", evidence)
     sess.seen_report_ids.update(evidence)
 
-    return ChatResponse(text=text, evidence=evidence, trace=trace,
+    return ChatResponse(text="", personas=personas_list, disclaimer=DISCLAIMER,
+                        evidence=evidence, trace=trace,
                         session_id=sess.session_id, turn_type="persona",
                         used_llm=used_llm)
 

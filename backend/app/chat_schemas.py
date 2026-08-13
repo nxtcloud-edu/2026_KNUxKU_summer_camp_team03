@@ -38,8 +38,10 @@ class TraceStepSchema(BaseModel):
 
 
 class ChatResponse(BaseModel):
-    text: str
+    text: str = ""
     evidence: list[str] = []  # 근거 리포트 ID (FE reportById로 카드 렌더)
+    personas: list[dict] | None = None  # mode="persona" 시 페르소나별 응답 배열
+    disclaimer: str | None = None  # mode="persona" 시 면책 문구
     notice: Optional[str] = None  # 가드레일 개입 안내
     trace: list[TraceStepSchema] = []
     session_id: str

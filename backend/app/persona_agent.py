@@ -19,6 +19,7 @@ import os
 
 import requests
 
+from .chat_agent import _strip_contact_info
 from .guardrails import DISCLAIMER, sanitize_output
 from .personas import ALL_PERSONAS
 
@@ -96,29 +97,32 @@ _FAIL_MSG = "지금 답변을 만들지 못했어요."
 
 def answer_persona(question: str, reports: list[dict],
                    news: list[dict] | None = None,
-                   profile_ctx: str = "") -> tuple[str, bool]:
-    """3명의 페르소나 의견을 순차 호출해 합산 텍스트로 반환.
+                   profile_ctx: str = "") -> tuple[list[dict], bool]:
+    """3명의 페르소나 의견을 순차 호출해 dict 배열로 반환.
 
     Returns:
-        (합산 텍스트, LLM을 하나라도 성공적으로 호출했는가)
+        (페르소나별 응답 dict 리스트, LLM을 하나라도 성공적으로 호출했는가)
     """
     user_prompt = _build_user_prompt(question, reports, profile_ctx, news)
-    replies: list[str] = []
+    results: list[dict] = []
     any_success = False
 
     for persona in ALL_PERSONAS:
         try:
             reply = _call_gemini_for_persona(persona["system_prompt"], user_prompt)
             any_success = True
+            message = sanitize_output(_strip_contact_info(reply))
         except (RuntimeError, requests.RequestException, KeyError,
                 IndexError, json.JSONDecodeError) as exc:
             print(f"[persona_agent] {persona['name']} 실패: {exc}", flush=True)
-            reply = _FAIL_MSG
+            message = _FAIL_MSG
 
-        replies.append(
-            f"**{persona['emoji']} {persona['name']} ({persona['label']})**\n{reply}"
-        )
+        results.append({
+            "persona": persona["name"],
+            "label": persona["label"],
+            "emoji": persona["emoji"],
+            "message": message,
+            "evidence": [r["id"] for r in reports],
+        })
 
-    combined = "\n\n".join(replies)
-    combined = sanitize_output(combined) + "\n\n" + DISCLAIMER
-    return combined, any_success
+    return results, any_success

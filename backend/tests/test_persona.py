@@ -6,6 +6,7 @@
 3. 리포트 0건일 때 NO_EVIDENCE_FALLBACK 반환
 4. 훈수 탭 세션이 리서치 탭의 seen_report_ids에 영향 안 주는지
 5. LLM 부분 실패 시에도 나머지 페르소나 응답이 살아있는지
+6. 모든 LLM 실패 시 used_llm=False
 """
 
 from __future__ import annotations
@@ -49,7 +50,7 @@ _SAMPLE_REPORTS = [
 # ── 1. 페르소나 3개가 서로 다른 텍스트를 반환 ─────────────────
 @patch("app.persona_agent._call_gemini_for_persona")
 def test_three_personas_return_different_text(mock_call):
-    """각 페르소나에 대해 다른 텍스트가 조립되는지 확인."""
+    """각 페르소나에 대해 다른 dict가 조립되는지 확인."""
     mock_call.side_effect = [
         "안전마진 관점에서 금리 인하는 장기채 가격 회복 가능성을 높입니다.",
         "사이클 전환 초기 국면이라 장기채 비중을 확대할 시점입니다.",
@@ -58,18 +59,32 @@ def test_three_personas_return_different_text(mock_call):
 
     from app.persona_agent import answer_persona
 
-    text, used_llm = answer_persona("금리 인하되면 어떻게 해야 하나요?", _SAMPLE_REPORTS)
+    personas_list, used_llm = answer_persona("금리 인하되면 어떻게 해야 하나요?", _SAMPLE_REPORTS)
 
     assert used_llm is True
-    assert "김원칙" in text
-    assert "한사이클" in text
-    assert "오선점" in text
-    # 세 응답이 모두 포함
-    assert "안전마진" in text
-    assert "사이클 전환" in text
-    assert "기회비용" in text
-    # DISCLAIMER는 맨 끝에 한 번만
-    assert text.count("투자 권유가 아닙니다") == 1
+    assert len(personas_list) == 3
+
+    # 각 dict에 필수 키가 있는지
+    for d in personas_list:
+        assert "persona" in d
+        assert "label" in d
+        assert "emoji" in d
+        assert "message" in d
+        assert "evidence" in d
+
+    # 세 응답이 모두 다름
+    messages = [d["message"] for d in personas_list]
+    assert len(set(messages)) == 3
+
+    # 개별 페르소나 확인
+    assert "안전마진" in personas_list[0]["message"]
+    assert "사이클 전환" in personas_list[1]["message"]
+    assert "기회비용" in personas_list[2]["message"]
+
+    # 페르소나 이름 확인
+    assert personas_list[0]["persona"] == "김원칙"
+    assert personas_list[1]["persona"] == "한사이클"
+    assert personas_list[2]["persona"] == "오선점"
 
 
 # ── 2. sanitize_output이 한 번만 적용되는지 ──────────────────
@@ -84,12 +99,11 @@ def test_sanitize_applied_once(mock_call):
 
     from app.persona_agent import answer_persona
 
-    text, _ = answer_persona("ETF 뭐가 좋아요?", _SAMPLE_REPORTS)
+    personas_list, _ = answer_persona("ETF 뭐가 좋아요?", _SAMPLE_REPORTS)
 
-    assert "추천합니다" not in text
-    assert "해설해 드립니다" in text
-    # 이중 치환 없음
-    assert text.count("해설해 드립니다") == 1
+    # 첫 번째 페르소나의 message에서 치환 확인
+    assert "추천합니다" not in personas_list[0]["message"]
+    assert "해설해 드립니다" in personas_list[0]["message"]
 
 
 # ── 3. 리포트 0건 → NO_EVIDENCE_FALLBACK ────────────────────
@@ -107,6 +121,7 @@ def test_no_reports_returns_fallback():
         resp = _handle_persona(req)
 
     assert resp.text == NO_EVIDENCE_FALLBACK
+    assert resp.personas is None
     assert resp.used_llm is False
     assert resp.turn_type == "persona"
 
@@ -149,12 +164,12 @@ def test_partial_llm_failure(mock_call):
 
     from app.persona_agent import answer_persona
 
-    text, used_llm = answer_persona("장기채 비중 늘릴까?", _SAMPLE_REPORTS)
+    personas_list, used_llm = answer_persona("장기채 비중 늘릴까?", _SAMPLE_REPORTS)
 
     assert used_llm is True  # 하나라도 성공했으므로 True
-    assert "지금 답변을 만들지 못했어요" in text  # 실패한 자리
-    assert "사이클 관점" in text  # 한사이클 성공
-    assert "성장 테마" in text  # 오선점 성공
+    assert personas_list[0]["message"] == "지금 답변을 만들지 못했어요."  # 실패한 자리
+    assert "사이클 관점" in personas_list[1]["message"]  # 한사이클 성공
+    assert "성장 테마" in personas_list[2]["message"]  # 오선점 성공
 
 
 # ── 6. 모든 LLM 실패 시 used_llm=False ──────────────────────
@@ -169,9 +184,8 @@ def test_all_llm_failure(mock_call):
 
     from app.persona_agent import answer_persona
 
-    text, used_llm = answer_persona("금리 전망?", _SAMPLE_REPORTS)
+    personas_list, used_llm = answer_persona("금리 전망?", _SAMPLE_REPORTS)
 
     assert used_llm is False
-    assert text.count("지금 답변을 만들지 못했어요") == 3
-    # DISCLAIMER는 여전히 붙음
-    assert "투자 권유가 아닙니다" in text
+    for d in personas_list:
+        assert d["message"] == "지금 답변을 만들지 못했어요."
