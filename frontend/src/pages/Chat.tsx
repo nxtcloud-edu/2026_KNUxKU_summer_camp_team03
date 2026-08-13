@@ -10,7 +10,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { type ChatAnswer, type TraceStep } from '../lib/chatEngine'
-import { askChat } from '../lib/api'
+import { askChat, clearSession } from '../lib/api'
 import { useCopilot } from '../lib/copilot'
 import type { RiskProfile } from '../lib/quant'
 import { reportById, SUGGESTS } from '../lib/mock'
@@ -172,9 +172,11 @@ export default function Chat() {
   }
 
   const newChat = () => {
-    setMsgs([])
+    setChatMsgs([])
+    setPersonaMsgs([])
     setActive(null)
     setTrace([])
+    clearSession()
   }
 
   const openConvo = (id: string) => {

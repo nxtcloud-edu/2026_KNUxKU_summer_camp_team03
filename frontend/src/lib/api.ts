@@ -15,7 +15,24 @@ import type { RiskProfile } from './quant'
 const API_BASE = (import.meta as any).env?.VITE_API_URL ?? 'http://localhost:8000'
 const TIMEOUT_MS = 15000
 
-let sessionId: string | null = null
+const SESSION_KEY_CHAT = 'quill.session.chat'
+const SESSION_KEY_PERSONA = 'quill.session.persona'
+
+function _loadSessionId(mode: 'chat' | 'persona'): string | null {
+  const key = mode === 'persona' ? SESSION_KEY_PERSONA : SESSION_KEY_CHAT
+  return localStorage.getItem(key)
+}
+
+function _saveSessionId(mode: 'chat' | 'persona', id: string): void {
+  const key = mode === 'persona' ? SESSION_KEY_PERSONA : SESSION_KEY_CHAT
+  localStorage.setItem(key, id)
+}
+
+/** 새 대화 시작 시 호출 — 기존 세션 삭제 */
+export function clearSession(mode?: 'chat' | 'persona'): void {
+  if (!mode || mode === 'chat') localStorage.removeItem(SESSION_KEY_CHAT)
+  if (!mode || mode === 'persona') localStorage.removeItem(SESSION_KEY_PERSONA)
+}
 
 interface ServerChatResponse {
   text: string
@@ -35,6 +52,7 @@ export async function askChat(
   try {
     const ctrl = new AbortController()
     const timer = window.setTimeout(() => ctrl.abort(), TIMEOUT_MS)
+    const sessionId = _loadSessionId(mode)
 
     const res = await fetch(`${API_BASE}/api/chat`, {
       method: 'POST',
@@ -58,7 +76,7 @@ export async function askChat(
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
     const data = (await res.json()) as ServerChatResponse
-    sessionId = data.session_id
+    _saveSessionId(mode, data.session_id)
 
     return {
       text: data.text,
