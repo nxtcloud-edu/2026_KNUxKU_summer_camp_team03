@@ -23,8 +23,10 @@ load_dotenv()
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
 
 from . import quant
+from .agent_supervisor import run as run_agent_supervisor
 from .chat_schemas import ChatRequest, ChatResponse
 from .supervisor import handle as handle_chat
 from .gemini_agent import propose_adjustments
@@ -174,3 +176,23 @@ def chat(body: ChatRequest):
     실패해도 500을 내지 않는다 — 폴백 문구가 항상 준비돼 있다.
     """
     return handle_chat(body)
+
+
+class AgentChatRequest(BaseModel):
+    message: str = Field(..., min_length=1, max_length=1000)
+
+
+class AgentChatResponse(BaseModel):
+    text: str
+    tools_called: list[str] = []
+
+
+@app.post("/api/agent-chat", response_model=AgentChatResponse)
+def agent_chat(body: AgentChatRequest):
+    """Agent-as-Tool Supervisor — LLM이 report_retriever/evidence_finder/
+    portfolio_builder 중 무엇을 호출할지 직접 판단한다.
+
+    기존 /api/chat(supervisor.py + triage.py)과는 완전히 별개의 새 경로다.
+    """
+    result = run_agent_supervisor(body.message)
+    return AgentChatResponse(text=result["text"], tools_called=result["tools_called"])
