@@ -1,0 +1,508 @@
+[
+  {
+    "id": "P-357870",
+    "name": "TIGER CD금리투자KIS(합성)",
+    "ticker": "357870",
+    "asset": "cash",
+    "tag": "채권-단기-국채",
+    "expected": 3.0,
+    "fee": 0.03,
+    "risk": 1,
+    "desc": "KIS CD Index(총수익) 지수를 추종하는 합성(패시브) 상품",
+    "why": "비상금 목적의 안전한 현금성 자산이에요.",
+    "sources": [],
+    "theme_keywords": []
+  },
+  {
+    "id": "P-488770",
+    "name": "KODEX 머니마켓액티브",
+    "ticker": "488770",
+    "asset": "cash",
+    "tag": "채권-단기-국채",
+    "expected": 3.0,
+    "fee": 0.05,
+    "risk": 1,
+    "desc": "KAP MMF 지수(TR) 지수를 추종하는 실물(액티브) 상품",
+    "why": "비상금 목적의 안전한 현금성 자산이에요.",
+    "sources": [],
+    "theme_keywords": []
+  },
+  {
+    "id": "P-453010",
+    "name": "PLUS KOFR금리",
+    "ticker": "453010",
+    "asset": "cash",
+    "tag": "채권-단기-국채",
+    "expected": 3.0,
+    "fee": 0.05,
+    "risk": 1,
+    "desc": "KOFR 지수 지수를 추종하는 실물(패시브) 상품",
+    "why": "비상금 목적의 안전한 현금성 자산이에요.",
+    "sources": [],
+    "theme_keywords": []
+  },
+  {
+    "id": "P-114100",
+    "name": "RISE 국고채3년",
+    "ticker": "114100",
+    "asset": "govShort",
+    "tag": "채권-단기-국채",
+    "expected": 3.5,
+    "fee": 0.115,
+    "risk": 2,
+    "desc": "KTB INDEX(시장가격) 지수를 추종하는 실물(패시브) 상품",
+    "why": "단기 국채로 안정적인 이자를 받을 수 있어요.",
+    "sources": [],
+    "theme_keywords": []
+  },
+  {
+    "id": "P-196230",
+    "name": "RISE 단기통안채",
+    "ticker": "196230",
+    "asset": "govShort",
+    "tag": "채권-단기-국채",
+    "expected": 3.5,
+    "fee": 0.13,
+    "risk": 2,
+    "desc": "KIS 통안채 5개월 지수(총수익) 지수를 추종하는 실물(패시브) 상품",
+    "why": "단기 국채로 안정적인 이자를 받을 수 있어요.",
+    "sources": [],
+    "theme_keywords": []
+  },
+  {
+    "id": "P-122260",
+    "name": "KIWOOM 통안채1년",
+    "ticker": "122260",
+    "asset": "govShort",
+    "tag": "채권-단기-국채",
+    "expected": 3.5,
+    "fee": 0.05,
+    "risk": 2,
+    "desc": "MK 통안채지수(총수익) 지수를 추종하는 실물(패시브) 상품",
+    "why": "단기 국채로 안정적인 이자를 받을 수 있어요.",
+    "sources": [],
+    "theme_keywords": []
+  },
+  {
+    "id": "P-148070",
+    "name": "KIWOOM 국고채10년",
+    "ticker": "148070",
+    "asset": "govLong",
+    "tag": "채권-장기-국채",
+    "expected": 4.0,
+    "fee": 0.05,
+    "risk": 3,
+    "desc": "KIS 10년 국고채 지수(총수익) 지수를 추종하는 실물(패시브) 상품",
+    "why": "장기 국채로 금리 인하 시 시세 차익을 기대할 수 있어요.",
+    "sources": [],
+    "theme_keywords": []
+  },
+  {
+    "id": "P-385560",
+    "name": "RISE KIS국고채30년Enhanced",
+    "ticker": "385560",
+    "asset": "govLong",
+    "tag": "채권-장기-국채",
+    "expected": 4.0,
+    "fee": 0.05,
+    "risk": 3,
+    "desc": "KIS 국고채30년Enhanced지수(시장가격) 지수를 추종하는 실물(패시브) 상품",
+    "why": "장기 국채로 금리 인하 시 시세 차익을 기대할 수 있어요.",
+    "sources": [],
+    "theme_keywords": []
+  },
+  {
+    "id": "P-439870",
+    "name": "KODEX 국고채30년액티브",
+    "ticker": "439870",
+    "asset": "govLong",
+    "tag": "채권-장기-국채",
+    "expected": 4.0,
+    "fee": 0.05,
+    "risk": 3,
+    "desc": "KAP 국고채 30년 총수익 지수 지수를 추종하는 실물(액티브) 상품",
+    "why": "장기 국채로 금리 인하 시 시세 차익을 기대할 수 있어요.",
+    "sources": [],
+    "theme_keywords": []
+  },
+  {
+    "id": "P-136340",
+    "name": "RISE 중기우량회사채",
+    "ticker": "136340",
+    "asset": "corp",
+    "tag": "채권-회사채",
+    "expected": 4.5,
+    "fee": 0.07,
+    "risk": 3,
+    "desc": "KOBI 크레딧 지수(총수익) 지수를 추종하는 실물(패시브) 상품",
+    "why": "우량 회사채로 국채보다 조금 높은 수익을 추구해요.",
+    "sources": [],
+    "theme_keywords": []
+  },
+  {
+    "id": "P-438330",
+    "name": "TIGER 우량회사채액티브",
+    "ticker": "438330",
+    "asset": "corp",
+    "tag": "채권-회사채",
+    "expected": 4.5,
+    "fee": 0.1,
+    "risk": 3,
+    "desc": "KIS 투자등급회사채 지수(총수익) 지수를 추종하는 실물(액티브) 상품",
+    "why": "우량 회사채로 국채보다 조금 높은 수익을 추구해요.",
+    "sources": [],
+    "theme_keywords": []
+  },
+  {
+    "id": "P-0099L0",
+    "name": "ACE 우량회사채(AA-이상)액티브",
+    "ticker": "0099L0",
+    "asset": "corp",
+    "tag": "채권-회사채",
+    "expected": 4.5,
+    "fee": 0.095,
+    "risk": 3,
+    "desc": "KIS 1~3년 우량크레딧(AA-이상) 총수익지수 지수를 추종하는 실물(액티브) 상품",
+    "why": "우량 회사채로 국채보다 조금 높은 수익을 추구해요.",
+    "sources": [],
+    "theme_keywords": []
+  },
+  {
+    "id": "P-069500",
+    "name": "KODEX 200",
+    "ticker": "069500",
+    "asset": "etfPassive",
+    "tag": "ETF-패시브-지수",
+    "expected": 7.0,
+    "fee": 0.15,
+    "risk": 4,
+    "desc": "코스피 200 지수를 추종하는 실물(패시브) 상품",
+    "why": "시장 전체를 따라가는 패시브 ETF예요.",
+    "sources": [],
+    "theme_keywords": []
+  },
+  {
+    "id": "P-360750",
+    "name": "TIGER 미국S&P500",
+    "ticker": "360750",
+    "asset": "etfPassive",
+    "tag": "ETF-패시브-지수",
+    "expected": 7.0,
+    "fee": 0.006,
+    "risk": 4,
+    "desc": "S&P 500 지수를 추종하는 실물(패시브) 상품",
+    "why": "시장 전체를 따라가는 패시브 ETF예요.",
+    "sources": [],
+    "theme_keywords": []
+  },
+  {
+    "id": "P-133690",
+    "name": "TIGER 미국나스닥100",
+    "ticker": "133690",
+    "asset": "etfPassive",
+    "tag": "ETF-패시브-지수",
+    "expected": 7.0,
+    "fee": 0.7,
+    "risk": 4,
+    "desc": "NASDAQ 100 지수를 추종하는 실물(패시브) 상품",
+    "why": "시장 전체를 따라가는 패시브 ETF예요.",
+    "sources": [],
+    "theme_keywords": []
+  },
+  {
+    "id": "P-495940",
+    "name": "RISE 미국AI테크액티브",
+    "ticker": "495940",
+    "asset": "etfActive",
+    "tag": "ETF-액티브-테마",
+    "expected": 9.0,
+    "fee": 0.5,
+    "risk": 5,
+    "desc": "Solactive US AI Tech Active Index PR 지수를 추종하는 실물(액티브) 상품",
+    "why": "AI 산업 성장에 베팅하는 상품이에요.",
+    "sources": [],
+    "theme_keywords": [
+      "AI",
+      "인공지능"
+    ]
+  },
+  {
+    "id": "P-474590",
+    "name": "WON 반도체밸류체인액티브",
+    "ticker": "474590",
+    "asset": "etfActive",
+    "tag": "ETF-액티브-테마",
+    "expected": 9.0,
+    "fee": 0.31,
+    "risk": 5,
+    "desc": "FnGuide 반도체 밸류체인(Price Return) 지수 지수를 추종하는 실물(액티브) 상품",
+    "why": "반도체 산업 성장에 베팅하는 상품이에요.",
+    "sources": [],
+    "theme_keywords": [
+      "반도체",
+      "밸류체인"
+    ]
+  },
+  {
+    "id": "P-422420",
+    "name": "RISE 2차전지액티브",
+    "ticker": "422420",
+    "asset": "etfActive",
+    "tag": "ETF-액티브-테마",
+    "expected": 9.0,
+    "fee": 0.35,
+    "risk": 5,
+    "desc": "iSelect 2차전지 지수(시장가격지수) 지수를 추종하는 실물(액티브) 상품",
+    "why": "2차전지 산업 성장에 베팅하는 상품이에요.",
+    "sources": [],
+    "theme_keywords": [
+      "2차전지",
+      "배터리"
+    ]
+  },
+  {
+    "id": "P-445290",
+    "name": "KODEX 로봇액티브",
+    "ticker": "445290",
+    "asset": "etfActive",
+    "tag": "ETF-액티브-테마",
+    "expected": 9.0,
+    "fee": 0.5,
+    "risk": 5,
+    "desc": "iSelect K-로봇테마 지수 지수를 추종하는 실물(액티브) 상품",
+    "why": "로봇 산업 성장에 베팅하는 상품이에요.",
+    "sources": [],
+    "theme_keywords": [
+      "로봇"
+    ]
+  },
+  {
+    "id": "P-0000Z0",
+    "name": "RISE 바이오TOP10액티브",
+    "ticker": "0000Z0",
+    "asset": "etfActive",
+    "tag": "ETF-액티브-테마",
+    "expected": 9.0,
+    "fee": 0.5,
+    "risk": 5,
+    "desc": "KRX 바이오 TOP 10 지수 지수를 추종하는 실물(액티브) 상품",
+    "why": "바이오 산업 성장에 베팅하는 상품이에요.",
+    "sources": [],
+    "theme_keywords": [
+      "바이오",
+      "헬스케어",
+      "제약"
+    ]
+  },
+  {
+    "id": "P-478150",
+    "name": "TIME 글로벌우주테크&방산액티브",
+    "ticker": "478150",
+    "asset": "etfActive",
+    "tag": "ETF-액티브-테마",
+    "expected": 9.0,
+    "fee": 0.8,
+    "risk": 5,
+    "desc": "Solactive Aerospace and Defense USD Index PR 지수를 추종하는 실물(액티브) 상품",
+    "why": "우주항공 산업 성장에 베팅하는 상품이에요.",
+    "sources": [],
+    "theme_keywords": [
+      "우주항공",
+      "방산",
+      "우주테크"
+    ]
+  },
+  {
+    "id": "P-385510",
+    "name": "KODEX 신재생에너지액티브",
+    "ticker": "385510",
+    "asset": "etfActive",
+    "tag": "ETF-액티브-테마",
+    "expected": 9.0,
+    "fee": 0.5,
+    "risk": 5,
+    "desc": "FnGuide K-신재생에너지 플러스 지수 지수를 추종하는 실물(액티브) 상품",
+    "why": "신재생에너지 산업 성장에 베팅하는 상품이에요.",
+    "sources": [],
+    "theme_keywords": [
+      "신재생에너지",
+      "태양광",
+      "친환경"
+    ]
+  },
+  {
+    "id": "P-385520",
+    "name": "KODEX 자율주행액티브",
+    "ticker": "385520",
+    "asset": "etfActive",
+    "tag": "ETF-액티브-테마",
+    "expected": 9.0,
+    "fee": 0.5,
+    "risk": 5,
+    "desc": "FnGuide K-미래차 지수 지수를 추종하는 실물(액티브) 상품",
+    "why": "자율주행 산업 성장에 베팅하는 상품이에요.",
+    "sources": [],
+    "theme_keywords": [
+      "자율주행",
+      "미래차",
+      "전기차"
+    ]
+  },
+  {
+    "id": "P-445150",
+    "name": "KODEX 친환경조선해운액티브",
+    "ticker": "445150",
+    "asset": "etfActive",
+    "tag": "ETF-액티브-테마",
+    "expected": 9.0,
+    "fee": 0.5,
+    "risk": 5,
+    "desc": "FnGuide K-친환경 선박 지수 지수를 추종하는 실물(액티브) 상품",
+    "why": "조선 산업 성장에 베팅하는 상품이에요.",
+    "sources": [],
+    "theme_keywords": [
+      "조선",
+      "해운",
+      "친환경선박"
+    ]
+  },
+  {
+    "id": "P-0176E0",
+    "name": "RISE 미국AI전력인프라액티브",
+    "ticker": "0176E0",
+    "asset": "etfActive",
+    "tag": "ETF-액티브-테마",
+    "expected": 9.0,
+    "fee": 0.45,
+    "risk": 5,
+    "desc": "Solactive US AI Electricity Infrastructure Index PR 지수를 추종하는 실물(액티브) 상품",
+    "why": "AI전력인프라 산업 성장에 베팅하는 상품이에요.",
+    "sources": [],
+    "theme_keywords": [
+      "AI전력인프라",
+      "데이터센터",
+      "전력망"
+    ]
+  },
+  {
+    "id": "P-0219B0",
+    "name": "KoAct 광통신&위성네트워크액티브",
+    "ticker": "0219B0",
+    "asset": "etfActive",
+    "tag": "ETF-액티브-테마",
+    "expected": 9.0,
+    "fee": 0.5,
+    "risk": 5,
+    "desc": "FnGuide 저궤도위성 & 광통신 인프라 지수 지수를 추종하는 실물(액티브) 상품",
+    "why": "광통신 산업 성장에 베팅하는 상품이에요.",
+    "sources": [],
+    "theme_keywords": [
+      "광통신",
+      "위성네트워크",
+      "저궤도위성"
+    ]
+  },
+  {
+    "id": "P-0020H0",
+    "name": "KoAct 글로벌양자컴퓨팅액티브",
+    "ticker": "0020H0",
+    "asset": "etfActive",
+    "tag": "ETF-액티브-테마",
+    "expected": 9.0,
+    "fee": 0.5,
+    "risk": 5,
+    "desc": "FactSet 글로벌양자컴퓨팅 PR 지수 지수를 추종하는 실물(액티브) 상품",
+    "why": "양자컴퓨팅 산업 성장에 베팅하는 상품이에요.",
+    "sources": [],
+    "theme_keywords": [
+      "양자컴퓨팅",
+      "퀀텀"
+    ]
+  },
+  {
+    "id": "P-0132D0",
+    "name": "KoAct 글로벌K컬처밸류체인액티브",
+    "ticker": "0132D0",
+    "asset": "etfActive",
+    "tag": "ETF-액티브-테마",
+    "expected": 9.0,
+    "fee": 0.5,
+    "risk": 5,
+    "desc": "KEDI 글로벌 K컬처밸류체인 지수(PR) 지수를 추종하는 실물(액티브) 상품",
+    "why": "K컬처 산업 성장에 베팅하는 상품이에요.",
+    "sources": [],
+    "theme_keywords": [
+      "K컬처",
+      "콘텐츠",
+      "엔터"
+    ]
+  },
+  {
+    "id": "P-401470",
+    "name": "KODEX 메타버스액티브",
+    "ticker": "401470",
+    "asset": "etfActive",
+    "tag": "ETF-액티브-테마",
+    "expected": 9.0,
+    "fee": 0.5,
+    "risk": 5,
+    "desc": "FnGuide K-메타버스 지수 지수를 추종하는 실물(액티브) 상품",
+    "why": "메타버스 산업 성장에 베팅하는 상품이에요.",
+    "sources": [],
+    "theme_keywords": [
+      "메타버스",
+      "가상현실"
+    ]
+  },
+  {
+    "id": "P-0015K0",
+    "name": "TIGER 미국소비트렌드액티브",
+    "ticker": "0015K0",
+    "asset": "etfActive",
+    "tag": "ETF-액티브-테마",
+    "expected": 9.0,
+    "fee": 0.79,
+    "risk": 5,
+    "desc": "Mirae Asset US Consumer Trend 지수(PR) 지수를 추종하는 실물(액티브) 상품",
+    "why": "소비트렌드 산업 성장에 베팅하는 상품이에요.",
+    "sources": [],
+    "theme_keywords": [
+      "소비트렌드",
+      "컨슈머"
+    ]
+  },
+  {
+    "id": "P-495230",
+    "name": "KoAct 코리아밸류업액티브",
+    "ticker": "495230",
+    "asset": "etfActive",
+    "tag": "ETF-액티브-테마",
+    "expected": 9.0,
+    "fee": 0.5,
+    "risk": 5,
+    "desc": "코리아 밸류업 지수 지수를 추종하는 실물(액티브) 상품",
+    "why": "코리아밸류업 산업 성장에 베팅하는 상품이에요.",
+    "sources": [],
+    "theme_keywords": [
+      "코리아밸류업",
+      "주주환원"
+    ]
+  },
+  {
+    "id": "P-497780",
+    "name": "KoAct 미국천연가스인프라액티브",
+    "ticker": "497780",
+    "asset": "etfActive",
+    "tag": "ETF-액티브-테마",
+    "expected": 9.0,
+    "fee": 0.5,
+    "risk": 5,
+    "desc": "Solactive 미국천연가스인프라 PR 지수 지수를 추종하는 실물(액티브) 상품",
+    "why": "천연가스 산업 성장에 베팅하는 상품이에요.",
+    "sources": [],
+    "theme_keywords": [
+      "천연가스",
+      "에너지인프라"
+    ]
+  }
+]

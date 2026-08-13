@@ -61,12 +61,65 @@ SYSTEM_PROMPT = """당신은 Quill의 해설 에이전트입니다. Quill은 증
 3. 리포트 간 관점이 갈리면 우열을 가리지 않고 나란히 소개합니다.
 4. 답변에 인용한 리포트는 (증권사, 제목) 형태로 본문에 자연스럽게 밝힙니다.
 5. 사용자의 이해 수준에 맞는 말투로 씁니다: beginner는 비유 중심으로 쉽게, intermediate는 용어를 쓰되 풀어서, advanced는 간결하고 전문적으로.
-6. 4~8문장, 존댓말. 마지막 문장은 반드시 면책 문구 없이 끝냅니다(면책은 시스템이 붙입니다)."""
+6. 4~8문장, 존댓말. 마지막 문장은 반드시 면책 문구 없이 끝냅니다(면책은 시스템이 붙입니다).
+7. 상품 목록이 제공되면 해당 상품명을 자연스럽게 언급할 수 있습니다. 단 "추천"이 아니라 "이런 상품이 있다"는 안내만 합니다."""
+
+
+# ── 상품 질문 감지 ──────────────────────────────────────────────
+import re as _re
+
+_PRODUCT_QUERY_PAT = _re.compile(
+    r"상품|뭐\s?있|뭘\s?살\s?수|어떤\s?(etf|상품|채권|펀드)|종류|목록|리스트"
+    r"|추천.*(etf|상품|채권)|etf.*(뭐|뭘|어떤|종류|있)",
+    _re.I,
+)
+_ASSET_HINTS = [
+    (_re.compile(r"패시브|인덱스|지수\s?추종", _re.I), "etfPassive"),
+    (_re.compile(r"액티브|테마", _re.I), "etfActive"),
+    (_re.compile(r"현금|mmf|cd금리|머니마켓", _re.I), "cash"),
+    (_re.compile(r"단기채|단기\s?국채|통안채", _re.I), "govShort"),
+    (_re.compile(r"장기채|장기\s?국채|10년|30년", _re.I), "govLong"),
+    (_re.compile(r"회사채|크레딧", _re.I), "corp"),
+]
+_THEME_HINTS = [
+    (_re.compile(r"ai|인공지능", _re.I), "AI"),
+    (_re.compile(r"반도체"), "반도체"),
+    (_re.compile(r"2차전지|배터리"), "2차전지"),
+    (_re.compile(r"로봇"), "로봇"),
+    (_re.compile(r"바이오|헬스케어|제약"), "바이오"),
+    (_re.compile(r"우주|방산"), "우주항공"),
+    (_re.compile(r"신재생|태양광|친환경에너지"), "신재생에너지"),
+    (_re.compile(r"자율주행|전기차|미래차"), "자율주행"),
+    (_re.compile(r"조선|해운"), "조선"),
+    (_re.compile(r"양자|퀀텀"), "양자컴퓨팅"),
+    (_re.compile(r"메타버스|가상현실"), "메타버스"),
+    (_re.compile(r"전력.*인프라|데이터센터"), "AI전력인프라"),
+]
+
+
+def _detect_product_query(question: str) -> dict | None:
+    """질문에서 상품 검색 의도를 감지. 없으면 None 반환."""
+    if not _PRODUCT_QUERY_PAT.search(question):
+        return None
+
+    kwargs: dict = {}
+    for pat, asset in _ASSET_HINTS:
+        if pat.search(question):
+            kwargs["asset_hint"] = asset
+            break
+    for pat, theme in _THEME_HINTS:
+        if pat.search(question):
+            kwargs["theme_keyword"] = theme
+            break
+
+    return kwargs if kwargs else {"asset_hint": None}  # 힌트 없으면 전체 검색
 
 
 def _build_user_prompt(question: str, reports: list[dict],
                        profile_ctx: str, history_ctx: str,
                        news: list[dict] | None = None) -> str:
+    from .product_store import format_products_for_prompt, search_products
+
     parts = []
     if reports:
         lines = []
@@ -83,6 +136,14 @@ def _build_user_prompt(question: str, reports: list[dict],
                   for n in news]
         parts.append("## 최신 뉴스 (보조 근거 — 인용 시 '(로이터 8/10 보도)'처럼 출처·날짜를 밝힐 것)\n"
                      + "\n".join(nlines))
+
+    # 상품 관련 키워드가 질문에 있으면 관련 상품 목록 주입
+    _product_hints = _detect_product_query(question)
+    if _product_hints:
+        prods = search_products(**_product_hints)
+        prod_text = format_products_for_prompt(prods)
+        if prod_text:
+            parts.append(prod_text)
     if profile_ctx:
         parts.append("## 사용자 컨텍스트\n" + profile_ctx)
     if history_ctx:
