@@ -47,7 +47,7 @@ NAVER_WHITELIST = [
 
 # 해외/국내 이슈 판별 — triage 태그와 별개로 뉴스 소스만 고른다
 _GLOBAL_PAT = re.compile(r"연준|미국|미국채|fed|fomc|글로벌|달러|파월|국제|해외|워시", re.I)
-_DOMESTIC_PAT = re.compile(r"금통위|한은|한국은행|국고채|가계부채|국내|원화|한국")
+_DOMESTIC_PAT = re.compile(r"금통위|한은|한국은행|국고채|국채|장기채|단기채|회사채|크레딧|가계부채|국내|원화|한국")
 
 _cache: dict[str, tuple[float, list[dict]]] = {}
 
@@ -158,7 +158,7 @@ def _from_naver(query: str) -> list[dict]:
 
 
 def search_news(raw_msg: str, keywords: str | None = None) -> list[dict]:
-    """질문 성격에 맞는 소스에서 뉴스 검색. 키 없으면 조용히 빈 리스트.
+    """질문 성격에 맞는 소스에서 뉴스 검색. 키 없으면 대체 소스로 폴백.
 
     raw_msg: 지역(해외/국내) 판별용 — 사용자 원문 그대로 넘긴다.
     keywords: 실제 검색 API에 넘길 검색어. "오늘 뉴스 뽑아줘" 같은 원문을
@@ -166,8 +166,26 @@ def search_news(raw_msg: str, keywords: str | None = None) -> list[dict]:
       태그 기반으로 재구성해서 넘긴다. 없으면 raw_msg를 그대로 쓴다."""
     q = keywords or raw_msg
     region = pick_region(raw_msg)
+
+    has_newsapi = bool(os.environ.get("NEWSAPI_KEY", ""))
+    has_naver = bool(os.environ.get("NAVER_CLIENT_ID", "") and os.environ.get("NAVER_CLIENT_SECRET", ""))
+
     if region == "global":
-        # NewsAPI는 영어만 안정적 — 한국어 질문이면 핵심 영문 키워드로 치환
-        q = "federal reserve rates bonds" if re.search(r"[가-힣]", q) else q
-        return _from_newsapi(q)
-    return _from_naver(q)
+        if has_newsapi:
+            q_en = "federal reserve rates bonds" if re.search(r"[가-힣]", q) else q
+            return _from_newsapi(q_en)
+        elif has_naver:
+            print(f"[evidence_finder] global 키 없음, domestic으로 폴백", flush=True)
+            return _from_naver(q)
+        else:
+            return []
+
+    # region == "domestic"
+    if has_naver:
+        return _from_naver(q)
+    elif has_newsapi:
+        print(f"[evidence_finder] domestic 키 없음, global(NewsAPI)으로 폴백", flush=True)
+        q_en = "federal reserve rates bonds" if re.search(r"[가-힣]", q) else q
+        return _from_newsapi(q_en)
+    else:
+        return []

@@ -142,8 +142,11 @@ def test_news_region_routing():
 
 
 def test_news_returns_empty_without_keys():
+    from unittest.mock import patch
     from app.evidence_finder import search_news
-    assert search_news("금통위 금리") == []  # 키 없음 → 조용히 빈 리스트
+    # 양쪽 키 모두 없을 때 빈 리스트
+    with patch.dict("os.environ", {"NEWSAPI_KEY": "", "NAVER_CLIENT_ID": "", "NAVER_CLIENT_SECRET": ""}):
+        assert search_news("금통위 금리") == []
 
 
 # ── 가드레일 완화 검증 ───────────────────────────────────
