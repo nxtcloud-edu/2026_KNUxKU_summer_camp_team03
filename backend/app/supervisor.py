@@ -270,7 +270,7 @@ def _handle(req: ChatRequest) -> ChatResponse:
             evidence = [r["id"] for r in related]
             if related:
                 text += "\n\n마침 오늘 들어온 리포트 중 관련 자료가 있어요 — 아래 근거 카드를 눌러 보세요."
-            text = sanitize_output(text) + "\n\n" + DISCLAIMER
+            text = sanitize_output(text)
             trace.append(_step("Analysis", "용어 사전 응답",
                                f"「{term}」 {level} 수준 · 검수된 해설 · LLM 0회", 3))
         else:
@@ -285,7 +285,7 @@ def _handle(req: ChatRequest) -> ChatResponse:
                                         risk=req.profile.risk,
                                         gap_warning=(req.profile.tolerance - req.profile.capacity)
                                         >= quant.ALLOCATION_PARAMS["gap_warning_threshold"])
-            text = sanitize_output(quant.explain_baseline(profile, w)) + "\n\n" + DISCLAIMER
+            text = sanitize_output(quant.explain_baseline(profile, w))
             trace.append(_step("Recommendation", "1~2단계 재계산",
                                f"위험 점수 {req.profile.risk} → 기준 비중 · 순수 함수 · LLM 0회", 3))
         else:

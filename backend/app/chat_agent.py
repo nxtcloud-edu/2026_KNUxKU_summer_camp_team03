@@ -207,6 +207,6 @@ def answer(question: str, reports: list[dict],
         print(f"[chat_agent] LLM 실패, 템플릿 폴백: {exc}", flush=True)
         text = _template_answer(question, reports)
         used_llm = False
-    return sanitize_output(_strip_contact_info(text)) + "\n\n" + DISCLAIMER, used_llm
+    return sanitize_output(_strip_contact_info(text)), used_llm
 
 # (두 전문가 토론 기능은 별도 탭으로 분리 — 다른 담당 구현. 과거 코드는 git 히스토리 03b9bdf 참고)
