@@ -160,7 +160,12 @@ def _handle(req: ChatRequest) -> ChatResponse:
                        + (f"태그 {plan.tags}" if plan.tags else "태그 없음 — 광역 검색"), 4))
 
     # ── 2.5 관련성 게이트 — 금융 무관 질문은 여기서 끝 (후속 질문은 예외) ──
+    # verdict.mode=="explain"이면 guardrails.check_input이 이미 "매수/예측 요구"로
+    # 판정한 것 — 즉 FINANCE_VOCAB에 없는 표현("지금 사도 될까")이어도 명백히
+    # 금융 관련이다. 서로 다른 어휘집을 쓰는 두 가드레일이 같은 문장을 두 번
+    # 검사하다 상충하지 않도록, explain 판정을 관련성 증거로도 인정한다.
     if not plan.rewritten and not plan.tags and not is_finance_related(req.message) \
+            and verdict.mode != "explain" \
             and plan.turn_type in ("market", "evidence", "decision"):
         trace.append(_step("Guardrails", "범위 밖 주제", "금융 어휘 0건 — 검색·LLM 미실행", 2))
         store.append(sess, "user", req.message, "off_topic")
