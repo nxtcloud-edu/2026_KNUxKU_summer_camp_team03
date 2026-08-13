@@ -365,7 +365,7 @@ export default function Chat() {
                     )}
 
                     {/* ── 훈수 탭: 페르소나 카드 렌더링 ── */}
-                    {m.done && m.data?.personas ? (
+                    {m.done && m.data?.personas && m.data.personas.length > 0 ? (
                       <div className="persona-cards">
                         {m.data.personas.map((p) => (
                           <div className="persona-card" key={p.persona}>
