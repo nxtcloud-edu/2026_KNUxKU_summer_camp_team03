@@ -214,6 +214,30 @@ h4 {
   text-transform: uppercase;
   color: var(--gold);
 }
+
+/* ── 목록/설정류 페이지 머리말 ─────────────────────────────
+   .section-head·.ob-title는 처음 만나는 화면(랜딩·온보딩)에 쓰는
+   큰 표제다. 서재·마이페이지처럼 자주 들르는 목록형 화면에까지 그 크기를
+   쓰면 제목이 스크롤 한 칸을 통째로 먹어 버린다. 여기는 훨씬 작게. */
+.page-head {
+  margin-bottom: var(--sp-5);
+}
+.page-title {
+  font-family: var(--font-display);
+  font-size: var(--t-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  word-break: keep-all;
+}
+.page-lead {
+  margin-top: 4px;
+  font-size: var(--t-sm);
+  line-height: 1.7;
+  color: var(--ink-3);
+  max-width: 56em;
+  word-break: keep-all;
+}
 .truncate {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -428,20 +452,22 @@ h4 {
   opacity: 0.42;
   cursor: not-allowed;
 }
+/* 그라데이션 + 색깔 있는 글로우 그림자는 걷어냈다 — 반짝이는 버튼은
+   눈에는 띄지만 "생성형 AI가 만든 화면" 신호로 가장 먼저 읽힌다.
+   납작한 골드 한 톤 + 옅은 그림자(shadow-sm)만 쓴다. */
 .btn-primary {
-  background: var(--brand-grad);
-  color: #f7f6f3;
-  box-shadow: var(--shadow-brand);
+  background: var(--gold);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
 }
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(168deg, #b8934a 0%, #a8843c 55%, #7d6029 100%);
-  color: #f7f6f3;
-  box-shadow: 0 3px 8px rgba(116, 87, 42, 0.2), 0 14px 30px rgba(116, 87, 42, 0.22);
-  transform: translateY(-1px);
+  background: var(--gold-hover);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
 }
 .btn-primary:active:not(:disabled) {
   transform: translateY(0) scale(0.988);
-  box-shadow: 0 1px 3px rgba(116, 87, 42, 0.24);
+  box-shadow: var(--shadow-xs);
 }
 .btn-soft {
   background: var(--brand-soft);
@@ -939,7 +965,7 @@ h4 {
 
 @media print {
   .no-print,
-  .site-header,
+  .app-sidebar,
   .chat-fab {
     display: none !important;
   }
