@@ -42,6 +42,31 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
+def load_env() -> None:
+    """collector/.env 를 읽어 환경변수에 올린다.
+
+    python-dotenv를 쓰지 않는 이유: 이 수집기는 표준 라이브러리만으로 돌아야
+    팀원 누구나 pip install 없이 바로 실행할 수 있다.
+
+    ⚠ 키는 여기(로컬/서버)에만 둔다. frontend/.env.local 로 옮기면
+      빌드 결과물에 박혀 브라우저에 노출된다.
+    """
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    if not os.path.exists(path):
+        return
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            k, v = k.strip(), v.strip().strip("'\"")
+            if v and not os.environ.get(k):
+                os.environ[k] = v
+
+
+load_env()
+
 BASE = "https://finance.naver.com/research"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.path.join(ROOT, "data", "quill.db")
