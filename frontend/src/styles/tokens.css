@@ -160,10 +160,14 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.4, 0.5, 1);
 
-  --header-h: 60px;
+  /* 상단 헤더를 좌측 사이드바로 옮기면서 헤더 높이가 필요 없어졌다.
+     페이지 곳곳의 calc(100vh - var(--header-h))가 그대로 100vh로
+     동작하도록 값만 0으로 죽여 둔다 — 계산식을 일일이 고칠 필요가 없다. */
+  --header-h: 0px;
   --content-max: 1200px;
   --read-max: 700px;
   --panel-w: 372px;
+  --sidebar-w: 236px;
 }
 
 @media (max-width: 760px) {
@@ -171,6 +175,5 @@
     --t-3xl: 30px;
     --t-4xl: 36px;
     --t-2xl: 25px;
-    --header-h: 54px;
   }
 }

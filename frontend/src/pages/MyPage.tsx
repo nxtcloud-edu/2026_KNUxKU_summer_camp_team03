@@ -94,26 +94,11 @@ export default function MyPage() {
   return (
     <div className="my-shell">
       {/* ── 머리 ─────────────────────────────────── */}
-      <header className="my-head">
-        <span className="eyebrow">
-          <span className="rule-gold" />
-          마이페이지
-        </span>
-        <h1 className="ob-title">
-          {user?.email ? (
-            <>
-              {user.email.split('@')[0]}님의 자리
-              <br />
-              <span className="muted">맡기신 것과 그 근거가 모여 있습니다.</span>
-            </>
-          ) : (
-            <>
-              내 자리
-              <br />
-              <span className="muted">맡기신 것과 그 근거가 모여 있습니다.</span>
-            </>
-          )}
+      <header className="page-head">
+        <h1 className="page-title">
+          {user?.email ? `${user.email.split('@')[0]}님의 자리` : '내 자리'}
         </h1>
+        <p className="page-lead">맡기신 것과 그 근거가 모여 있습니다.</p>
 
         {!enabled && (
           <div className="my-notice">

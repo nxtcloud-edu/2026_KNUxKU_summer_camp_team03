@@ -2,17 +2,16 @@
  * 대화 화면 — 이 서비스의 메인이다.
  *
  * 세 칸으로 나눈다.
- *   왼쪽   대화 보관함 (확인 키를 만든 경우에만 채워진다)
+ *   왼쪽   사이드바 — 메뉴 + 대화 기록(확인 키를 만든 경우에만 채워진다)
  *   가운데 대화
  *   오른쪽 근거 패널 — 인용된 리포트가 쌓이고 그 자리에서 원문이 열린다
  *
  * "출처 없는 문장은 쓰지 않는다"는 약속을 화면 구조로 보여 주려는 배치다.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { answer, TODAY_REPORTS, type ChatAnswer, type TraceStep } from '../lib/chatEngine'
+import { answer, type ChatAnswer, type TraceStep } from '../lib/chatEngine'
 import { useCopilot } from '../lib/copilot'
-import { baselineWeights, type RiskProfile } from '../lib/quant'
+import type { RiskProfile } from '../lib/quant'
 import { reportById, SUGGESTS } from '../lib/mock'
 import {
   createVault,
@@ -30,7 +29,9 @@ import ParallelViews from '../components/ParallelViews'
 import RichText from '../components/RichText'
 import InkText from '../components/InkText'
 import ChatVault, { type VaultState } from '../components/ChatVault'
-import { IconArrowRight, IconQuill, IconSend, IconShield } from '../components/icons'
+import WelcomeModal from '../components/WelcomeModal'
+import AppSidebar from '../components/AppSidebar'
+import { IconChat, IconQuill, IconSend, IconShield } from '../components/icons'
 
 interface Msg {
   id: string
@@ -74,7 +75,7 @@ function penDelay(ch: string): number {
 }
 
 export default function Chat() {
-  const { input, profile, effectiveRisk } = useCopilot()
+  const { profile, effectiveRisk } = useCopilot()
   const [msgs, setMsgs] = useState<Msg[]>([])
   const [q, setQ] = useState('')
   const [busy, setBusy] = useState(false)
@@ -289,28 +290,38 @@ export default function Chat() {
   }
 
   return (
-    <div className="chat-shell">
-      <ChatVault
-        state={vault}
-        list={convos}
-        activeId={activeId}
-        error={vaultErr}
-        busy={vaultBusy}
-        onCreate={createKey}
-        onUnlock={unlock}
-        onOpen={openConvo}
-        onNew={newChat}
-        onLock={lock}
-        onDestroy={wipe}
+    <div className="app-row">
+      <AppSidebar
+        newChat={
+          <button className="side-link side-newchat" onClick={newChat}>
+            <IconChat size={18} />
+            <span>새 대화</span>
+          </button>
+        }
+        history={
+          <ChatVault
+            state={vault}
+            list={convos}
+            activeId={activeId}
+            error={vaultErr}
+            busy={vaultBusy}
+            onCreate={createKey}
+            onUnlock={unlock}
+            onOpen={openConvo}
+            onLock={lock}
+            onDestroy={wipe}
+          />
+        }
       />
+
+    <div className="chat-shell">
+      <WelcomeModal />
 
       {/* ── 대화 ─────────────────────────────────────── */}
       <section className="chat-main">
         <div className="chat-scroll" ref={scrollRef}>
-          <div className="chat-inner">
-            {msgs.length === 0 && (
-              <Opening onPick={send} hasProfile={!!input} risk={effectiveRisk} />
-            )}
+          <div className={`chat-inner${msgs.length === 0 ? ' chat-inner-empty' : ''}`}>
+            {msgs.length === 0 && <Opening onPick={send} />}
 
             {msgs.map((m) =>
               m.role === 'user' ? (
@@ -417,9 +428,8 @@ export default function Chat() {
               aria-label="질문 입력"
               disabled={busy}
             />
-            <button className="btn btn-primary" disabled={!q.trim() || busy}>
-              보내기
-              <IconSend size={15} />
+            <button className="btn btn-primary btn-icon composer-send" disabled={!q.trim() || busy} aria-label="보내기">
+              <IconSend size={16} />
             </button>
           </form>
           <div className="composer-foot">
@@ -448,66 +458,18 @@ export default function Chat() {
 
       <EvidencePanel cited={cited} />
     </div>
+    </div>
   )
 }
 
 /* ── 대화 시작 화면 ─────────────────────────────────────── */
 
-function Opening({
-  onPick,
-  hasProfile,
-  risk,
-}: {
-  onPick: (s: string) => void
-  hasProfile: boolean
-  risk: number | null
-}) {
-  const w = risk !== null ? baselineWeights(risk) : null
-
+function Opening({ onPick }: { onPick: (s: string) => void }) {
   return (
     <div className="opening">
-      <div className="opening-mark" aria-hidden>
-        <span className="script-en script-sign">Quill</span>
-      </div>
+      <IconQuill size={24} style={{ color: 'var(--gold)' }} />
 
-      <h1 className="opening-title">
-        어려운 리포트는 제가 읽을게요.
-        <br />
-        <span className="opening-title-2">당신은 결정만 하시면 됩니다.</span>
-      </h1>
-
-      <p className="opening-lead">
-        증권사 리포트에서 채권·ETF 이야기만 골라 읽고, 근거를 붙여 해설합니다.
-        근거가 없으면 답을 만들지 않습니다.
-      </p>
-
-      {hasProfile && w ? (
-        <div className="opening-card">
-          <div className="row-between">
-            <span className="eyebrow">현재 기준 비중</span>
-            <span className="xs faint num">위험 점수 {risk}</span>
-          </div>
-          <div className="mt-3">
-            <AllocBar baseline={w} compact />
-          </div>
-          <Link className="btn btn-soft btn-sm mt-4" to="/portfolio">
-            포트폴리오 자세히 보기
-            <IconArrowRight size={14} />
-          </Link>
-        </div>
-      ) : (
-        <div className="opening-card">
-          <div className="strong">아직 성향을 모릅니다</div>
-          <p className="small muted keep mt-1">
-            6개 질문에 답하면 기준 비중을 계산해 드려요. 숫자는 전부 코드가 계산하고,
-            에이전트는 근거를 들고 조정만 제안합니다.
-          </p>
-          <Link className="btn btn-primary btn-sm mt-4" to="/onboarding">
-            성향 진단 시작
-            <IconArrowRight size={14} />
-          </Link>
-        </div>
-      )}
+      <h1 className="opening-title">무엇이 궁금하신가요?</h1>
 
       <div className="opening-suggests">
         {SUGGESTS.map((s) => (
@@ -518,18 +480,6 @@ function Opening({
         <button className="sug" onClick={() => onPick('내 비중은 어떻게 되나요?')}>
           내 비중은 어떻게 되나요?
         </button>
-      </div>
-
-      <div className="opening-today">
-        <span className="eyebrow">오늘 들어온 리포트</span>
-        <div className="mt-3 col gap-2">
-          {TODAY_REPORTS.map((r) => (
-            <div className="today-row" key={r.id}>
-              <span className="today-house">{r.house}</span>
-              <span className="truncate">{r.title}</span>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   )

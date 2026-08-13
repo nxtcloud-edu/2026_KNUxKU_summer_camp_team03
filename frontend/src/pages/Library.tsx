@@ -28,15 +28,11 @@ export default function Library() {
 
   return (
     <div className="container" style={{ padding: 'var(--sp-12) 0 var(--sp-24)' }}>
-      <div className="section-head">
-        <span className="eyebrow">
-          <span className="rule-gold" />
-          리포트 서재
-        </span>
-        <h2 className="mt-4">답변의 근거가 되는 자료들</h2>
-        <p>
-          수집 → 키워드 1차 필터 → 모델 태깅 → 3줄 요약을 거쳐 남은 리포트입니다. 챗봇과
-          포트폴리오가 인용하는 자료는 전부 여기 있습니다.
+      <div className="page-head">
+        <h1 className="page-title">리포트 서재</h1>
+        <p className="page-lead">
+          답변의 근거가 되는 자료들 — 수집 → 키워드 1차 필터 → 모델 태깅 → 3줄 요약을 거쳐
+          남은 리포트입니다. 챗봇과 포트폴리오가 인용하는 자료는 전부 여기 있습니다.
         </p>
       </div>
 

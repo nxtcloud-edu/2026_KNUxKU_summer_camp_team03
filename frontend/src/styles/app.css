@@ -4,26 +4,7 @@
           장식을 하나 더할 때마다 본문 가독성을 먼저 확인한다.
    ───────────────────────────────────────────────────────────── */
 
-/* ── 헤더 ─────────────────────────────────────────────────── */
-.site-header {
-  position: sticky;
-  top: 0;
-  z-index: 60;
-  height: var(--header-h);
-  background: rgba(247, 246, 243, 0.82);
-  backdrop-filter: saturate(180%) blur(14px);
-  transition: box-shadow 0.3s var(--ease), background 0.3s var(--ease);
-}
-.site-header.scrolled {
-  background: rgba(247, 246, 243, 0.94);
-  box-shadow: 0 1px 0 rgba(230, 228, 222, 0.9), 0 6px 20px rgba(22, 24, 28, 0.05);
-}
-.site-header .container {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-8);
-}
+/* ── 브랜드 마크 — 이제 좌측 사이드바 위쪽에서 쓴다 ──────────── */
 .brand {
   display: inline-flex;
   align-items: baseline;
@@ -46,37 +27,6 @@
   font-size: var(--t-xs);
   color: var(--ink-4);
   letter-spacing: 0.04em;
-}
-.nav {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.nav a {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 62px; /* '홈' 한 글자가 동그라미로 보이지 않도록 */
-  padding: 8px 14px;
-  border-radius: var(--r-full);
-  font-size: var(--t-sm);
-  font-weight: 580;
-  color: var(--ink-3);
-  transition: background 0.18s var(--ease), color 0.18s var(--ease);
-}
-.nav a:hover {
-  background: var(--surface-hover);
-  color: var(--ink);
-}
-.nav a.active {
-  color: var(--brand-hover);
-  background: var(--brand-soft);
-}
-@media (max-width: 860px) {
-  .nav,
-  .brand-sub {
-    display: none;
-  }
 }
 
 /* ── 히어로 ───────────────────────────────────────────────── */
@@ -987,19 +937,20 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 54px;
-  padding: 0 22px 0 18px;
-  border-radius: var(--r-full);
-  background: var(--brand-grad);
-  color: #f7f6f3;
+  height: 50px;
+  padding: 0 20px 0 16px;
+  border-radius: var(--r-md);
+  background: var(--gold);
+  color: #fff;
   font-size: var(--t-sm);
   font-weight: 620;
-  box-shadow: var(--shadow-brand);
+  box-shadow: var(--shadow-md);
   transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease);
 }
 .chat-fab:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(22, 24, 28, 0.20), 0 18px 40px rgba(22, 24, 28, 0.22);
+  background: var(--gold-hover);
+  box-shadow: var(--shadow-lg);
 }
 .chat-panel {
   position: fixed;

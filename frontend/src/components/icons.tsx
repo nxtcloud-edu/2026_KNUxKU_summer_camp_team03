@@ -236,3 +236,9 @@ export const IconBell = ({ size = 18, style, className }: P) => (
     <path d="M13.7 18.5a2 2 0 0 1-3.4 0" />
   </svg>
 )
+export const IconUser = ({ size = 18, style }: P) => (
+  <svg {...base(size)} style={style} aria-hidden>
+    <circle cx="12" cy="8.2" r="3.6" />
+    <path d="M4.6 20.2c1.2-3.6 4-5.4 7.4-5.4s6.2 1.8 7.4 5.4" />
+  </svg>
+)
