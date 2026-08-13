@@ -9,7 +9,8 @@
  * "출처 없는 문장은 쓰지 않는다"는 약속을 화면 구조로 보여 주려는 배치다.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { answer, type ChatAnswer, type TraceStep } from '../lib/chatEngine'
+import { type ChatAnswer, type TraceStep } from '../lib/chatEngine'
+import { askChat } from '../lib/api'
 import { useCopilot } from '../lib/copilot'
 import type { RiskProfile } from '../lib/quant'
 import { reportById, SUGGESTS } from '../lib/mock'
@@ -223,7 +224,7 @@ export default function Chat() {
   /* ── 전송 ────────────────────────────────────────── */
 
   const send = useCallback(
-    (text: string) => {
+    async (text: string) => {
       const value = text.trim()
       if (!value || busy) return
 
@@ -238,7 +239,7 @@ export default function Chat() {
       }
       setMsgs((m) => [...m, userMsg])
 
-      const res = answer(value, activeProfile ?? undefined)
+      const res = await askChat(value, activeProfile ?? undefined)
       setTrace(res.trace)
 
       const think = res.trace.reduce((s, t) => s + t.ms, 0)
