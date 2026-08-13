@@ -722,3 +722,222 @@
   color: var(--gold-deep);
   margin-bottom: var(--sp-5);
 }
+
+/* ─────────────────────────────────────────────────────────────
+   마이페이지 — 로그인한 고객의 자리
+   맡긴 것(성향·배분)과 받은 것(알림·대화), 그리고 지울 권리를 한 화면에.
+   ───────────────────────────────────────────────────────────── */
+
+.my-shell {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--sp-10) var(--sp-6) var(--sp-16);
+}
+.my-head {
+  margin-bottom: var(--sp-8);
+}
+.my-notice {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  background: var(--surface-sunken);
+  border-radius: var(--r-md);
+  padding: 11px 14px;
+  font-size: var(--t-xs);
+  line-height: 1.75;
+  color: var(--ink-3);
+  word-break: keep-all;
+  margin-top: var(--sp-5);
+  max-width: 46em;
+}
+.my-notice svg {
+  flex: none;
+  margin-top: 3px;
+}
+.my-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-5);
+  align-items: start;
+}
+.my-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+.my-card {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--sp-6);
+}
+.my-h {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.my-count {
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--gold);
+  color: var(--ink-invert);
+  border-radius: var(--r-full);
+  padding: 1px 8px;
+}
+.my-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--t-xs);
+  font-weight: 640;
+  color: var(--gold-deep);
+  transition: gap 0.16s var(--ease);
+}
+.my-more:hover {
+  gap: 7px;
+}
+.my-note {
+  font-size: 11.5px;
+  line-height: 1.75;
+  color: var(--ink-4);
+  word-break: keep-all;
+  margin-top: var(--sp-4);
+}
+.my-scores {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+}
+.my-score {
+  background: var(--surface-sunken);
+  border-radius: var(--r-md);
+  padding: 14px 12px;
+  text-align: center;
+}
+.my-score.strong-row {
+  background: var(--gold-tint);
+  box-shadow: inset 0 0 0 1px var(--gold-line);
+}
+.my-score-l {
+  font-size: var(--t-xs);
+  font-weight: 640;
+  margin-top: 2px;
+}
+.my-score-s {
+  font-size: 10.5px;
+  color: var(--ink-4);
+}
+.my-warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+  border-radius: var(--r-md);
+  padding: 11px 14px;
+  font-size: var(--t-xs);
+  line-height: 1.7;
+  word-break: keep-all;
+  margin-top: var(--sp-4);
+}
+.my-facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 var(--sp-4);
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  background: var(--gold-hairline) top / 100% 1px no-repeat;
+}
+.my-facts dt {
+  font-size: var(--t-xs);
+  color: var(--ink-4);
+  padding: 5px 0;
+}
+.my-facts dd {
+  font-size: var(--t-sm);
+  color: var(--ink);
+  padding: 5px 0;
+  margin: 0;
+  text-align: right;
+}
+.my-notis {
+  margin-top: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+}
+.my-noti {
+  padding: 11px 0;
+}
+.my-noti + .my-noti {
+  background: var(--gold-hairline) top / 100% 1px no-repeat;
+}
+.my-noti.read {
+  opacity: 0.5;
+}
+.my-noti-t {
+  font-size: var(--t-sm);
+  line-height: 1.6;
+  word-break: keep-all;
+}
+.my-noti-src {
+  display: block;
+  font-size: 11px;
+  color: var(--gold-deep);
+  margin-top: 4px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+.my-unlock {
+  margin-top: var(--sp-4);
+}
+.my-convos {
+  margin-top: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+}
+.my-convo {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 10px 0;
+  font-size: var(--t-sm);
+  color: var(--ink-2);
+}
+.my-convo + .my-convo {
+  background: var(--gold-hairline) top / 100% 1px no-repeat;
+}
+.my-convo:hover {
+  color: var(--ink);
+}
+.my-convo span:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.my-convo-d {
+  flex: none;
+  font-size: 10.5px;
+  color: var(--ink-4);
+}
+.my-empty {
+  margin-top: var(--sp-4);
+  padding: var(--sp-5) 0 var(--sp-2);
+}
+/* 내 데이터 — 지울 권리는 눈에 보이는 자리에 */
+.my-danger {
+  background: var(--surface-sunken);
+  box-shadow: none;
+}
+.my-wiped {
+  font-size: var(--t-xs);
+  color: var(--ok);
+  margin-top: var(--sp-3);
+}
+
+@media (max-width: 900px) {
+  .my-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

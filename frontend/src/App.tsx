@@ -11,6 +11,7 @@ import Layout, { ChatLayout } from './components/Layout'
 import Chat from './pages/Chat'
 import Onboarding from './pages/Onboarding'
 import Portfolio from './pages/Portfolio'
+import MyPage from './pages/MyPage'
 import Library from './pages/Library'
 import Login from './pages/Login'
 import RequireAuth from './components/RequireAuth'
@@ -38,6 +39,7 @@ export default function App() {
       <Route element={<Layout />}>
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/portfolio" element={<Portfolio />} />
+        <Route path="/mypage" element={<MyPage />} />
         <Route path="/library" element={<Library />} />
         <Route path="/library/:id" element={<ReportPage />} />
       </Route>

@@ -54,6 +54,9 @@ export default function AccountMenu() {
       {open && (
         <div className="acct-pop">
           <div className="acct-mail truncate">{email}</div>
+          <Link className="acct-item" to="/mypage" onClick={() => setOpen(false)}>
+            마이페이지
+          </Link>
           <button
             className="acct-item"
             onClick={async () => {

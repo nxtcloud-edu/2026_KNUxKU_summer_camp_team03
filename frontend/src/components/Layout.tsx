@@ -33,6 +33,7 @@ export function SiteHeader() {
           </NavLink>
           <NavLink to="/portfolio">내 포트폴리오</NavLink>
           <NavLink to="/library">리포트 서재</NavLink>
+          <NavLink to="/mypage">마이페이지</NavLink>
         </nav>
 
         <span className="spacer" />
