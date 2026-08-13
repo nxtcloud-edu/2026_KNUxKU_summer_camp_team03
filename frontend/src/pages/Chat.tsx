@@ -13,7 +13,7 @@ import { type ChatAnswer, type TraceStep } from '../lib/chatEngine'
 import { askChat, clearSession } from '../lib/api'
 import { useCopilot } from '../lib/copilot'
 import type { RiskProfile } from '../lib/quant'
-import { reportById, SUGGESTS } from '../lib/mock'
+import { SUGGESTS } from '../lib/mock'
 import {
   createVault,
   destroyVault,
@@ -421,27 +421,18 @@ export default function Chat() {
                       )}
 
                       {m.done && !!m.data?.evidence.length && (
-                        <div className="cite-row">
-                          {m.data.evidence.map((id, n) => {
-                            const r = reportById(id)
-                            if (!r) return null
-                            return (
-                              <button
-                                key={id}
-                                className="cite"
-                                onClick={() =>
-                                  window.dispatchEvent(
-                                    new CustomEvent('quill:open-report', { detail: id }),
-                                  )
-                                }
-                              >
-                                <span className="cite-num">{n + 1}</span>
-                                <span className="cite-house">{r.house}</span>
-                                <span className="cite-title">{r.title}</span>
-                              </button>
-                            )
-                          })}
-                        </div>
+                        <button
+                          className="persona-evidence-pill"
+                          onClick={() => {
+                            for (const id of m.data!.evidence) {
+                              window.dispatchEvent(
+                                new CustomEvent('quill:open-report', { detail: id }),
+                              )
+                            }
+                          }}
+                        >
+                          📄 근거 {m.data.evidence.length}건
+                        </button>
                       )}
                     </div>
                     )}
