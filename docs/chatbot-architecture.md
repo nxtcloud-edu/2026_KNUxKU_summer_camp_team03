@@ -48,14 +48,15 @@ flowchart TB
     NEWS --> ANA
     NEWS --> DEC
     SRCH -->|"market / evidence"| ANA["💬 chat_agent.answer — LLM 1회<br/>시스템 프롬프트 고정(캐시 친화)<br/>컨텍스트: 리포트 발췌(700자 절단)+프로필 점수+최근 4턴<br/>thinkingBudget=0 (2026-08 수정 — 전엔 사고 토큰이<br/>예산을 다 먹어 답이 MAX_TOKENS로 잘림)<br/>실패 시 리포트 요약 템플릿 폴백"]:::llm
-    SRCH -->|"decision"| DEC["💬 decision_agent.answer_decision — 팀원 구현 예정<br/>📈 낙관론 / 🛡️ 보수론 두 페르소나 병렬 해설(우열 없음)<br/><b>지금은 스텁</b> — chat_agent로 임시 대체해 라우팅만 살아있음<br/>시그니처: (question, reports, news, profile_ctx) → (text, used_llm)<br/>reports/news는 이미 Supervisor가 모아서 넘김 — 검색 재호출 불필요"]:::stub
+    SRCH -->|"decision"| DEC["💬 decision_agent.answer_decision — 팀원 구현 예정<br/>📈 낙관론 / 🛡️ 보수론 두 페르소나 병렬 해설(우열 없음)<br/><b>지금은 스텁</b> — chat_agent로 임시 대체해 라우팅만 살아있음<br/>시그니처: (question, reports, news, profile_ctx, history_ctx) → (text, used_llm)<br/>reports/news는 이미 Supervisor가 모아서 넘김 — 검색 재호출 불필요<br/>history_ctx(최근 4턴 STM)도 2026-08-14부터 함께 전달됨"]:::stub
 
     GLO --> SAN
     PORT --> SAN
     SCH --> SAN
     FB --> SAN
     ANA --> SAN
-    DEC --> SAN
+    DEC --> BAL["🛡 check_decision_balance (2026-08-14 추가)<br/>대조 표지어('반면'·'관점을 제시' 등) 없거나<br/>'무조건 오릅니다'류 단정 패턴 있으면<br/>DECISION_UNBALANCED_FALLBACK으로 대체<br/>— LLM이 시스템 프롬프트를 어겨도 코드로 재차 강제"]:::guard
+    BAL --> SAN
     SAN["sanitize_output + DISCLAIMER<br/>'추천'→'해설' 치환 — 마지막 관문"]:::guard
     SAN --> APP["STM 기록<br/>턴 append · 태그/유형/기출 리포트 갱신"]:::fn
   end
@@ -107,7 +108,7 @@ flowchart TB
 
 ## 팀원이 `decision_agent.py`에 꽂을 때
 
-- `answer_decision(question, reports, news, profile_ctx) -> (text, used_llm)` 시그니처만 유지하면 내부 구현은 자유.
+- `answer_decision(question, reports, news, profile_ctx, history_ctx) -> (text, used_llm)` 시그니처만 유지하면 내부 구현은 자유. (`history_ctx`는 2026-08-14 추가 — 직전 대화 STM 요약, 없으면 빈 문자열)
 - `reports`(report_retriever가 모은 근거)·`news`(evidence_finder가 모은 보조 근거)는 이미 Supervisor가 검색해서 넘겨준다 — 이 함수 안에서 검색 API를 다시 부를 필요 없음.
 - 반환 텍스트는 `sanitize_output`+`DISCLAIMER`까지 붙은 완성본이어야 한다 (`chat_agent.answer`와 동일 계약) — Supervisor는 그대로 화면에 낸다.
 - 절대 규칙(근거 밖 내용 금지·매수/매도 지시 금지·리포트 우열 안 가림)은 두 페르소나 모두 공통 적용.

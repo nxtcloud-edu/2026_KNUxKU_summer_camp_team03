@@ -25,10 +25,16 @@ from . import chat_agent
 
 
 def answer_decision(question: str, reports: list[dict], news: list[dict] | None,
-                     profile_ctx: str = "") -> tuple[str, bool]:
+                     profile_ctx: str = "", history_ctx: str = "") -> tuple[str, bool]:
     """TODO(팀원): 낙관론/보수론 두 페르소나 병렬 해설로 교체.
 
     지금은 기존 chat_agent 단일 해설로 임시 대체한다 — decision 라우팅과
     근거 수집(report_retriever+evidence_finder)은 이미 붙어 있으니,
-    이 함수 내부만 교체하면 된다."""
-    return chat_agent.answer(question, reports, profile_ctx=profile_ctx, news=news)
+    이 함수 내부만 교체하면 된다.
+
+    history_ctx: 직전 대화 STM 요약(session_store.context_text) — "그럼 그거
+    말고 다른 건?" 같은 후속 의사결정형 질문에서 맥락을 잇는 데 쓴다. 두
+    페르소나로 교체할 때도 이 인자는 그대로 두고 chat_agent.answer()처럼
+    프롬프트에 주입하면 된다."""
+    return chat_agent.answer(question, reports, profile_ctx=profile_ctx,
+                              history_ctx=history_ctx, news=news)

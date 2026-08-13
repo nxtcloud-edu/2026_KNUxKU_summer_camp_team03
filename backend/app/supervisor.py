@@ -31,8 +31,9 @@ from . import decision_agent, evidence_finder, glossary, quant, triage
 from . import persona_agent, report_retriever
 from .chat_agent import answer as agent_answer
 from .chat_schemas import ChatProfileSchema, ChatRequest, ChatResponse, TraceStepSchema
-from .guardrails import (DISCLAIMER, NO_EVIDENCE_FALLBACK, OFF_TOPIC_NOTICE,
-                         check_input, is_finance_related, sanitize_output)
+from .guardrails import (DECISION_UNBALANCED_FALLBACK, DISCLAIMER, NO_EVIDENCE_FALLBACK,
+                         OFF_TOPIC_NOTICE, check_decision_balance, check_input,
+                         is_finance_related, sanitize_output)
 from .session_store import store
 
 SCHEDULE_NOTICE = (
@@ -311,12 +312,21 @@ def _handle(req: ChatRequest) -> ChatResponse:
                 # 두 전문가 병렬 해설 — 실제 토론 로직은 팀원 구현 예정,
                 # 지금은 decision_agent 스텁이 chat_agent로 임시 대체한다.
                 text, used_llm = decision_agent.answer_decision(
-                    plan.query, reports, news, profile_ctx=_profile_ctx(req.profile))
+                    plan.query, reports, news, profile_ctx=_profile_ctx(req.profile),
+                    history_ctx=store.context_text(sess))
                 trace.append(_step("Analysis",
                                    "의사결정형 해설" + ("" if used_llm else " (템플릿 폴백)"),
                                    f"근거 {len(evidence)}건 · 뉴스 {len(news)}건 · "
                                    "decision_agent(팀원 구현 전 — chat_agent 임시 대체)",
                                    380 if used_llm else 8))
+                # ── 균형 가드 — LLM이 한쪽으로 단정하면 코드로 한 번 더 막는다 ──
+                # (템플릿 폴백은 리포트 요약만 나열해 방향성이 없으므로 검사 대상 아님)
+                if used_llm and not check_decision_balance(text):
+                    text = DECISION_UNBALANCED_FALLBACK
+                    used_llm = False
+                    trace.append(_step("Guardrails", "의사결정형 균형 검사 실패",
+                                       "찬/반 관점 중 하나 이상 누락 또는 단정 표현 감지 "
+                                       "— 안전 문구로 대체", 2))
             else:
                 text, used_llm = agent_answer(
                     plan.query, reports,

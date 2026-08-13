@@ -20,10 +20,15 @@ backend/app/decision_agent.py   ← 이 파일의 answer_decision() 함수만 �
 
 ```python
 def answer_decision(question: str, reports: list[dict], news: list[dict] | None,
-                     profile_ctx: str = "") -> tuple[str, bool]:
+                     profile_ctx: str = "", history_ctx: str = "") -> tuple[str, bool]:
     ...
     return text, used_llm
 ```
+
+> **2026-08-14 갱신:** `history_ctx` 인자가 새로 추가됐습니다 (예전엔 decision 경로만
+> STM이 안 붙어 있어서, "그럼 다른 건?" 같은 후속 의사결정형 질문에서 직전 대화를
+> 못 봤습니다). 두 페르소나로 교체하실 때 이 인자를 그대로 `chat_agent.answer()`처럼
+> 프롬프트에 넣어주시면 됩니다 — 없어도 빈 문자열이 오니 무시해도 동작은 깨지지 않습니다.
 
 - **입력은 이미 Supervisor(`supervisor.py`)가 다 모아서 줍니다.**
   - `question`: 검색용으로 재구성된 사용자 질문 (후속 질문이면 이전 턴과 합쳐진 문장)
@@ -31,10 +36,22 @@ def answer_decision(question: str, reports: list[dict], news: list[dict] | None,
   - `news`: evidence_finder가 찾은 보조 뉴스 (0건일 수 있음 — 특히 지금 네이버 API가
     401로 죽어 있어서 국내 뉴스는 거의 항상 빈 리스트로 옵니다. 아래 "알아두실 것" 참고)
   - `profile_ctx`: 사용자 위험 성향을 요약한 문자열 (예시는 아래)
+  - `history_ctx`: 직전 대화 STM 요약 (`session_store.context_text()`가 최근 4턴을
+    턴당 200자로 잘라 만든 문자열). 새 세션이거나 이전 턴이 없으면 빈 문자열.
 - **반환은 `(완성된 답변 텍스트, LLM을 실제로 썼는가)`** — `chat_agent.answer()`와 똑같은 계약입니다.
   - 텍스트에는 `sanitize_output` + `DISCLAIMER`까지 이미 붙여서 반환해야 합니다
     (Supervisor는 반환값을 그대로 화면에 냅니다 — 재가공 안 함).
   - `guardrails.sanitize_output`, `guardrails.DISCLAIMER`를 그대로 가져다 쓰면 됩니다.
+
+> **2026-08-14 추가 — 균형 가드가 통과 조건을 코드로 강제합니다.** Supervisor가
+> `answer_decision()`의 반환 텍스트를 `guardrails.check_decision_balance()`로
+> 한 번 더 검사합니다. "반면", "관점을 제시" 같은 **대조 표지어가 하나도 없거나**
+> "무조건 오릅니다"류 단정 패턴이 있으면, 반환값을 무시하고
+> `DECISION_UNBALANCED_FALLBACK`(안전 문구)으로 바꿔치기합니다 — 팀원 코드가
+> 실수로 한쪽으로 단정해도 화면엔 안 나갑니다. 두 페르소나(📈/🛡)를 실제로
+> 나란히 쓰면 이 검사는 자연히 통과되니 별도로 신경 쓸 필요는 없지만, 정답
+> 코드 짤 때 "반면"/"관점" 같은 표지어가 자연스럽게 들어가는 문장 구조로
+> 쓰시는 걸 권장합니다. (`app/guardrails.py`의 `BALANCE_MARKERS` 참고)
 
 ## 절대 규칙 (전체 서비스 공통 — 두 페르소나 모두에 적용)
 
