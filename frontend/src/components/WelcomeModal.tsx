@@ -48,7 +48,7 @@ export default function WelcomeModal() {
 
         <div className="welcome-actions">
           <Link className="btn btn-primary" to="/onboarding" onClick={close}>
-            시작하기 · 성향 진단
+            성향 진단 시작
             <IconArrowRight size={15} />
           </Link>
           <button className="btn btn-ghost" onClick={close}>

@@ -10,7 +10,8 @@
  *   메뉴       내 포트폴리오 · 리포트 서재 · 마이페이지
  *   대화 기록  남는 공간을 전부 차지하며 늘어난다 (대화 화면에서만 채워짐)
  *   ↓ 여백 ↓   기록이 짧아도 아래 기능들과 붙지 않도록 flex로 밀어낸다
- *   CTA        성향 진단
+ *   CTA        성향 진단 — 대화 화면일 때만. 다른 화면에마다 다 떠 있으면
+ *              같은 버튼이 곳곳에 반복되는 느낌만 준다
  *   맨 아래    알림 · 계정
  *
  * 대화 기록 칸의 실제 내용(ChatVault)과 "새 대화"를 눌렀을 때 실제로
@@ -37,6 +38,11 @@ export default function AppSidebar({
   const { diagnosis } = useProfile()
   /* 접기·펼치기는 이 컴포넌트 안에서만 도는 화면 상태다 */
   const [collapsed, setCollapsed] = useState(false)
+  /* 성향 진단 CTA는 대화 화면(새 대화든 진행 중이든)에서만 보여 준다.
+     history는 Chat.tsx에서 렌더링할 때만 넘어오는 값이라 그 자체로
+     "지금 대화 화면인가"를 뜻한다. 다른 화면에마다 이 버튼이 다 떠 있으면
+     여기저기 같은 CTA가 덕지덕지 반복되는 느낌만 준다. */
+  const onChatScreen = history !== undefined
 
   return (
     <aside className={`app-sidebar${collapsed ? ' collapsed' : ''}`}>
@@ -88,10 +94,12 @@ export default function AppSidebar({
         <div className="side-spacer" />
       )}
 
-      <NavLink to="/onboarding" className="btn btn-primary btn-sm side-cta" aria-label={diagnosis ? '조건 다시 잡기' : '성향 진단'}>
-        {collapsed ? <IconTarget size={16} /> : <IconArrowRight size={14} />}
-        <span>{diagnosis ? '조건 다시 잡기' : '성향 진단'}</span>
-      </NavLink>
+      {onChatScreen && (
+        <NavLink to="/onboarding" className="btn btn-primary btn-sm side-cta" aria-label={diagnosis ? '조건 다시 잡기' : '성향 진단 시작'}>
+          {collapsed ? <IconTarget size={16} /> : <IconArrowRight size={14} />}
+          <span>{diagnosis ? '조건 다시 잡기' : '성향 진단 시작'}</span>
+        </NavLink>
+      )}
 
       <div className="side-foot">
         <Notifications />
