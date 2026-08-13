@@ -77,7 +77,11 @@ function penDelay(ch: string): number {
 
 export default function Chat() {
   const { profile, effectiveRisk } = useCopilot()
-  const [msgs, setMsgs] = useState<Msg[]>([])
+  const [chatMode, setChatMode] = useState<'chat' | 'persona'>('chat')
+  const [chatMsgs, setChatMsgs] = useState<Msg[]>([])
+  const [personaMsgs, setPersonaMsgs] = useState<Msg[]>([])
+  const msgs = chatMode === 'chat' ? chatMsgs : personaMsgs
+  const setMsgs = chatMode === 'chat' ? setChatMsgs : setPersonaMsgs
   const [q, setQ] = useState('')
   const [busy, setBusy] = useState(false)
   const [trace, setTrace] = useState<TraceStep[]>([])
@@ -239,7 +243,7 @@ export default function Chat() {
       }
       setMsgs((m) => [...m, userMsg])
 
-      const res = await askChat(value, activeProfile ?? undefined)
+      const res = await askChat(value, activeProfile ?? undefined, chatMode)
       setTrace(res.trace)
 
       const think = res.trace.reduce((s, t) => s + t.ms, 0)
@@ -320,6 +324,22 @@ export default function Chat() {
 
       {/* ── 대화 ─────────────────────────────────────── */}
       <section className="chat-main">
+        {/* ── 리서치/훈수 탭 전환 ── */}
+        <div className="chat-mode-tabs">
+          <button
+            className={`chat-mode-tab${chatMode === 'chat' ? ' active' : ''}`}
+            onClick={() => setChatMode('chat')}
+          >
+            🔬 리서치
+          </button>
+          <button
+            className={`chat-mode-tab${chatMode === 'persona' ? ' active' : ''}`}
+            onClick={() => setChatMode('persona')}
+          >
+            💬 훈수
+          </button>
+        </div>
+
         <div className="chat-scroll" ref={scrollRef}>
           <div className={`chat-inner${msgs.length === 0 ? ' chat-inner-empty' : ''}`}>
             {msgs.length === 0 && <Opening onPick={send} />}

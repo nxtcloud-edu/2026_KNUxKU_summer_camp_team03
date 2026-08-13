@@ -30,6 +30,7 @@ interface ServerChatResponse {
 export async function askChat(
   message: string,
   profile?: RiskProfile,
+  mode: 'chat' | 'persona' = 'chat',
 ): Promise<ChatAnswer> {
   try {
     const ctrl = new AbortController()
@@ -42,6 +43,7 @@ export async function askChat(
       body: JSON.stringify({
         message,
         session_id: sessionId,
+        mode,
         profile: profile
           ? {
               capacity: profile.capacity,

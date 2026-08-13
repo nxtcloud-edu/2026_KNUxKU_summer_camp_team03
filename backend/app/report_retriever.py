@@ -78,6 +78,13 @@ def all_reports() -> list[dict]:
     return _from_supabase() or _load_seed()
 
 
+# 인덱싱 스크립트(scripts/index_reports.py)와 반드시 같은 값을 써야 한다 —
+# 컬렉션 생성 시 쓴 임베딩 함수와 다르면 쿼리 시 차원 불일치로 깨진다.
+CHROMA_EMBEDDING_MODEL = os.environ.get(
+    "CHROMA_EMBEDDING_MODEL", "paraphrase-multilingual-mpnet-base-v2"
+)
+
+
 # ── Chroma (벡터 검색) ────────────────────────────────────────
 def _chroma_collection():
     """env가 없으면 None — Chroma는 선택 사항이다."""
@@ -86,11 +93,17 @@ def _chroma_collection():
     if not host and not path:
         return None
     import chromadb  # 지연 import — 미설치여도 다른 경로는 동작
+    from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
+
     if host:
         client = chromadb.HttpClient(host=host, port=int(os.environ.get("CHROMA_PORT", "8001")))
     else:
         client = chromadb.PersistentClient(path=path)
-    return client.get_collection(os.environ.get("CHROMA_COLLECTION", "reports"))
+    # get_collection()에 embedding_function을 명시하지 않으면 Chroma가 생성 시
+    # 쓴 함수를 복원하지 않고 조용히 자체 기본값(384차원)으로 대체해버린다 —
+    # 그러면 쿼리 시 차원 불일치로 예외가 나서 매번 키워드 검색 폴백으로 빠진다.
+    ef = SentenceTransformerEmbeddingFunction(model_name=CHROMA_EMBEDDING_MODEL)
+    return client.get_collection(os.environ.get("CHROMA_COLLECTION", "reports"), embedding_function=ef)
 
 
 def _row_from_chroma(cid: str, doc: str, meta: dict) -> dict:

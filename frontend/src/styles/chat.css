@@ -1124,3 +1124,33 @@
   background: var(--gold-soft);
   color: var(--gold-deep);
 }
+
+
+/* ── 리서치/훈수 탭 전환 ── */
+.chat-mode-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border, #e5e5e5);
+  background: var(--surface, #fafafa);
+}
+.chat-mode-tab {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted, #888);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.chat-mode-tab:hover {
+  background: var(--hover, #f0f0f0);
+  color: var(--text, #333);
+}
+.chat-mode-tab.active {
+  background: var(--brand-bg, #f5f0e8);
+  color: var(--brand, #8b7355);
+  font-weight: 600;
+}

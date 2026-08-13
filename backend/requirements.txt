@@ -4,6 +4,7 @@ pydantic>=2.7
 requests>=2.32
 python-dotenv>=1.0
 chromadb>=0.5
+sentence-transformers>=3.0
 
 # 테스트 전용 — tests/test_chat.py가 fastapi.testclient(TestClient)를 쓴다
 pytest>=8.0
