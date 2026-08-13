@@ -108,12 +108,17 @@ export default function Library() {
                   ))}
                 </ul>
 
-                <div className="row wrap gap-1 mt-1">
-                  {r.tags.map((t) => (
+                {/* 태그 개수가 리포트마다 달라 줄바꿈 여부까지 들쭉날쭉했다.
+                    3개까지만 보여주고 나머지는 개수로만 알려 한 줄로 고정한다 */}
+                <div className="row wrap gap-1 mt-1 rep-tags">
+                  {r.tags.slice(0, 3).map((t) => (
                     <span key={t} className="tag">
                       {readTag(t)}
                     </span>
                   ))}
+                  {r.tags.length > 3 && (
+                    <span className="tag tag-more">+{r.tags.length - 3}</span>
+                  )}
                 </div>
               </button>
             </Reveal>

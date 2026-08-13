@@ -388,20 +388,17 @@
 .pf-head {
   margin-bottom: var(--sp-8);
 }
-.pf-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-  gap: var(--sp-5);
-  align-items: start;
-}
-.pf-card {
+/* 위험점수·슬라이더·배분·근거 — 한 패널. 안쪽은 헤어라인으로만 나눈다 */
+.pf-summary {
   background: var(--surface);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-sm);
-  padding: var(--sp-5);
+  padding: var(--sp-6);
 }
-.pf-card + .pf-card {
-  margin-top: var(--sp-4);
+.pf-alloc-block {
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--line);
 }
 .pf-card-t {
   font-size: var(--t-xs);
@@ -488,13 +485,22 @@
   line-height: 1.7;
   word-break: keep-all;
 }
-.pf-side {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-4);
+/* 자산군 3열 — 패널 하나, 세로 헤어라인으로만 나눈다. 카드 속 카드를
+   안 만든다(상품도 배경 없이 헤어라인으로만 구분) */
+.pf-assets {
+  margin-top: var(--sp-5);
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-.pf-side .pf-card + .pf-card {
-  margin-top: 0;
+.pf-asset {
+  padding: var(--sp-5);
+  min-width: 0;
+}
+.pf-asset + .pf-asset {
+  border-left: 1px solid var(--line);
 }
 .pf-dot {
   width: 10px;
@@ -511,33 +517,43 @@
   margin-top: var(--sp-4);
   display: flex;
   flex-direction: column;
-  gap: var(--sp-3);
 }
 .pf-prod {
+  padding: var(--sp-3) 0;
+}
+.pf-prod + .pf-prod {
+  border-top: 1px solid var(--line-soft);
+}
+
+/* 파라미터 — 카드로 세우지 않는다. 옅은 바탕에 한 줄로 지나가는 정보 */
+.pf-params {
+  margin-top: var(--sp-5);
+  padding: var(--sp-4) var(--sp-5);
   background: var(--surface-sunken);
   border-radius: var(--r-md);
-  padding: 12px 14px;
 }
-.pf-params {
-  background: var(--surface-sunken);
-  border-radius: var(--r-lg);
-  padding: var(--sp-5);
+.pf-params-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-8);
+  margin-top: var(--sp-3);
 }
 .pf-param-row {
   display: flex;
-  justify-content: space-between;
-  gap: var(--sp-3);
-  font-size: var(--t-sm);
-  color: var(--ink-3);
-  padding: 5px 0;
+  align-items: baseline;
+  gap: 8px;
 }
 .pf-param-row b {
   color: var(--ink);
 }
 
 @media (max-width: 1000px) {
-  .pf-grid {
+  .pf-assets {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .pf-asset + .pf-asset {
+    border-left: none;
+    border-top: 1px solid var(--line);
   }
 }
 
