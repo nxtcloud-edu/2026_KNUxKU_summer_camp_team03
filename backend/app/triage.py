@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 # schedule   일정형: 금통위·FOMC 날짜 → 경로 C (데모: 준비 중 안내)
 # market     시장정세형: 전반 시황·전망 → 4보드 교차 검색 → analysis
 # evidence   근거형: 특정 자산·상품 → 태그 검색 → analysis
-# decision   의사결정형: 포트폴리오 피드백·선택 고민 → 낙관/보수 두 관점 병렬 (LLM 2회)
+# (의사결정형/두 전문가 토론은 별도 탭으로 분리 — 다른 담당이 구현)
 TurnType = str
 
 
@@ -47,7 +47,10 @@ PORTFOLIO_PAT = re.compile(r"내 (비중|성향|점수)|비중은 어떻게|배�
 # explain 모드로 바꾸고 오므로, 여기서는 관점 병렬 제시로 응답한다.
 DECISION_PAT = re.compile(
     r"할까|말까|살까|팔까|괜찮(아|을까|나)|나을까|나아|어떤 게|어느 쪽|해도 되|해도 돼"
-    r"|늘릴|줄일|바꿀|피드백|평가해|점검해|포트폴리오 어때|내 포트.*(어때|봐줘)")
+    r"|늘릴|줄일|바꿀|피드백|평가해|점검해|포트폴리오 어때|내 포트.*(어때|봐줘)"
+    # "뭐 사/뭘 사" — 가드레일이 explain 모드로 바꾼 뒤 여기로 온다.
+    # 시장정세형으로 흘리면 동문서답이 되므로, 낙관/보수 병렬 관점으로 응답
+    r"|뭐\s?사|뭘\s?사")
 SCHEDULE_PAT = re.compile(r"언제|일정|날짜|캘린더|다음 (금통위|fomc)", re.I)
 CONCEPT_PAT = re.compile(r"뭐야|뭐예요|무엇|뭔가요|차이가|다른가|어떤 건가|이란\s|이 뭐")
 MARKET_PAT = re.compile(r"요즘|최근|분위기|시장.*(어때|상황)|시황|전망|어떻게 (될|봐)|흐름")
@@ -64,8 +67,11 @@ TAG_RULES: list[tuple[re.Pattern, str]] = [
     (re.compile(r"환율|달러|엔화|경제|물가|고용|매크로"), "매크로"),
 ]
 
-# 후속 질문 감지 — 이 정도로 짧고 지시어가 있으면 이전 턴을 이어받는다
-FOLLOWUP_PAT = re.compile(r"^(그럼|그거|그건|그래서|왜|더|또|근데)|(자세히|예를 들|쉽게)")
+# 후속 질문 감지 — 짧고 지시어/연결어가 있으면 이전 턴을 이어받는다
+FOLLOWUP_PAT = re.compile(
+    r"^(그럼|그러면|그래서|그래도|그니까|그거|그건|그게|왜|더|또|근데|아까|방금|이건|저건)"
+    r"|(자세히|예를 들|쉽게|다시 (설명|말)|무슨 (뜻|말)|이유가|이유는|얼마나|어느 정도)")
+FOLLOWUP_MAX_LEN = 60
 
 
 def extract_tags(text: str) -> list[str]:
@@ -77,7 +83,7 @@ def extract_tags(text: str) -> list[str]:
 
 
 def classify(message: str, prev_tags: list[str] | None = None,
-             prev_user_text: str = "") -> TriagePlan:
+             prev_user_text: str = "", prev_turn_type: str = "") -> TriagePlan:
     """질문 → 검색 계획. prev_*는 세션(STM)에서 온다."""
     text = message.strip()
 
@@ -86,27 +92,37 @@ def classify(message: str, prev_tags: list[str] | None = None,
         turn_type, tags = BUTTON_MAP[text]
         return TriagePlan(turn_type=turn_type, query=text, tags=list(tags))
 
-    # 2) 후속 질문이면 이전 턴의 주제를 이어받아 재구성
+    # 2) 후속 질문이면 이전 턴을 이어받아 재구성.
+    #    새 태그가 잡혀도(예: "그럼 단기채는?") 이전 태그와 병합하고
+    #    질문도 이전 문장과 합쳐 비교 맥락을 살린다.
     query = text
     rewritten = False
     tags = extract_tags(text)
-    if not tags and prev_tags and FOLLOWUP_PAT.search(text) and len(text) <= 40:
-        tags = list(prev_tags)
+    is_followup = (prev_tags or prev_turn_type) and \
+        FOLLOWUP_PAT.search(text) and len(text) <= FOLLOWUP_MAX_LEN
+    if is_followup:
+        merged = list(tags)
+        for t in (prev_tags or []):
+            if t not in merged:
+                merged.append(t)
+        tags = merged
         if prev_user_text:
             query = f"{prev_user_text} — 후속 질문: {text}"
         rewritten = True
 
-    # 3) 유형 규칙 (포트폴리오 > 의사결정 > 일정 > 개념 > 시장정세 > 근거)
+    # 3) 유형 규칙 (포트폴리오 > 일정 > 개념 > 시장정세 > 근거)
     if PORTFOLIO_PAT.search(text):
         return TriagePlan("portfolio", query, tags, rewritten)
-    if DECISION_PAT.search(text):
-        return TriagePlan("decision", query, tags, rewritten)
     if SCHEDULE_PAT.search(text) and extract_tags(text) != ["매크로"]:
         return TriagePlan("schedule", query, tags, rewritten)
     if CONCEPT_PAT.search(text):
         return TriagePlan("concept", query, tags, rewritten)
+
+    # 후속 질문인데 위 어떤 유형 신호도 없으면 → 직전 턴의 유형을 상속
+    # ("그럼 국채는?" 이 개념형 다음이면 개념형으로, 시황 다음이면 시황으로)
+    if is_followup and prev_turn_type in ("concept", "market", "evidence"):
+        return TriagePlan(prev_turn_type, query, tags, rewritten)
+
     if MARKET_PAT.search(text) or not tags:
-        # 태그가 하나도 안 잡히는 모호한 질문은 시장정세형으로 넓게 —
-        # 검색 0건이면 어차피 폴백이 막는다
         return TriagePlan("market", query, tags, rewritten)
     return TriagePlan("evidence", query, tags, rewritten)

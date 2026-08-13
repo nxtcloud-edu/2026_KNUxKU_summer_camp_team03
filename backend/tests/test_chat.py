@@ -118,3 +118,40 @@ def test_followup_inherits_previous_topic():
 def test_new_session_issued_when_absent():
     res = ask("채권이 뭐야?")
     assert res["session_id"]
+
+
+# ── 관련성 게이트 + 뉴스 소스 라우팅 ─────────────────────
+def test_off_topic_is_blocked_without_search():
+    res = ask("오늘 점심 뭐 먹지?")
+    assert res["turn_type"] == "off_topic"
+    assert res["evidence"] == [] and res["used_llm"] is False
+
+
+def test_followup_is_not_blocked_by_topic_gate():
+    r1 = ask("장기채 전망 어때?")
+    r2 = ask("그럼 왜?", r1["session_id"])
+    assert r2["turn_type"] != "off_topic"
+    assert r2["evidence"]
+
+
+def test_news_region_routing():
+    from app.evidence_finder import pick_region
+    assert pick_region("연준 금리 인하 관련 뉴스") == "global"
+    assert pick_region("금통위 국고채 소식") == "domestic"
+
+
+def test_news_returns_empty_without_keys():
+    from app.evidence_finder import search_news
+    assert search_news("금통위 금리") == []  # 키 없음 → 조용히 빈 리스트
+
+
+# ── 가드레일 완화 검증 ───────────────────────────────────
+def test_buy_thinking_is_answered_not_nagged():
+    res = ask("나 뭐사")  # '뭐 사' 고민 — 잔소리 없이 시황+근거로 답한다
+    assert res["turn_type"] in ("market", "evidence")
+    assert res["evidence"]
+
+
+def test_news_question_passes_topic_gate():
+    res = ask("오늘 나온 뉴스 있어?")  # '뉴스'가 금융 어휘로 인정됨
+    assert res["turn_type"] != "off_topic"

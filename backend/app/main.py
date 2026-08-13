@@ -26,7 +26,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import quant
 from .chat_schemas import ChatRequest, ChatResponse
-from .chat_service import handle as handle_chat
+from .supervisor import handle as handle_chat
 from .gemini_agent import propose_adjustments
 from .guardrails import DISCLAIMER
 from .schemas import (
@@ -51,7 +51,6 @@ def root():
         "docs": "/docs",
         "health": "/health",
     }
-
 
 _allowed_origin = os.environ.get("ALLOWED_ORIGIN", "http://localhost:5174")
 app.add_middleware(
@@ -169,9 +168,9 @@ def recommend(body: RecommendRequest):
 
 @app.post("/api/chat", response_model=ChatResponse)
 def chat(body: ChatRequest):
-    """멀티턴 챗 — 가드레일 → 세션(STM) → triage(규칙) → 유형별 라우팅.
+    """멀티턴 챗 — Supervisor가 판단해 report_retriever/evidence_finder를 호출.
 
-    LLM은 최대 1회(analysis)만 쓴다. 자세한 흐름은 chat_service.py 참고.
+    자세한 흐름은 supervisor.py 참고.
     실패해도 500을 내지 않는다 — 폴백 문구가 항상 준비돼 있다.
     """
     return handle_chat(body)
