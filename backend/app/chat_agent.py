@@ -19,6 +19,27 @@ import requests
 
 from .guardrails import DISCLAIMER, sanitize_output
 
+# ── PII 제거 — 애널리스트 연락처가 답변에 노출되지 않게 ────────
+import re as _re
+
+_EMAIL_PAT = _re.compile(r"[\w.\-+]+@[\w.\-]+\.\w+")
+# 전화번호: 02-1234-5678, 031-123-4567, 2122-9206(내선), 010-1234-5678 등
+_PHONE_PAT = _re.compile(
+    r"(?:\d{2,4}[)\-.\s]){1,2}\d{3,4}[.\-\s]?\d{4}"  # 지역번호-국번-번호
+    r"|\d{4}[.\-]\d{4}"  # 내선번호 (예: 2122-9206)
+)
+
+
+def _strip_contact_info(text: str) -> str:
+    """이메일·전화번호 패턴을 제거한다.
+
+    리포트 원문 발췌에 애널리스트 연락처가 들어있을 수 있다.
+    LLM이 그대로 인용하거나 폴백 조립에서 포함되면 개인정보 노출이다.
+    """
+    text = _EMAIL_PAT.sub("", text)
+    text = _PHONE_PAT.sub("", text)
+    return text
+
 def _api_key() -> str:
     """키는 호출 시점에 읽는다 — .env 로드 순서나 런타임 교체에 안전."""
     return os.environ.get("GEMINI_API_KEY", "")
@@ -125,6 +146,6 @@ def answer(question: str, reports: list[dict],
         print(f"[chat_agent] LLM 실패, 템플릿 폴백: {exc}", flush=True)
         text = _template_answer(question, reports)
         used_llm = False
-    return sanitize_output(text) + "\n\n" + DISCLAIMER, used_llm
+    return sanitize_output(_strip_contact_info(text)) + "\n\n" + DISCLAIMER, used_llm
 
 # (두 전문가 토론 기능은 별도 탭으로 분리 — 다른 담당 구현. 과거 코드는 git 히스토리 03b9bdf 참고)
