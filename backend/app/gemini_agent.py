@@ -43,7 +43,7 @@ SYSTEM_INSTRUCTION = """너는 퀀트 자산관리 보조 에이전트다. 아�
    근거가 없다고 판단되면 그 항목은 아예 제안하지 마라.
 3. asset은 대분류가 아니라 세부분류 중 하나만 쓴다:
    "cash", "etf_passive"(패시브 ETF), "etf_theme"(테마 ETF),
-   "bond_short"(단기채), "bond_long"(장기채).
+   "bond_short"(단기채), "bond_long"(장기채), "bond_corp"(우량 회사채).
 4. delta_pp는 -10에서 10 사이 정수로 제안한다 (그 밖의 값을 내도
    서버가 자동으로 잘라내지만, 처음부터 범위 안에서 제안하라).
    한쪽을 줄이자고 제안하면, 보통 같은 근거로 다른 세부분류를 그만큼
@@ -67,7 +67,10 @@ RESPONSE_SCHEMA = {
                 "properties": {
                     "asset": {
                         "type": "string",
-                        "enum": ["cash", "etf_passive", "etf_theme", "bond_short", "bond_long"],
+                        "enum": [
+                            "cash", "etf_passive", "etf_theme",
+                            "bond_short", "bond_long", "bond_corp",
+                        ],
                     },
                     "delta_pp": {"type": "number"},
                     "evidence_report_id": {"type": "string"},
@@ -106,7 +109,7 @@ capacity(객관): {profile.capacity}점 / tolerance(주관): {profile.tolerance}
 [기준 비중 (2단계 계산 결과, 이미 확정됨 — 대분류 자체는 건드릴 수 없다)]
 현금성 {baseline.cash}%
 ETF {baseline.etf_total}% (패시브 {baseline.etf_passive}% · 테마 {baseline.etf_theme}%)
-채권 {baseline.bond_total}% (장기 {baseline.bond_long}% · 단기 {baseline.bond_short}%)
+채권 {baseline.bond_total}% (장기 {baseline.bond_long}% · 단기 {baseline.bond_short}% · 회사채 {baseline.bond_corp}%)
 
 [오늘의 근거 리포트 후보]
 {reports_block}
@@ -178,7 +181,7 @@ def propose_adjustments(
 
     for item in raw_list:
         asset = item.get("asset")
-        if asset not in ("cash", "etf_passive", "etf_theme", "bond_short", "bond_long"):
+        if asset not in ("cash", "etf_passive", "etf_theme", "bond_short", "bond_long", "bond_corp"):
             continue  # 스키마를 벗어난 항목은 조용히 버린다
 
         evidence_id: Optional[str] = item.get("evidence_report_id")

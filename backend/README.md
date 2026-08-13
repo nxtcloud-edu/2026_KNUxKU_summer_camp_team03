@@ -47,10 +47,14 @@ backend/
 번 더 쪼갭니다**:
 
 - ETF → **패시브**(코어) / **테마**(새틀라이트)
-- 채권 → **장기채** / **단기채**
+- 채권 → **장기채** / **단기채** / **회사채**(AA- 이상 우량등급, 신용위험 반영)
 
 3단계 조정도 대분류가 아니라 **세부분류 단위**로 이뤄집니다. 자산 키는
-5개입니다: `cash`, `etf_passive`, `etf_theme`, `bond_short`, `bond_long`.
+6개입니다: `cash`, `etf_passive`, `etf_theme`, `bond_short`, `bond_long`, `bond_corp`.
+
+채권의 3분할 비율은 `bond_long_share=0.55 / bond_short_share=0.25 /
+bond_corp_share=0.20`을 기본값으로 뒀습니다. 회사채는 신용위험이 있어
+가장 작게 시작했고, `allocation_params`에서 언제든 바꿀 수 있습니다.
 
 capacity/tolerance 내부 세부 가중치(운용기간·저축여력·나이, MDD·손실반응·
 목표수익률)는 설계문서에 구체적 수치가 없어서 새로 합리적인 기본값을
@@ -128,11 +132,13 @@ capacity/tolerance 내부 세부 가중치(운용기간·저축여력·나이, M
   공식·파라미터로 다시 짜야 숫자가 어긋나지 않습니다.
 - `reports` 필드는 `lib/mock.ts`의 `Report` 타입에 맞춰뒀습니다. mock.ts가
   갱신되면 `schemas.py`의 `ReportEvidence`도 같이 고쳐야 합니다.
-- **`AssetKey`(6종: cash/govShort/govLong/corp/etfPassive/etfActive)는 상품
-  표시용 분류이고, 조정 알고리즘의 5버킷과는 다른 레이어입니다.** `corp`(회사채)는
-  지금 알고리즘 버킷에 자리가 없는데, 실제로는 `bond_long`/`bond_short`
-  어느 한쪽에 포함되는 상품으로 취급할지, 별도 세부분류로 추가할지 팀에서
-  정해야 합니다. 지금은 채권 세부분류를 장기/단기 2개로만 뒀습니다.
+- **`AssetKey`(6종: cash/govShort/govLong/corp/etfPassive/etfActive)와 알고리즘의
+  6버킷(`cash/etf_passive/etf_theme/bond_short/bond_long/bond_corp`)이 이제
+  거의 1:1로 대응합니다** (`govShort`→`bond_short`, `govLong`→`bond_long`,
+  `corp`→`bond_corp`). 다만 이름이 다릅니다 — mock.ts는 ETF의 두 번째 세부분류를
+  "액티브(`etfActive`)"라고 부르고, 이 백엔드/설계문서는 "테마(`etf_theme`)"라고
+  부릅니다. 액티브 운용과 테마 투자는 원래 다른 개념이라 프론트/설계문서 중
+  어느 쪽 용어로 통일할지 팀에서 한 번 정리하면 좋을 것 같습니다.
 - DB/RAG가 아직 없는 상태라 리포트 후보를 요청 바디로 그대로 실어 보내는
   구조로 짰습니다. Supabase가 붙으면 `reports`를 요청에서 빼고 서버가
   직접 조회하도록 바꾸면 됩니다.

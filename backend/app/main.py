@@ -63,6 +63,7 @@ def _weights_to_schema(w: quant.Weights) -> WeightsSchema:
         etf_theme=w.etf_theme,
         bond_short=w.bond_short,
         bond_long=w.bond_long,
+        bond_corp=w.bond_corp,
         etf_total=w.etf_total,
         bond_total=w.bond_total,
     )

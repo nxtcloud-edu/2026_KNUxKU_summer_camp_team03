@@ -19,13 +19,14 @@ class OnboardingInputSchema(BaseModel):
 
 
 class WeightsSchema(BaseModel):
-    """세부분류 5버킷 + 화면 표시용 대분류 합계."""
+    """세부분류 6버킷 + 화면 표시용 대분류 합계."""
 
     cash: int
     etf_passive: int
     etf_theme: int
     bond_short: int
     bond_long: int
+    bond_corp: int
     etf_total: int
     bond_total: int
 
@@ -67,7 +68,7 @@ class ReportEvidence(BaseModel):
 
 
 class AdjustmentSchema(BaseModel):
-    asset: Literal["cash", "etf_passive", "etf_theme", "bond_short", "bond_long"]
+    asset: Literal["cash", "etf_passive", "etf_theme", "bond_short", "bond_long", "bond_corp"]
     delta_pp: float
     reason: str
     evidence_report_id: Optional[str] = None
