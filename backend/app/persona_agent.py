@@ -24,7 +24,7 @@ from .personas import ALL_PERSONAS
 
 # chat_agent.py와 동일한 Gemini 설정 — 일관성을 위해 재사용 패턴
 _TIMEOUT_SEC = 12
-_MAX_OUTPUT_TOKENS = 300  # 페르소나당 2~3문장이면 300이면 넉넉
+_MAX_OUTPUT_TOKENS = 600  # 페르소나당 200자(한글) ≈ 300~400토큰, 여유 확보
 _EXCERPT_TRUNCATE = 700
 
 
