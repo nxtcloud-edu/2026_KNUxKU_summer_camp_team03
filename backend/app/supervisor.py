@@ -160,17 +160,19 @@ def _handle_persona(req: ChatRequest) -> ChatResponse:
         return ChatResponse(text=verdict.notice or "", evidence=[], trace=trace,
                             session_id=sess.session_id, turn_type="blocked", used_llm=False)
 
-    # ── 관련성 게이트 ──
-    if not is_finance_related(req.message):
-        trace.append(_step("Guardrails", "범위 밖 주제", "금융 어휘 0건 — 검색·LLM 미실행", 2))
+    # ── triage 분류 (concept redirect + 태그 추출) ──
+    from .triage import classify as _classify, extract_tags
+    plan = _classify(req.message)
+
+    # ── 관련성 게이트 (이중 체크: FINANCE_VOCAB + triage 태그) ──
+    if not is_finance_related(req.message) and not plan.tags:
+        trace.append(_step("Guardrails", "범위 밖 주제", "금융 어휘 0건 + 태그 0건 — 검색·LLM 미실행", 2))
         store.append(sess, "user", req.message, "off_topic")
         store.append(sess, "assistant", OFF_TOPIC_NOTICE, "off_topic")
         return ChatResponse(text=OFF_TOPIC_NOTICE, evidence=[], trace=trace,
                             session_id=sess.session_id, turn_type="off_topic", used_llm=False)
 
     # ── concept 질문 리다이렉트 (용어/개념은 리서치 탭이 더 적합) ──
-    from .triage import classify as _classify, extract_tags
-    plan = _classify(req.message)
     if plan.turn_type == "concept":
         redirect_msg = "이건 용어나 개념을 설명하는 질문 같아요. 🔬 리서치 탭에서 물어보시면 더 정확하게 답해드릴 수 있어요!"
         trace.append(_step("Triage", "concept 감지", "훈수 탭 → 리서치 탭 리다이렉트", 3))
