@@ -25,6 +25,7 @@ class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=1000)
     session_id: Optional[str] = None  # 없으면 서버가 발급해 응답에 실어 준다
     profile: Optional[ChatProfileSchema] = None
+    mode: Literal["chat", "persona"] = "chat"  # 탭 구분: chat=리서치탭, persona=훈수탭
 
 
 class TraceStepSchema(BaseModel):

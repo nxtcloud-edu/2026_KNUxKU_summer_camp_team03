@@ -28,7 +28,7 @@ from __future__ import annotations
 import time
 
 from . import decision_agent, evidence_finder, glossary, quant, triage
-from . import report_retriever
+from . import persona_agent, report_retriever
 from .chat_agent import answer as agent_answer
 from .chat_schemas import ChatProfileSchema, ChatRequest, ChatResponse, TraceStepSchema
 from .guardrails import (DISCLAIMER, NO_EVIDENCE_FALLBACK, OFF_TOPIC_NOTICE,
@@ -129,9 +129,80 @@ def _log_turn(req: ChatRequest, resp: ChatResponse, elapsed: float) -> None:
 def handle(req: ChatRequest) -> ChatResponse:
     """진입점 — 실제 처리(_handle) 후 사고 흐름을 터미널에 남긴다."""
     t0 = time.time()
-    resp = _handle(req)
+    if req.mode == "persona":
+        resp = _handle_persona(req)
+    else:
+        resp = _handle(req)
     _log_turn(req, resp, time.time() - t0)
     return resp
+
+
+# ── 훈수 탭 처리 ────────────────────────────────────────────────
+def _handle_persona(req: ChatRequest) -> ChatResponse:
+    """훈수 탭 — triage를 거치지 않고 바로 페르소나 3명에게 의견을 구한다.
+
+    세션 스코프: 리서치 탭과 분리하기 위해 session_id에 ":persona" 접미어를
+    붙여 별도 세션을 사용한다. seen_report_ids·history가 리서치 탭에 영향을
+    주지 않으며, profile_ctx만 공통으로 req.profile에서 읽는다.
+    """
+    # 세션 스코프 분리: "{원래 session_id}:persona"
+    persona_sid = f"{req.session_id or ''}:persona"
+    sess = store.get_or_create(persona_sid)
+
+    # ── 가드레일 (동일하게 적용) ──
+    verdict = check_input(req.message)
+    trace = [_step("Guardrails", "입력 검사",
+                   "차단" if verdict.mode == "deny"
+                   else ("해설 모드 전환" if verdict.mode == "explain" else "통과"), 9)]
+    if verdict.mode == "deny":
+        store.append(sess, "user", req.message, "blocked")
+        store.append(sess, "assistant", verdict.notice or "", "blocked")
+        return ChatResponse(text=verdict.notice or "", evidence=[], trace=trace,
+                            session_id=sess.session_id, turn_type="blocked", used_llm=False)
+
+    # ── 관련성 게이트 ──
+    if not is_finance_related(req.message):
+        trace.append(_step("Guardrails", "범위 밖 주제", "금융 어휘 0건 — 검색·LLM 미실행", 2))
+        store.append(sess, "user", req.message, "off_topic")
+        store.append(sess, "assistant", OFF_TOPIC_NOTICE, "off_topic")
+        return ChatResponse(text=OFF_TOPIC_NOTICE, evidence=[], trace=trace,
+                            session_id=sess.session_id, turn_type="off_topic", used_llm=False)
+
+    # ── 리포트 검색 (evidence 모드) ──
+    from .triage import extract_tags
+    tags = extract_tags(req.message)
+    reports = report_retriever.search("evidence", req.message, tags,
+                                      seen_ids=sess.seen_report_ids)
+    trace.append(_step("Supervisor", "report_retriever 호출",
+                       f"훈수 탭 evidence 검색 → {len(reports)}건", 21))
+
+    if not reports:
+        store.append(sess, "user", req.message, "persona")
+        store.append(sess, "assistant", NO_EVIDENCE_FALLBACK, "persona")
+        trace.append(_step("Supervisor", "폴백 응답", "근거 0건 — 생성 금지", 3))
+        return ChatResponse(text=NO_EVIDENCE_FALLBACK, evidence=[], trace=trace,
+                            session_id=sess.session_id, turn_type="persona", used_llm=False)
+
+    evidence = [r["id"] for r in reports]
+
+    # ── 뉴스 보조 (리포트 부족 시) ──
+    news = _maybe_news(req.message, tags, reports, trace)
+
+    # ── 페르소나 3명 호출 ──
+    text, used_llm = persona_agent.answer_persona(
+        req.message, reports, news=news, profile_ctx=_profile_ctx(req.profile))
+    trace.append(_step("Analysis", "페르소나 3명 의견",
+                       f"근거 {len(evidence)}건 · 뉴스 {len(news) if news else 0}건 · "
+                       + ("LLM 사용" if used_llm else "LLM 실패 → 폴백"), 400 if used_llm else 8))
+
+    # ── STM 기록 ──
+    store.append(sess, "user", req.message, "persona")
+    store.append(sess, "assistant", text, "persona", evidence)
+    sess.seen_report_ids.update(evidence)
+
+    return ChatResponse(text=text, evidence=evidence, trace=trace,
+                        session_id=sess.session_id, turn_type="persona",
+                        used_llm=used_llm)
 
 
 def _handle(req: ChatRequest) -> ChatResponse:
