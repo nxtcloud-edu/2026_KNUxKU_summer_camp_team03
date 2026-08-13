@@ -36,19 +36,19 @@ export default function WelcomeModal() {
         <IconQuill size={26} style={{ color: 'var(--gold)' }} />
 
         <h1 className="welcome-title">
-          어려운 리포트는 제가 읽을게요.
+          증권사 리포트를 읽고 정리해
           <br />
-          당신은 결정만 하시면 됩니다.
+          근거와 함께 설명해 드립니다.
         </h1>
 
         <p className="welcome-lead">
-          증권사 리포트에서 채권·ETF 이야기만 골라 읽고, 근거를 붙여 해설합니다. 6개
-          질문에 답하면 기준 비중부터 잡아 드려요.
+          채권·ETF 이야기만 골라 근거를 붙여 해설합니다. 6개 질문에 답하면
+          기준 비중부터 잡아 드려요.
         </p>
 
         <div className="welcome-actions">
           <Link className="btn btn-primary" to="/onboarding" onClick={close}>
-            시작하기 · 성향 진단
+            성향 진단 시작
             <IconArrowRight size={15} />
           </Link>
           <button className="btn btn-ghost" onClick={close}>

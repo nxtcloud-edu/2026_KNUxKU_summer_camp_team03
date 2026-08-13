@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { reportById } from '../lib/mock'
+import SelectionAsk from './SelectionAsk'
 import { IconArrowLeft, IconArrowRight, IconBook } from './icons'
 
 export default function EvidencePanel({ cited }: { cited: string[] }) {
@@ -91,6 +92,7 @@ export default function EvidencePanel({ cited }: { cited: string[] }) {
                 </button>
 
                 {isOpen && (
+                  <SelectionAsk>
                   <div className="evi-body">
                     <div className="evi-sec">3줄 요약</div>
                     <ul className="evi-sum">
@@ -112,6 +114,7 @@ export default function EvidencePanel({ cited }: { cited: string[] }) {
                       </Link>
                     </div>
                   </div>
+                  </SelectionAsk>
                 )}
               </div>
             )
