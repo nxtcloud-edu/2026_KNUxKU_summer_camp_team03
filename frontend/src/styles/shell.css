@@ -204,6 +204,17 @@
 }
 .app-sidebar.collapsed .side-foot {
   flex-direction: column;
+  align-items: center;
+}
+.app-sidebar.collapsed .acct-name {
+  display: none;
+}
+.app-sidebar.collapsed .acct,
+.app-sidebar.collapsed .acct-row {
+  flex: none;
+}
+.app-sidebar.collapsed .acct-row {
+  padding: 0;
 }
 /* 접힌 폭에서는 대화 기록 목록을 넣을 자리가 없다 — 아이콘 레일만 남기고,
    대신 메뉴 칸을 늘려 CTA·계정이 여전히 아래쪽에 붙게 한다 */

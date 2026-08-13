@@ -96,9 +96,9 @@ export default function MyPage() {
       {/* ── 머리 ─────────────────────────────────── */}
       <header className="page-head">
         <h1 className="page-title">
-          {user?.email ? `${user.email.split('@')[0]}님의 자리` : '내 자리'}
+          {user?.email ? `${user.email.split('@')[0]}님` : '마이페이지'}
         </h1>
-        <p className="page-lead">맡기신 것과 그 근거가 모여 있습니다.</p>
+        <p className="page-lead">내 성향 점수·배분·저장한 대화가 여기 모여 있습니다.</p>
 
         {!enabled && (
           <div className="my-notice">

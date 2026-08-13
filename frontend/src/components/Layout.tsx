@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom'
 import { IconQuill } from './icons'
 import ChatWidget from './ChatWidget'
 import AppSidebar from './AppSidebar'
+import SelectionAsk from './SelectionAsk'
 import { REPORTS } from '../lib/mock'
 
 export function SiteFooter() {
@@ -76,7 +77,12 @@ export default function Layout() {
     <div className="app-row">
       <AppSidebar />
       <div className="app-main" ref={mainRef}>
-        <Outlet />
+        {/* 우하단 챗봇이 뜨는 모든 화면에서 드래그 선택 → 바로 물어보기가
+            같이 되어야 한다. 페이지마다 따로 감싸지 않고 이 셸 하나에서
+            한 번에 건다 — ChatWidget이 뜨는 범위와 정확히 같아진다. */}
+        <SelectionAsk>
+          <Outlet />
+        </SelectionAsk>
         <SiteFooter />
         <ChatWidget />
       </div>

@@ -23,7 +23,7 @@ import { useProfile } from '../lib/store'
 import { TODAY_REPORTS } from '../lib/chatEngine'
 import Notifications from './Notifications'
 import AccountMenu from './AccountMenu'
-import { IconArrowLeft, IconArrowRight, IconBook, IconChat, IconPie, IconQuill, IconUser } from './icons'
+import { IconArrowLeft, IconArrowRight, IconBook, IconChat, IconPie, IconQuill, IconTarget, IconUser } from './icons'
 
 export default function AppSidebar({
   newChat,
@@ -88,9 +88,9 @@ export default function AppSidebar({
         <div className="side-spacer" />
       )}
 
-      <NavLink to="/onboarding" className="btn btn-primary btn-sm side-cta">
-        {diagnosis ? '조건 다시 잡기' : '성향 진단'}
-        <IconArrowRight size={14} />
+      <NavLink to="/onboarding" className="btn btn-primary btn-sm side-cta" aria-label={diagnosis ? '조건 다시 잡기' : '성향 진단'}>
+        {collapsed ? <IconTarget size={16} /> : <IconArrowRight size={14} />}
+        <span>{diagnosis ? '조건 다시 잡기' : '성향 진단'}</span>
       </NavLink>
 
       <div className="side-foot">

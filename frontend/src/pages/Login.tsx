@@ -98,7 +98,7 @@ export default function Login() {
         <div className="auth-mark script-en script-sign">Quill</div>
 
         <h1 className="auth-title">
-          {mode === 'in' ? '다시 오셨네요' : mode === 'up' ? '계정 만들기' : '비밀번호 재설정'}
+          {mode === 'in' ? '로그인' : mode === 'up' ? '계정 만들기' : '비밀번호 재설정'}
         </h1>
         <p className="auth-lead">
           {mode === 'reset'

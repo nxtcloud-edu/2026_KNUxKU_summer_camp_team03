@@ -215,6 +215,49 @@ h4 {
   color: var(--gold);
 }
 
+/* ── 드래그해서 바로 물어보기 ────────────────────────────────
+   선택 범위 위쪽 가운데에 작은 점 하나만 뜬다. 여기는 알약·사각형 대신
+   일부러 원을 쓴다 — 문서 주석 마커는 어디서나 동그라미라서, 각지게
+   그리면 오히려 낯설어 보인다. */
+.select-ask {
+  position: relative;
+}
+.select-ask-dot {
+  position: absolute;
+  transform: translateX(-50%);
+  z-index: 40;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  color: var(--ink-invert);
+  box-shadow: var(--shadow-md);
+  animation: select-ask-in 0.12s var(--ease-out);
+}
+.select-ask-dot:hover {
+  background: var(--gold-deep);
+}
+.select-ask-dot::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--ink);
+}
+.select-ask-dot:hover::after {
+  border-top-color: var(--gold-deep);
+}
+@keyframes select-ask-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.85);
+  }
+}
+
 /* ── 목록/설정류 페이지 머리말 ─────────────────────────────
    .section-head·.ob-title는 처음 만나는 화면(랜딩·온보딩)에 쓰는
    큰 표제다. 서재·마이페이지처럼 자주 들르는 목록형 화면에까지 그 크기를
