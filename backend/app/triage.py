@@ -20,7 +20,9 @@ from dataclasses import dataclass, field
 # schedule   일정형: 금통위·FOMC 날짜 → 경로 C (데모: 준비 중 안내)
 # market     시장정세형: 전반 시황·전망 → 4보드 교차 검색 → analysis
 # evidence   근거형: 특정 자산·상품 → 태그 검색 → analysis
-# (의사결정형/두 전문가 토론은 별도 탭으로 분리 — 다른 담당이 구현)
+# decision   의사결정형: "살까 말까"·"어떤 게 나아" → 근거 수집은 여기서(report_
+#            retriever+evidence_finder) 하고, 두 전문가 병렬 해설은
+#            decision_agent(팀원 구현 중)에 위임 — 현재는 chat_agent로 임시 대체
 TurnType = str
 
 
@@ -110,9 +112,11 @@ def classify(message: str, prev_tags: list[str] | None = None,
             query = f"{prev_user_text} — 후속 질문: {text}"
         rewritten = True
 
-    # 3) 유형 규칙 (포트폴리오 > 일정 > 개념 > 시장정세 > 근거)
+    # 3) 유형 규칙 (포트폴리오 > 의사결정 > 일정 > 개념 > 시장정세 > 근거)
     if PORTFOLIO_PAT.search(text):
         return TriagePlan("portfolio", query, tags, rewritten)
+    if DECISION_PAT.search(text):
+        return TriagePlan("decision", query, tags, rewritten)
     if SCHEDULE_PAT.search(text) and extract_tags(text) != ["매크로"]:
         return TriagePlan("schedule", query, tags, rewritten)
     if CONCEPT_PAT.search(text):
@@ -120,7 +124,7 @@ def classify(message: str, prev_tags: list[str] | None = None,
 
     # 후속 질문인데 위 어떤 유형 신호도 없으면 → 직전 턴의 유형을 상속
     # ("그럼 국채는?" 이 개념형 다음이면 개념형으로, 시황 다음이면 시황으로)
-    if is_followup and prev_turn_type in ("concept", "market", "evidence"):
+    if is_followup and prev_turn_type in ("concept", "market", "evidence", "decision"):
         return TriagePlan(prev_turn_type, query, tags, rewritten)
 
     if MARKET_PAT.search(text) or not tags:

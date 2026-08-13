@@ -70,7 +70,7 @@ def _from_supabase() -> list[dict] | None:
         rows = resp.json()
         return rows if isinstance(rows, list) and rows else None
     except (requests.RequestException, ValueError) as exc:
-        print(f"[report_store] Supabase 조회 실패, 로컬 시드로 폴백: {exc}")
+        print(f"[report_store] Supabase 조회 실패, 로컬 시드로 폴백: {exc}", flush=True)
         return None
 
 
@@ -132,7 +132,7 @@ def _search_chroma(query: str, top_k: int, seen_ids: set | None) -> list[dict] |
                 break
         return rows or None
     except Exception as exc:  # noqa: BLE001 — 검색은 절대 죽지 않는다
-        print(f"[report_store] Chroma 검색 실패, 키워드 검색으로 폴백: {exc}")
+        print(f"[report_store] Chroma 검색 실패, 키워드 검색으로 폴백: {exc}", flush=True)
         return None
 
 

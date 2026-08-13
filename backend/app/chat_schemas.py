@@ -42,5 +42,5 @@ class ChatResponse(BaseModel):
     notice: Optional[str] = None  # 가드레일 개입 안내
     trace: list[TraceStepSchema] = []
     session_id: str
-    turn_type: str  # concept | portfolio | market | evidence | schedule | blocked
+    turn_type: str  # concept | portfolio | market | evidence | schedule | decision | blocked | off_topic
     used_llm: bool  # 이번 턴에 LLM을 실제로 호출했는가 (데모 트레이스용)

@@ -105,7 +105,7 @@ def _from_newsapi(query: str) -> list[dict]:
         } for a in resp.json().get("articles", [])]
         return _store(ck, rows)
     except (requests.RequestException, ValueError) as exc:
-        print(f"[news_store] NewsAPI 실패(무시): {exc}")
+        print(f"[news_store] NewsAPI 실패(무시): {exc}", flush=True)
         return []
 
 
@@ -153,15 +153,21 @@ def _from_naver(query: str) -> list[dict]:
                 break
         return _store(ck, rows)
     except (requests.RequestException, ValueError) as exc:
-        print(f"[news_store] 네이버 뉴스 실패(무시): {exc}")
+        print(f"[news_store] 네이버 뉴스 실패(무시): {exc}", flush=True)
         return []
 
 
-def search_news(query: str) -> list[dict]:
-    """질문 성격에 맞는 소스에서 뉴스 검색. 키 없으면 조용히 빈 리스트."""
-    region = pick_region(query)
+def search_news(raw_msg: str, keywords: str | None = None) -> list[dict]:
+    """질문 성격에 맞는 소스에서 뉴스 검색. 키 없으면 조용히 빈 리스트.
+
+    raw_msg: 지역(해외/국내) 판별용 — 사용자 원문 그대로 넘긴다.
+    keywords: 실제 검색 API에 넘길 검색어. "오늘 뉴스 뽑아줘" 같은 원문을
+      그대로 네이버/NewsAPI에 넘기면 매칭이 안 되므로, 호출부(supervisor)가
+      태그 기반으로 재구성해서 넘긴다. 없으면 raw_msg를 그대로 쓴다."""
+    q = keywords or raw_msg
+    region = pick_region(raw_msg)
     if region == "global":
         # NewsAPI는 영어만 안정적 — 한국어 질문이면 핵심 영문 키워드로 치환
-        q = "federal reserve rates bonds" if re.search(r"[가-힣]", query) else query
+        q = "federal reserve rates bonds" if re.search(r"[가-힣]", q) else q
         return _from_newsapi(q)
-    return _from_naver(query)
+    return _from_naver(q)

@@ -12,11 +12,12 @@ import os
 import pytest
 from fastapi.testclient import TestClient
 
-# 키를 비워 LLM 폴백 경로를 강제한다
-os.environ.pop("GEMINI_API_KEY", None)
-
-from app.main import app  # noqa: E402
+from app.main import app  # noqa: E402  — import 시점에 main.py가 load_dotenv()를 돌린다
 from app import triage  # noqa: E402
+
+# 키를 비워 LLM 폴백 경로를 강제한다. import *뒤에* 지워야 한다 — 앞에서 지우면
+# main.py의 load_dotenv()가 .env에서 다시 채워 넣어 테스트 격리가 깨진다.
+os.environ.pop("GEMINI_API_KEY", None)
 
 client = TestClient(app)
 
@@ -147,11 +148,26 @@ def test_news_returns_empty_without_keys():
 
 # ── 가드레일 완화 검증 ───────────────────────────────────
 def test_buy_thinking_is_answered_not_nagged():
-    res = ask("나 뭐사")  # '뭐 사' 고민 — 잔소리 없이 시황+근거로 답한다
-    assert res["turn_type"] in ("market", "evidence")
+    # '뭐 사' 고민 — 잔소리 없이 근거를 들고 답한다. DECISION_PAT이 잡아
+    # decision(의사결정형)으로 가되, "근거 없이 답 안 한다" 원칙은 그대로다.
+    res = ask("나 뭐사")
+    assert res["turn_type"] in ("market", "evidence", "decision")
     assert res["evidence"]
 
 
 def test_news_question_passes_topic_gate():
     res = ask("오늘 나온 뉴스 있어?")  # '뉴스'가 금융 어휘로 인정됨
     assert res["turn_type"] != "off_topic"
+
+
+def test_issue_question_passes_topic_gate():
+    # "이슈"류 넓은 질문도 막지 않는다 (FINANCE_VOCAB에 이슈/동향/소식 추가)
+    res = ask("오늘 뭐가 이슈야")
+    assert res["turn_type"] != "off_topic"
+
+
+# ── 의사결정형 라우팅 (팀원의 두 전문가 토론 붙기 전 임시 대체) ──
+def test_decision_question_routes_and_uses_evidence():
+    res = ask("국채 비중을 지금 늘릴까 말까 고민이에요")
+    assert res["turn_type"] == "decision"
+    assert res["evidence"]  # decision_agent도 근거 없이 답하지 않는다

@@ -1,10 +1,15 @@
-"""supervisor — 질문을 판단하고 두 검색 에이전트를 알맞게 호출한다.
+"""supervisor — 질문을 판단하고 검색·해설 에이전트를 알맞게 호출한다.
 
 구조 (워크샵의 Supervisor/Specialist 패턴):
   Supervisor (이 파일, 코드 라우팅)
     ├─ report_retriever  — 크로마/Supabase/시드에서 리포트 근거
-    └─ evidence_finder   — NewsAPI(해외)·네이버(국내)에서 외부 지식
-  판단 재료는 triage(규칙 분류)가 만들고, 문장 생성만 chat_agent(LLM)가 한다.
+    ├─ evidence_finder   — NewsAPI(해외)·네이버(국내)에서 외부 지식
+    ├─ chat_agent         — 일반 해설 (LLM 1회)
+    └─ decision_agent     — 의사결정형 두 전문가 해설 (팀원 구현 예정,
+                             지금은 chat_agent로 임시 대체)
+  판단 재료는 triage(규칙 분류)가 만들고, 문장 생성만 LLM 에이전트가 한다.
+  어느 유형이든 근거 수집(report_retriever/evidence_finder 호출 여부)은
+  이 파일이 결정한다 — decision_agent는 검색 API를 직접 부르지 않는다.
 
 한 턴의 흐름:
   가드레일 check_input → 세션(STM) 로드 → triage(규칙) → 유형별 라우팅
@@ -12,16 +17,17 @@
     portfolio → quant 재계산 (LLM 0회)
     schedule  → 준비 중 안내 (경로 C, LLM 0회)
     market/evidence → report_retriever 검색 → 0건이면 폴백 / 있으면 chat_agent (LLM ≤1회)
+    decision        → report_retriever+evidence_finder(강제) 검색 → decision_agent
   → 턴 기록(STM 저장)
 
-LLM 예산: 턴당 최대 1회. (두 전문가 토론 탭은 별도 담당이 구현 예정)
+LLM 예산: 턴당 최대 1회 (decision은 팀원 구현체가 붙으면 2회로 늘 수 있음).
 """
 
 from __future__ import annotations
 
 import time
 
-from . import evidence_finder, glossary, quant, triage
+from . import decision_agent, evidence_finder, glossary, quant, triage
 from . import report_retriever
 from .chat_agent import answer as agent_answer
 from .chat_schemas import ChatProfileSchema, ChatRequest, ChatResponse, TraceStepSchema
@@ -57,14 +63,44 @@ def _profile_ctx(p: ChatProfileSchema | None) -> str:
     )
 
 
-def _maybe_news(raw_msg: str, query: str, reports: list, trace: list) -> list[dict]:
+# triage 태그 → 사람이 읽는(=검색 API에 실제로 걸리는) 검색어로 변환.
+# "채권-장기-국채" 같은 내부 태그 문자열은 뉴스 검색 API엔 그대로 안 걸린다.
+_TAG_TO_KEYWORDS = {
+    "채권-장기-국채": "장기 국채",
+    "채권-단기-국채": "단기 국채",
+    "채권-회사채": "회사채",
+    "ETF-패시브-지수": "패시브 ETF",
+    "ETF-액티브": "액티브 ETF",
+    "금리": "금리",
+    "매크로": "매크로 경제",
+}
+_DEFAULT_NEWS_QUERY = "국채 금리 시장 동향"  # 태그도 리포트도 없을 때의 최후 폴백
+
+
+def _news_query(tags: list[str], reports: list[dict]) -> str:
+    """뉴스 검색 API에 실제로 넘길 검색어를 만든다.
+
+    사용자 원문("오늘 뉴스 뽑아줘")을 그대로 넘기면 네이버/NewsAPI 어디서도
+    안 걸려서 항상 0건이 된다 — triage 태그(없으면 검색된 리포트의 태그)를
+    사람이 읽는 키워드로 바꿔 사용한다."""
+    use_tags = tags or (reports[0].get("tags", []) if reports else [])
+    labels = [_TAG_TO_KEYWORDS.get(t, t) for t in use_tags[:2]]
+    return " ".join(labels) if labels else _DEFAULT_NEWS_QUERY
+
+
+def _maybe_news(raw_msg: str, tags: list[str], reports: list, trace: list,
+                force: bool = False) -> list[dict]:
     """뉴스 보완 조건: 리포트가 빈약(<2건)하거나 사용자가 최신 소식을 원할 때만.
-    소스는 news_store가 질문 성격으로 고른다 (해외→NewsAPI, 국내→네이버)."""
+    소스는 news_store가 질문 성격으로 고른다 (해외→NewsAPI, 국내→네이버).
+
+    force: 의사결정형처럼 판단에 최신 소식이 중요한 유형은, 리포트가 충분해도
+    "필요할 수도 있으니" 건너뛰지 않고 항상 시도한다 — 결과가 0건이면 그냥
+    안 붙을 뿐, 호출 자체를 생략하지는 않는다."""
     import re as _re
-    wants_news = bool(_re.search(r"뉴스|속보|기사|최신 소식|오늘 나온", raw_msg))
+    wants_news = force or bool(_re.search(r"뉴스|속보|기사|최신 소식|오늘 나온|이슈|동향|소식", raw_msg))
     if len(reports) >= 2 and not wants_news:
         return []
-    news = evidence_finder.search_news(query)
+    news = evidence_finder.search_news(raw_msg, _news_query(tags, reports))
     if news:
         region = news[0].get("region", "?")
         src = "NewsAPI(Reuters·Bloomberg)" if region == "global" else "네이버뉴스(화이트리스트 필터)"
@@ -82,12 +118,12 @@ def _log_turn(req: ChatRequest, resp: ChatResponse, elapsed: float) -> None:
     q = req.message[:60].replace("\n", " ")
     print(f"\n┌─[chat] 세션 {resp.session_id} · 유형 {resp.turn_type} · "
           f"LLM {'사용' if resp.used_llm else '0회'} · {elapsed:.2f}s")
-    print(f"│ 질문: {q}")
+    print(f"│ 질문: {q}", flush=True)
     for t in resp.trace:
         icon = AGENT_ICON.get(t.agent, "·")
-        print(f"│ {icon} {t.agent:<14} {t.label:<24} {t.detail}")
+        print(f"│ {icon} {t.agent:<14} {t.label:<24} {t.detail}", flush=True)
     ev = ", ".join(resp.evidence[:4]) if resp.evidence else "없음"
-    print(f"└─ 답변 {len(resp.text)}자 · 근거 [{ev}]")
+    print(f"└─ 답변 {len(resp.text)}자 · 근거 [{ev}]", flush=True)
 
 
 def handle(req: ChatRequest) -> ChatResponse:
@@ -125,7 +161,7 @@ def _handle(req: ChatRequest) -> ChatResponse:
 
     # ── 2.5 관련성 게이트 — 금융 무관 질문은 여기서 끝 (후속 질문은 예외) ──
     if not plan.rewritten and not plan.tags and not is_finance_related(req.message) \
-            and plan.turn_type in ("market", "evidence"):
+            and plan.turn_type in ("market", "evidence", "decision"):
         trace.append(_step("Guardrails", "범위 밖 주제", "금융 어휘 0건 — 검색·LLM 미실행", 2))
         store.append(sess, "user", req.message, "off_topic")
         store.append(sess, "assistant", OFF_TOPIC_NOTICE, "off_topic")
@@ -173,28 +209,49 @@ def _handle(req: ChatRequest) -> ChatResponse:
         text = SCHEDULE_NOTICE
         trace.append(_step("Supervisor", "일정형 → 경로 C", "캘린더 미구현 — 정직한 안내", 2))
 
-    elif plan.turn_type in ("market", "evidence"):
-        reports = report_retriever.search(plan.turn_type, plan.query, plan.tags,
+    elif plan.turn_type in ("market", "evidence", "decision"):
+        # report_retriever는 market/그 외(evidence·decision) 두 검색 모드만
+        # 안다 — decision은 기본적으로 evidence처럼 태그+의미 검색을 쓰되,
+        # "나 뭐사"처럼 특정 자산 태그가 안 잡히는 막연한 질문은 market과
+        # 똑같이 3보드 교차 최신 리포트로 넓혀서 근거 0건을 피한다.
+        is_market_like = plan.turn_type == "market" or \
+            (plan.turn_type == "decision" and not plan.tags)
+        search_kind = "market" if is_market_like else "evidence"
+        reports = report_retriever.search(search_kind, plan.query, plan.tags,
                                       seen_ids=sess.seen_report_ids)
         trace.append(_step("Supervisor", "report_retriever 호출",
-                           f"{'3보드 교차 최신순' if plan.turn_type == 'market' else '크로마 의미검색→키워드 폴백'} "
+                           f"{'3보드 교차 최신순' if is_market_like else '크로마 의미검색→키워드 폴백'} "
                            f"→ {len(reports)}건", 21))
         if not reports:
             text = NO_EVIDENCE_FALLBACK
             trace.append(_step("Supervisor", "폴백 응답", "근거 0건 — 생성 금지", 3))
         else:
             evidence = [r["id"] for r in reports]
-            news = _maybe_news(req.message, plan.query, reports, trace)
-            text, used_llm = agent_answer(
-                plan.query, reports,
-                profile_ctx=_profile_ctx(req.profile),
-                history_ctx=store.context_text(sess),
-                news=news,
-            )
-            trace.append(_step("Analysis",
-                               "리포트 한정 해설" + ("" if used_llm else " (템플릿 폴백)"),
-                               f"근거 {len(evidence)}건 · literacy={level} · "
-                               + ("LLM 1회" if used_llm else "LLM 실패 → 요약 조립"), 380 if used_llm else 8))
+            # 의사결정형은 리포트가 충분해도 최신 소식이 판단에 중요할 수 있어
+            # evidence_finder(뉴스 API) 호출을 건너뛰지 않는다 (force=True).
+            news = _maybe_news(req.message, plan.tags, reports, trace,
+                               force=(plan.turn_type == "decision"))
+            if plan.turn_type == "decision":
+                # 두 전문가 병렬 해설 — 실제 토론 로직은 팀원 구현 예정,
+                # 지금은 decision_agent 스텁이 chat_agent로 임시 대체한다.
+                text, used_llm = decision_agent.answer_decision(
+                    plan.query, reports, news, profile_ctx=_profile_ctx(req.profile))
+                trace.append(_step("Analysis",
+                                   "의사결정형 해설" + ("" if used_llm else " (템플릿 폴백)"),
+                                   f"근거 {len(evidence)}건 · 뉴스 {len(news)}건 · "
+                                   "decision_agent(팀원 구현 전 — chat_agent 임시 대체)",
+                                   380 if used_llm else 8))
+            else:
+                text, used_llm = agent_answer(
+                    plan.query, reports,
+                    profile_ctx=_profile_ctx(req.profile),
+                    history_ctx=store.context_text(sess),
+                    news=news,
+                )
+                trace.append(_step("Analysis",
+                                   "리포트 한정 해설" + ("" if used_llm else " (템플릿 폴백)"),
+                                   f"근거 {len(evidence)}건 · literacy={level} · "
+                                   + ("LLM 1회" if used_llm else "LLM 실패 → 요약 조립"), 380 if used_llm else 8))
 
     # ── 4. STM 기록 — 다음 턴의 기억 ──
     store.append(sess, "user", req.message, plan.turn_type)

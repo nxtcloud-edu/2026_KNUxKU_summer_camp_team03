@@ -85,6 +85,10 @@ def _call_gemini(user_prompt: str, system_prompt: str | None = None) -> str:
             "generationConfig": {
                 "temperature": 0.4,
                 "maxOutputTokens": MAX_OUTPUT_TOKENS,
+                # gemini-2.5-flash는 추론(thinking) 모델이라 thinkingBudget을 두면
+                # maxOutputTokens 예산 대부분을 thinking이 먹어 답변이 MAX_TOKENS로
+                # 잘려버린다 (실측: 700 중 669가 thinking). 해설 텍스트만 필요하므로 끈다.
+                "thinkingConfig": {"thinkingBudget": 0},
             },
         },
         timeout=TIMEOUT_SEC,
@@ -92,7 +96,7 @@ def _call_gemini(user_prompt: str, system_prompt: str | None = None) -> str:
     resp.raise_for_status()
     data = resp.json()
     text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
-    print(f"│ ✍ [LLM] Gemini 응답 {_time.time() - _t0:.2f}s · {len(text)}자")
+    print(f"│ ✍ [LLM] Gemini 응답 {_time.time() - _t0:.2f}s · {len(text)}자", flush=True)
     return text
 
 
@@ -118,7 +122,7 @@ def answer(question: str, reports: list[dict],
         used_llm = True
     except (RuntimeError, requests.RequestException, KeyError,
             IndexError, json.JSONDecodeError) as exc:
-        print(f"[chat_agent] LLM 실패, 템플릿 폴백: {exc}")
+        print(f"[chat_agent] LLM 실패, 템플릿 폴백: {exc}", flush=True)
         text = _template_answer(question, reports)
         used_llm = False
     return sanitize_output(text) + "\n\n" + DISCLAIMER, used_llm
