@@ -46,6 +46,55 @@ NEED_PROFILE = (
 )
 
 
+def _llm_topic_check(message: str) -> bool:
+    """FINANCE_VOCAB + triage 태그 모두 실패했을 때의 최종 안전망.
+
+    Gemini에게 금융 관련 여부만 yes/no로 물어본다. 가볍고 빠르게(3초 타임아웃).
+    예외/타임아웃/파싱 실패 → 안전하게 False(off_topic) 반환.
+    """
+    import os
+    import time as _time
+    import requests as _requests
+
+    _t0 = _time.time()
+    key = os.environ.get("GEMINI_API_KEY", "")
+    if not key:
+        print("[topic_check] GEMINI_API_KEY 없음 → off_topic 폴백", flush=True)
+        return False
+
+    model = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+    endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+
+    try:
+        resp = _requests.post(
+            endpoint,
+            params={"key": key},
+            json={
+                "systemInstruction": {"parts": [{"text":
+                    "너는 분류기다. 사용자 질문이 금융·투자·경제·자산배분·채권·ETF·주식시장과 "
+                    "관련 있으면 yes, 아니면 no를 한 단어로만 답하라. 다른 말 하지 마라."
+                }]},
+                "contents": [{"role": "user", "parts": [{"text": message}]}],
+                "generationConfig": {
+                    "temperature": 0,
+                    "maxOutputTokens": 5,
+                    "thinkingConfig": {"thinkingBudget": 0},
+                },
+            },
+            timeout=3,
+        )
+        resp.raise_for_status()
+        text = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip().lower()
+        result = "yes" in text
+        elapsed = int((_time.time() - _t0) * 1000)
+        print(f"[topic_check] LLM 판정: '{text}' → {'통과' if result else 'off_topic'} ({elapsed}ms)", flush=True)
+        return result
+    except Exception as exc:
+        elapsed = int((_time.time() - _t0) * 1000)
+        print(f"[topic_check] 실패({exc}) → off_topic 폴백 ({elapsed}ms)", flush=True)
+        return False
+
+
 def _step(agent: str, label: str, detail: str, ms: int) -> TraceStepSchema:
     return TraceStepSchema(agent=agent, label=label, detail=detail, ms=ms)
 
@@ -164,13 +213,16 @@ def _handle_persona(req: ChatRequest) -> ChatResponse:
     from .triage import classify as _classify, extract_tags
     plan = _classify(req.message)
 
-    # ── 관련성 게이트 (이중 체크: FINANCE_VOCAB + triage 태그) ──
+    # ── 관련성 게이트 (이중 체크: FINANCE_VOCAB + triage 태그 + LLM 판정) ──
     if not is_finance_related(req.message) and not plan.tags:
-        trace.append(_step("Guardrails", "범위 밖 주제", "금융 어휘 0건 + 태그 0건 — 검색·LLM 미실행", 2))
-        store.append(sess, "user", req.message, "off_topic")
-        store.append(sess, "assistant", OFF_TOPIC_NOTICE, "off_topic")
-        return ChatResponse(text=OFF_TOPIC_NOTICE, evidence=[], trace=trace,
-                            session_id=sess.session_id, turn_type="off_topic", used_llm=False)
+        # 최종 안전망: LLM에게 물어본다
+        if not _llm_topic_check(req.message):
+            trace.append(_step("Guardrails", "범위 밖 주제", "금융 어휘 0건 + 태그 0건 + LLM no → off_topic", 2))
+            store.append(sess, "user", req.message, "off_topic")
+            store.append(sess, "assistant", OFF_TOPIC_NOTICE, "off_topic")
+            return ChatResponse(text=OFF_TOPIC_NOTICE, evidence=[], trace=trace,
+                                session_id=sess.session_id, turn_type="off_topic", used_llm=False)
+        trace.append(_step("Guardrails", "LLM 관련성 판정", "VOCAB·태그 미스 but LLM yes → 통과", 2))
 
     # ── concept 질문 리다이렉트 (용어/개념은 리서치 탭이 더 적합) ──
     if plan.turn_type == "concept":
@@ -251,11 +303,14 @@ def _handle(req: ChatRequest) -> ChatResponse:
     if not plan.rewritten and not plan.tags and not is_finance_related(req.message) \
             and verdict.mode != "explain" \
             and plan.turn_type in ("market", "evidence", "decision"):
-        trace.append(_step("Guardrails", "범위 밖 주제", "금융 어휘 0건 — 검색·LLM 미실행", 2))
-        store.append(sess, "user", req.message, "off_topic")
-        store.append(sess, "assistant", OFF_TOPIC_NOTICE, "off_topic")
-        return ChatResponse(text=OFF_TOPIC_NOTICE, evidence=[], notice=notice, trace=trace,
-                            session_id=sess.session_id, turn_type="off_topic", used_llm=False)
+        # 최종 안전망: LLM에게 물어본다
+        if not _llm_topic_check(req.message):
+            trace.append(_step("Guardrails", "범위 밖 주제", "금융 어휘 0건 + LLM no → off_topic", 2))
+            store.append(sess, "user", req.message, "off_topic")
+            store.append(sess, "assistant", OFF_TOPIC_NOTICE, "off_topic")
+            return ChatResponse(text=OFF_TOPIC_NOTICE, evidence=[], notice=notice, trace=trace,
+                                session_id=sess.session_id, turn_type="off_topic", used_llm=False)
+        trace.append(_step("Guardrails", "LLM 관련성 판정", "VOCAB 미스 but LLM yes → 통과", 2))
 
     used_llm = False
     evidence: list[str] = []
