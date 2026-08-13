@@ -710,3 +710,15 @@
   background: var(--warn);
   margin-left: 2px;
 }
+
+/* 잠금 화면 아이콘 — 관리자 콘솔 차단 */
+.gate-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--gold-soft);
+  color: var(--gold-deep);
+  margin-bottom: var(--sp-5);
+}

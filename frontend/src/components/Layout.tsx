@@ -83,7 +83,7 @@ export function SiteFooter() {
               <span className="small muted">수집 리포트 {REPORTS.length}건</span>
               <span className="small muted">태그 체계 10종</span>
               <Link className="small muted" to="/admin">
-                관리자 콘솔
+                관리자 콘솔 (로그인 필요)
               </Link>
             </div>
           </div>
