@@ -19,11 +19,14 @@ import requests
 
 from .guardrails import DISCLAIMER, sanitize_output
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
-GEMINI_ENDPOINT = (
-    f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
-)
+def _api_key() -> str:
+    """키는 호출 시점에 읽는다 — .env 로드 순서나 런타임 교체에 안전."""
+    return os.environ.get("GEMINI_API_KEY", "")
+
+
+def _endpoint() -> str:
+    model = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+    return f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 TIMEOUT_SEC = 12
 MAX_OUTPUT_TOKENS = 700
 EXCERPT_TRUNCATE = 700  # 리포트당 프롬프트에 넣는 발췌 길이 (토큰 예산)
@@ -62,11 +65,12 @@ def _build_user_prompt(question: str, reports: list[dict],
 
 
 def _call_gemini(user_prompt: str) -> str:
-    if not GEMINI_API_KEY:
-        raise RuntimeError("GEMINI_API_KEY 미설정")
+    key = _api_key()
+    if not key:
+        raise RuntimeError("GEMINI_API_KEY 미설정 — backend/.env 확인")
     resp = requests.post(
-        GEMINI_ENDPOINT,
-        params={"key": GEMINI_API_KEY},
+        _endpoint(),
+        params={"key": key},
         json={
             "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
             "contents": [{"role": "user", "parts": [{"text": user_prompt}]}],

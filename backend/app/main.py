@@ -15,6 +15,12 @@ from __future__ import annotations
 
 import os
 
+from dotenv import load_dotenv
+
+# .env는 어떤 모듈보다 먼저 읽는다 — 아래 import되는 에이전트들이
+# 환경변수를 참조하기 때문. (backend/.env 또는 프로젝트 루트의 .env)
+load_dotenv()
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 

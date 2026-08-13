@@ -25,11 +25,13 @@ import requests
 from .guardrails import sanitize_output
 from .quant import Adjustment, RiskProfile, Weights
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
-GEMINI_ENDPOINT = (
-    f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
-)
+def _api_key() -> str:
+    return os.environ.get("GEMINI_API_KEY", "")
+
+
+def _endpoint() -> str:
+    model = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+    return f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
 # 델타 제안 개수 상한 — 폭주 방지용 안전장치 (코드 레벨)
 MAX_PROPOSALS = 4
@@ -123,8 +125,9 @@ class GeminiAgentError(Exception):
 
 
 def _call_gemini(prompt: str) -> dict:
-    if not GEMINI_API_KEY:
-        raise GeminiAgentError("GEMINI_API_KEY가 설정되지 않았습니다 (.env 확인)")
+    key = _api_key()
+    if not key:
+        raise GeminiAgentError("GEMINI_API_KEY가 설정되지 않았습니다 (backend/.env 확인)")
 
     body = {
         "systemInstruction": {"parts": [{"text": SYSTEM_INSTRUCTION}]},
@@ -137,8 +140,8 @@ def _call_gemini(prompt: str) -> dict:
     }
 
     resp = requests.post(
-        GEMINI_ENDPOINT,
-        params={"key": GEMINI_API_KEY},
+        _endpoint(),
+        params={"key": key},
         json=body,
         timeout=20,
     )
