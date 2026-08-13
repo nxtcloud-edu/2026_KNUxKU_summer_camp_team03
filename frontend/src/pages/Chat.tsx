@@ -364,6 +364,38 @@ export default function Chat() {
                       </div>
                     )}
 
+                    {/* ── 훈수 탭: 페르소나 카드 렌더링 ── */}
+                    {m.done && m.data?.personas ? (
+                      <div className="persona-cards">
+                        {m.data.personas.map((p) => (
+                          <div className="persona-card" key={p.persona}>
+                            <div className="persona-card-header">
+                              {p.emoji} {p.persona} ({p.label})
+                            </div>
+                            <p className={`persona-card-body${pen ? ' pen' : ''}`}>
+                              {p.message}
+                            </p>
+                            {p.evidence.length > 0 && (
+                              <button
+                                className="persona-evidence-pill"
+                                onClick={() => {
+                                  for (const id of p.evidence) {
+                                    window.dispatchEvent(
+                                      new CustomEvent('quill:open-report', { detail: id }),
+                                    )
+                                  }
+                                }}
+                              >
+                                📄 근거 {p.evidence.length}건
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        {m.data.disclaimer && (
+                          <p className="persona-disclaimer">{m.data.disclaimer}</p>
+                        )}
+                      </div>
+                    ) : (
                     <div className="bubble bubble-agent">
                       <p className={`chat-text${pen ? ' pen' : ''}`}>
                         {/* 다 흐른 뒤에만 용어 풀이를 입힌다 (잘린 단어에 밑줄이 깜빡이지 않게) */}
@@ -412,6 +444,7 @@ export default function Chat() {
                         </div>
                       )}
                     </div>
+                    )}
                   </div>
                 </div>
               ),

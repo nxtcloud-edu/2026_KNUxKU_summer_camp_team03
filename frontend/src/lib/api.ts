@@ -42,6 +42,11 @@ interface ServerChatResponse {
   session_id: string
   turn_type: string
   used_llm: boolean
+  personas?: Array<{
+    persona: string; label: string; emoji: string;
+    message: string; evidence: string[];
+  }> | null
+  disclaimer?: string | null
 }
 
 export async function askChat(
@@ -82,6 +87,8 @@ export async function askChat(
       text: data.text,
       evidence: data.evidence,
       notice: data.notice ?? undefined,
+      personas: data.personas ?? undefined,
+      disclaimer: data.disclaimer ?? undefined,
       trace: [
         ...data.trace,
         {

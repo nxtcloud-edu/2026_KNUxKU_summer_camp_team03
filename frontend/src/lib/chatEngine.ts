@@ -31,6 +31,14 @@ export interface TraceStep {
   ms: number
 }
 
+export interface PersonaReply {
+  persona: string
+  label: string
+  emoji: string
+  message: string
+  evidence: string[]
+}
+
 export interface ChatAnswer {
   /** 스트리밍으로 흘릴 본문 */
   text: string
@@ -42,6 +50,10 @@ export interface ChatAnswer {
   alloc?: AdjustResult
   /** 리포트끼리 의견이 갈렸을 때 — 합치지 않고 나란히 보여 준다 */
   divergent?: DivergentView
+  /** 훈수 탭 — 페르소나별 응답 배열 */
+  personas?: PersonaReply[]
+  /** 훈수 탭 — 면책 문구 */
+  disclaimer?: string
   trace: TraceStep[]
 }
 
