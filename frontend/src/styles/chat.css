@@ -1,0 +1,1148 @@
+/* ─────────────────────────────────────────────────────────────
+   대화 화면 — 이 서비스의 메인
+   · 화면을 꽉 채운다. 스크롤은 대화 영역 안에서만 일어난다.
+   · 골드는 세 곳에만 쓴다: 워드마크 헤어라인, 캐럿, 1차 버튼.
+     나머지는 먹색과 회색으로 버틴다. 강조가 흔해지면 강조가 아니다.
+   ───────────────────────────────────────────────────────────── */
+
+.chat-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--panel-w);
+  height: calc(100vh - var(--header-h));
+  background: var(--chat-bg);
+}
+
+/* ── 왼쪽 · 대화 ─────────────────────────────────────────── */
+.chat-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.chat-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.chat-inner {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--sp-8) var(--sp-6) var(--sp-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+/* ── 말풍선 ──────────────────────────────────────────────── */
+.bubble-row {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+}
+.bubble-row.user {
+  justify-content: flex-end;
+}
+.bubble {
+  border-radius: var(--r-lg);
+  padding: 13px 17px;
+  line-height: var(--lh-normal);
+  font-size: var(--t-base);
+  max-width: 100%;
+}
+.bubble-user {
+  background: var(--bubble-user);
+  color: var(--bubble-user-ink);
+  border-bottom-right-radius: var(--r-xs);
+  max-width: 76%;
+  word-break: keep-all;
+}
+.bubble-agent {
+  background: var(--bubble-agent);
+  color: var(--ink);
+  border-bottom-left-radius: var(--r-xs);
+  box-shadow: var(--shadow-sm);
+}
+/* 에이전트 표식 — 작은 골드 원. 아바타 이미지를 쓰지 않는다 */
+.bubble-mark {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--gold-soft);
+  color: var(--gold-deep);
+  margin-top: 3px;
+}
+.chat-text {
+  white-space: pre-wrap;
+  word-break: keep-all;
+  margin: 0;
+}
+
+/* 스트리밍 캐럿 — 만년필 촉이 멈춰 선 자리 */
+.caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  background: var(--gold);
+  vertical-align: -0.16em;
+  margin-left: 2px;
+  animation: caret 1s steps(2, start) infinite;
+}
+@keyframes caret {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* 생각 중 */
+.bubble-agent.thinking {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 15px 18px;
+}
+.thinking .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ink-4);
+  animation: dot 1.3s ease-in-out infinite;
+}
+.thinking .dot:nth-child(2) {
+  animation-delay: 0.16s;
+}
+.thinking .dot:nth-child(3) {
+  animation-delay: 0.32s;
+}
+@keyframes dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+/* 가드레일 안내 — 답변 위에 붙는 띠 */
+.guard-notice {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  background: var(--warn-soft);
+  color: var(--warn);
+  border-radius: var(--r-md);
+  padding: 9px 13px;
+  font-size: var(--t-sm);
+  line-height: 1.6;
+  margin-bottom: var(--sp-2);
+  word-break: keep-all;
+}
+.guard-notice svg {
+  flex: none;
+  margin-top: 3px;
+}
+
+/* ── 인용 — 답변 아래 각주 ──────────────────────────────────
+   알약 칩을 걷어냈다. 칩은 개수가 늘어날수록 색 덩어리가 되어
+   정작 읽어야 할 답변보다 시끄러워진다.
+   책의 각주처럼 번호·발행처·제목의 조판만으로 위계를 만든다.
+   칸을 나누는 선도 쓰지 않는다. 골드 헤어라인 하나로 구분한다. */
+.cite-row {
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  /* 양끝이 사라지는 헤어라인 — 상자를 만들지 않는다 */
+  background: var(--gold-hairline) top / 100% 1px no-repeat;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.cite {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  padding: 5px 2px;
+  border-radius: var(--r-sm);
+  transition: background 0.18s var(--ease);
+}
+.cite:hover {
+  background: var(--surface-sunken);
+}
+/* 각주 번호 — 명조로 앉혀야 각주처럼 읽힌다 */
+.cite-num {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold);
+  width: 14px;
+}
+.cite-house {
+  flex: none;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--ink-4);
+  white-space: nowrap;
+}
+.cite-title {
+  font-size: var(--t-xs);
+  line-height: 1.6;
+  color: var(--ink-2);
+  word-break: keep-all;
+}
+.cite:hover .cite-title {
+  color: var(--ink);
+}
+
+/* 배분 카드가 답변 안에 들어갈 때 */
+.alloc-block {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--line);
+}
+
+/* ── 입력 ────────────────────────────────────────────────── */
+.chat-composer {
+  flex: none;
+  padding: var(--sp-4) var(--sp-6) var(--sp-5);
+  background: linear-gradient(rgba(244, 243, 239, 0), var(--chat-bg) 34%);
+}
+.composer {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  padding: 7px 7px 7px 20px;
+  box-shadow: var(--shadow-md);
+  transition: box-shadow 0.18s var(--ease);
+}
+.composer:focus-within {
+  box-shadow: var(--shadow-lg), inset 0 0 0 1.5px var(--gold-line);
+}
+.composer input {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  border: 0;
+  background: none;
+  outline: none;
+  font-size: var(--t-md);
+}
+.composer input::placeholder {
+  color: var(--ink-4);
+}
+.composer-foot {
+  max-width: 760px;
+  margin: 10px auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+.trace-toggle {
+  font-size: var(--t-xs);
+  font-weight: 640;
+  color: var(--ink-3);
+  background: var(--surface-band);
+  border-radius: var(--r-full);
+  padding: 4px 12px;
+  transition: background 0.16s var(--ease), color 0.16s var(--ease);
+}
+.trace-toggle:hover:not(:disabled) {
+  background: var(--surface-active);
+  color: var(--ink);
+}
+.trace-toggle.on {
+  background: var(--ink);
+  color: var(--ink-invert);
+}
+.trace-toggle:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── 트레이스 ────────────────────────────────────────────── */
+.trace {
+  max-width: 760px;
+  margin: var(--sp-3) auto 0;
+  background: var(--surface);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--t-xs);
+}
+.trace-head {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+.trace-row {
+  display: grid;
+  grid-template-columns: 104px 96px minmax(0, 1fr) 52px;
+  gap: var(--sp-3);
+  align-items: center;
+  padding: 5px 0;
+}
+.trace-tag {
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  border-radius: var(--r-xs);
+  padding: 2px 7px;
+  text-align: center;
+}
+.trace-tag.guard {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+.trace-tag.sup {
+  background: var(--ink);
+  color: var(--ink-invert);
+}
+.trace-tag.a1,
+.trace-tag.a2,
+.trace-tag.a3 {
+  background: var(--surface-band);
+  color: var(--ink-2);
+}
+.trace-tag.a3 {
+  background: var(--gold-soft);
+  color: var(--gold-deep);
+}
+.trace-label {
+  font-weight: 640;
+  color: var(--ink-2);
+}
+.trace-detail {
+  color: var(--ink-3);
+}
+.trace-ms {
+  text-align: right;
+  color: var(--ink-4);
+}
+
+/* ── 대화 시작 화면 ──────────────────────────────────────── */
+.opening {
+  padding: var(--sp-10) 0 var(--sp-4);
+}
+/* 워드마크 — 영문 만년필체가 쓰이는 유일한 자리 */
+.opening-mark {
+  font-size: 54px;
+  line-height: 1;
+  color: var(--gold);
+  margin-bottom: var(--sp-6);
+}
+.opening-title {
+  font-family: var(--font-display);
+  font-size: clamp(27px, 3.4vw, 36px);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.34;
+  word-break: keep-all;
+}
+.opening-title-2 {
+  color: var(--ink-3);
+}
+.opening-lead {
+  color: var(--ink-3);
+  max-width: 34em;
+  word-break: keep-all;
+  margin-top: var(--sp-4);
+  line-height: 1.85;
+}
+.opening-card {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--sp-5);
+  margin-top: var(--sp-6);
+}
+.opening-suggests {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: var(--sp-6);
+}
+.sug {
+  background: var(--surface);
+  color: var(--ink-2);
+  border-radius: var(--r-full);
+  padding: 8px 15px;
+  font-size: var(--t-sm);
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow 0.16s var(--ease), transform 0.16s var(--ease-out);
+}
+.sug:hover {
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+.opening-today {
+  margin-top: var(--sp-8);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--line);
+}
+.today-row {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: center;
+  font-size: var(--t-sm);
+  color: var(--ink-2);
+  min-width: 0;
+}
+.today-house {
+  flex: none;
+  font-size: var(--t-xs);
+  color: var(--ink-4);
+  width: 82px;
+}
+
+/* ── 오른쪽 · 근거 패널 ────────────────────────────────────
+   상자를 겹치지 않는다. 카드마다 테두리와 그림자를 주면 목록이 아니라
+   블록 더미가 된다. 여백과 아주 옅은 바탕색만으로 나눈다. */
+.evi-panel {
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.evi-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-5) var(--sp-5) var(--sp-4);
+}
+.evi-empty {
+  padding: var(--sp-6) var(--sp-5);
+}
+.evi-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 var(--sp-3) var(--sp-5);
+  display: flex;
+  flex-direction: column;
+}
+/* 항목 사이는 선이 아니라 헤어라인. 첫 항목 위에는 긋지 않는다 */
+.evi-item + .evi-item {
+  background: var(--gold-hairline) top / 100% 1px no-repeat;
+}
+.evi-item {
+  border-radius: var(--r-md);
+  transition: background 0.18s var(--ease);
+}
+.evi-item.open {
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  /* 펼친 항목은 위 헤어라인을 지운다 — 상자 안에 선이 남으면 지저분하다 */
+  background-image: none;
+}
+.evi-top {
+  display: flex;
+  gap: 11px;
+  align-items: baseline;
+  width: 100%;
+  text-align: left;
+  padding: 14px 14px 13px;
+}
+/* 번호 — 각주와 같은 조판을 쓴다. 대화와 패널이 같은 언어로 읽히도록 */
+.evi-num {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold);
+  width: 14px;
+}
+.evi-house {
+  display: block;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--ink-4);
+}
+.evi-title {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  word-break: keep-all;
+  margin-top: 3px;
+}
+.evi-body {
+  padding: 0 14px 16px 39px;
+}
+.evi-sec {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--ink-4);
+  margin-bottom: 8px;
+}
+.evi-sum li {
+  font-size: var(--t-xs);
+  line-height: 1.8;
+  color: var(--ink-2);
+  padding-left: 13px;
+  position: relative;
+  word-break: keep-all;
+  margin-bottom: 5px;
+}
+/* 점 대신 아주 짧은 골드 선 — 목록 기호도 펜으로 그은 것처럼 */
+.evi-sum li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.85em;
+  width: 6px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.6;
+}
+/* 인용 원문 — 왼쪽 선을 지우고 들여쓰기와 서체로만 구분한다 */
+.evi-quote {
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  line-height: 1.9;
+  color: var(--ink-2);
+  word-break: keep-all;
+  padding-left: 2px;
+}
+.evi-quote::before {
+  content: "C";
+  font-family: var(--font-display);
+  font-size: 26px;
+  line-height: 0;
+  color: var(--gold);
+  vertical-align: -0.28em;
+  margin-right: 3px;
+}
+.evi-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--t-xs);
+  font-weight: 640;
+  color: var(--gold-deep);
+  transition: gap 0.18s var(--ease);
+}
+.evi-more:hover {
+  gap: 8px;
+}
+.evi-foot {
+  flex: none;
+  padding: var(--sp-4) var(--sp-5);
+  font-size: 10.5px;
+  line-height: 1.7;
+  color: var(--ink-4);
+  word-break: keep-all;
+  background: var(--gold-hairline) top / 100% 1px no-repeat;
+}
+
+/* ── 배분 막대 ───────────────────────────────────────────── */
+.allocbar {
+  font-size: var(--t-sm);
+}
+.wlabel {
+  font-size: var(--t-xs);
+  font-weight: 640;
+  color: var(--ink-3);
+  margin-bottom: 6px;
+}
+.wbar {
+  display: flex;
+  height: 32px;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  transition: opacity 0.2s var(--ease);
+}
+.wbar.dim {
+  opacity: 0.45;
+}
+.wseg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  transition: width 0.42s var(--ease-out);
+}
+/* 현금성은 밝아서 흰 글씨가 안 보인다 */
+.wseg:first-child {
+  color: var(--ink);
+}
+.wmid {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+.wmid-line {
+  flex: 1;
+  height: 1px;
+  background: var(--line-strong);
+}
+.wmid-tag {
+  font-size: 11px;
+  color: var(--ink-4);
+  white-space: nowrap;
+}
+.wdelta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.dchip {
+  font-size: 11px;
+  font-weight: 640;
+  border-radius: var(--r-full);
+  padding: 3px 10px;
+}
+.dchip.up {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+.dchip.down {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.dchip.off {
+  background: var(--surface-band);
+  color: var(--ink-3);
+}
+.wlegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 10px;
+  font-size: var(--t-xs);
+  color: var(--ink-3);
+}
+.wlegend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.wlegend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+
+/* ── 좁은 화면 ───────────────────────────────────────────── */
+@media (max-width: 1080px) {
+  .chat-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* 근거 패널은 대화 아래로 내린다 */
+  .evi-panel {
+    display: none;
+  }
+}
+@media (max-width: 640px) {
+  .chat-inner {
+    padding: var(--sp-6) var(--sp-4) var(--sp-4);
+  }
+  .chat-composer {
+    padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  }
+  .bubble-user {
+    max-width: 88%;
+  }
+  .trace-row {
+    grid-template-columns: 90px minmax(0, 1fr);
+  }
+  .trace-detail,
+  .trace-ms {
+    display: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   보관함 · 병렬 제시 · 알림
+   ───────────────────────────────────────────────────────────── */
+
+/* 세 칸 배치 — 보관함 | 대화 | 근거 */
+.chat-shell {
+  grid-template-columns: 232px minmax(0, 1fr) var(--panel-w);
+}
+
+/* ── 왼쪽 · 보관함 ───────────────────────────────────────── */
+.vault {
+  border-right: 1px solid var(--line);
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: var(--sp-4);
+}
+.vault-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px var(--sp-3);
+}
+.vault-lock,
+.vault-plain {
+  font-size: var(--t-xs);
+  color: var(--ink-3);
+  transition: color 0.14s var(--ease);
+}
+.vault-lock:hover,
+.vault-plain:hover {
+  color: var(--ink);
+}
+.vault-plain {
+  display: block;
+  width: 100%;
+  text-align: left;
+  line-height: 1.6;
+}
+.vault-new {
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  border-radius: var(--r-md);
+  padding: 10px 14px;
+  font-size: var(--t-sm);
+  font-weight: 640;
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow 0.16s var(--ease);
+}
+.vault-new:hover {
+  box-shadow: var(--shadow-sm);
+}
+.vault-off,
+.vault-pin {
+  margin-top: var(--sp-5);
+  padding: 0 4px;
+}
+.vault-input {
+  width: 100%;
+  height: 42px;
+  border: 0;
+  outline: none;
+  background: var(--surface);
+  border-radius: var(--r-md);
+  padding: 0 14px;
+  font-size: var(--t-md);
+  letter-spacing: 0.3em;
+  box-shadow: var(--shadow-xs);
+}
+.vault-input:focus {
+  box-shadow: var(--shadow-sm), inset 0 0 0 1.5px var(--gold-line);
+}
+.vault-err {
+  font-size: var(--t-xs);
+  color: var(--danger);
+  margin-top: 8px;
+}
+/* 무엇을 못 지키는지 적는 자리 — 작지만 지우지 말 것 */
+.vault-limit {
+  font-size: 10.5px;
+  line-height: 1.7;
+  color: var(--ink-4);
+  word-break: keep-all;
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--line);
+}
+.vault-list {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.vault-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  border-radius: var(--r-sm);
+  padding: 8px 10px;
+  font-size: var(--t-sm);
+  color: var(--ink-2);
+  transition: background 0.14s var(--ease);
+}
+.vault-item:hover {
+  background: var(--surface-hover);
+}
+.vault-item.on {
+  background: var(--surface-active);
+  font-weight: 640;
+}
+.vault-item-t {
+  flex: 1;
+  min-width: 0;
+}
+.vault-item-d {
+  flex: none;
+  font-size: 10.5px;
+  color: var(--ink-4);
+}
+.vault-foot {
+  flex: none;
+  font-size: 10.5px;
+  color: var(--ink-4);
+  padding: var(--sp-3) 4px 0;
+  border-top: 1px solid var(--line);
+  margin-top: var(--sp-3);
+}
+
+/* ── 병렬 제시 ─────────────────────────────────────────────
+   두 관점을 회색 상자에 담지 않는다. 상자를 씌우면 "인용된 자료"가 아니라
+   "UI 부품"으로 읽힌다. 가운데 헤어라인 하나로만 가르고, 나머지는 조판으로.
+   양쪽 무게는 반드시 같아야 한다 — 한쪽이 도드라지면 그 순간 판단이 된다. */
+.pv {
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  background: var(--gold-hairline) top / 100% 1px no-repeat;
+}
+.pv-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-4);
+}
+/* 알약을 걷어내고 자간을 벌린 라벨로 */
+.pv-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.pv-topic {
+  font-size: var(--t-xs);
+  color: var(--ink-3);
+  word-break: keep-all;
+}
+.pv-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-6);
+}
+/* 두 번째 칸 왼쪽에만 세로 헤어라인. 위아래로 사라져 상자를 만들지 않는다 */
+.pv-col + .pv-col {
+  background: linear-gradient(
+      180deg,
+      rgba(226, 214, 186, 0) 0%,
+      rgba(226, 214, 186, 1) 22%,
+      rgba(226, 214, 186, 1) 78%,
+      rgba(226, 214, 186, 0) 100%
+    )
+    left / 1px 100% no-repeat;
+  padding-left: var(--sp-6);
+}
+.pv-house {
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--ink-4);
+}
+.pv-stance {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.55;
+  letter-spacing: -0.012em;
+  word-break: keep-all;
+  margin-top: 4px;
+}
+.pv-ground {
+  font-size: var(--t-xs);
+  line-height: 1.85;
+  color: var(--ink-3);
+  word-break: keep-all;
+  margin-top: 8px;
+}
+.pv-src {
+  font-size: var(--t-xs);
+  font-weight: 640;
+  color: var(--gold-deep);
+  margin-top: 10px;
+  transition: opacity 0.16s var(--ease);
+}
+.pv-src::after {
+  content: " →";
+}
+.pv-src:hover {
+  opacity: 0.7;
+}
+.pv-foot {
+  font-size: 11px;
+  line-height: 1.75;
+  color: var(--ink-4);
+  word-break: keep-all;
+  margin-top: var(--sp-4);
+}
+
+/* ── 알림 ────────────────────────────────────────────────── */
+.noti {
+  position: relative;
+  margin-right: var(--sp-2);
+}
+.noti-btn {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-md);
+  color: var(--ink-2);
+  transition: background 0.14s var(--ease);
+}
+.noti-btn:hover {
+  background: var(--surface-hover);
+}
+.noti-dot {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 0 2px var(--paper);
+}
+.noti-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 352px;
+  max-width: calc(100vw - 32px);
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 60;
+  overflow: hidden;
+}
+.noti-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-4) var(--sp-4) var(--sp-3);
+  border-bottom: 1px solid var(--line);
+}
+.noti-read {
+  font-size: var(--t-xs);
+  color: var(--ink-3);
+}
+.noti-read:hover {
+  color: var(--ink);
+}
+.noti-list {
+  max-height: 380px;
+  overflow-y: auto;
+}
+.noti-item {
+  padding: var(--sp-4);
+  border-bottom: 1px solid var(--line-soft);
+}
+.noti-item.read {
+  opacity: 0.55;
+}
+.noti-type {
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: var(--r-full);
+  padding: 2px 9px;
+}
+.noti-type.sug {
+  background: var(--gold-soft);
+  color: var(--gold-deep);
+}
+.noti-type.info {
+  background: var(--surface-band);
+  color: var(--ink-3);
+}
+.noti-title {
+  font-size: var(--t-sm);
+  font-weight: 640;
+  line-height: 1.5;
+  word-break: keep-all;
+  margin-top: 7px;
+}
+.noti-body {
+  font-size: var(--t-xs);
+  line-height: 1.75;
+  color: var(--ink-3);
+  word-break: keep-all;
+  margin-top: 4px;
+}
+.noti-src {
+  display: block;
+  font-size: 11px;
+  color: var(--gold-deep);
+  margin-top: 8px;
+  word-break: keep-all;
+  line-height: 1.6;
+}
+.noti-foot {
+  padding: var(--sp-3) var(--sp-4);
+  font-size: 10.5px;
+  color: var(--ink-4);
+  background: var(--surface-sunken);
+  word-break: keep-all;
+  line-height: 1.6;
+}
+
+@media (max-width: 1240px) {
+  .chat-shell {
+    grid-template-columns: minmax(0, 1fr) var(--panel-w);
+  }
+  .vault {
+    display: none;
+  }
+}
+@media (max-width: 1080px) {
+  .chat-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pv-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   손글씨 — 만년필로 쓰는 느낌
+   · 갓 쓰인 글자는 잉크가 번진 상태로 나타나 서서히 마른다
+   · 색도 잉크처럼 앉는다: 옅은 갈색(젖음) → 먹색(마름)
+   · 촉은 쓰는 자리에 머물며 아주 살짝 흔들린다
+   본문 서체는 그대로 Pretendard다. 필기체로 쓰면 읽는 속도가 무너진다.
+   "쓰는 것처럼 보이는 것"과 "손글씨로 쓰는 것"은 다르다.
+   ───────────────────────────────────────────────────────────── */
+
+.ink-char {
+  /* clip-path를 걸려면 inline이 아니라 inline-block이어야 한다 */
+  display: inline-block;
+  animation: ink-stroke 300ms var(--ease-out) both;
+}
+
+/* 펜이 글자를 왼쪽에서 오른쪽으로 훑고 지나간다.
+   획순대로 그리려면 글자마다 획 경로 데이터가 있어야 하는데,
+   한글은 완성형만 1만 자가 넘어 현실적으로 불가능하다.
+   대신 훑는 방향과 잉크가 앉는 순서를 맞춰 '쓰는 중'으로 읽히게 했다. */
+@keyframes ink-stroke {
+  0% {
+    clip-path: inset(0 100% 0 0);
+    filter: blur(1.6px);
+    color: var(--gold);
+    transform: translateY(0.4px);
+  }
+  60% {
+    clip-path: inset(0 0 0 0);
+    filter: blur(0.7px);
+    color: var(--gold-deep);
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+    filter: blur(0);
+    color: var(--ink);
+    transform: translateY(0);
+  }
+}
+
+/* 만년필 촉 — 쓰는 자리를 따라다닌다 */
+.nib {
+  display: inline-block;
+  color: var(--gold);
+  vertical-align: -0.24em;
+  margin-left: 1px;
+  transform-origin: 50% 100%;
+  animation: nib-hand 0.9s ease-in-out infinite;
+  filter: drop-shadow(0 1px 1px rgba(111, 86, 34, 0.25));
+}
+
+/* 손으로 쓸 때의 미세한 흔들림. 크게 주면 장난스러워진다 */
+@keyframes nib-hand {
+  0% {
+    transform: rotate(-15deg) translateY(0);
+  }
+  50% {
+    transform: rotate(-12.5deg) translateY(-0.7px);
+  }
+  100% {
+    transform: rotate(-15deg) translateY(0);
+  }
+}
+
+/* 애니메이션을 원치 않는 사용자에게는 번짐도 흔들림도 주지 않는다 */
+@media (prefers-reduced-motion: reduce) {
+  .ink-char {
+    animation: none;
+  }
+  .nib {
+    animation: none;
+    transform: rotate(-15deg);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   만년필체는 '답변'에 쓴다
+   · 질문은 사용자가 자판으로 친 글이다. 그대로 Pretendard로 둔다.
+   · 답변은 에이전트가 펜으로 써 주는 글이다. 여기에 만년필 명조를 쓴다.
+     잉크가 앉는 애니메이션과 붙어야 "쓰고 있다"는 인상이 완성된다.
+   · 고운바탕은 만년필로 눌러 쓴 명조다. 세로획이 굵고 가로획이 얇아
+     펜촉의 필압이 글자에 남는다.
+   · 크기는 본문 크기를 지킨다. 명조는 자면이 작아 보여 2px만 올린다.
+   ───────────────────────────────────────────────────────────── */
+
+.chat-text.pen {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 16.5px;
+  line-height: 1.95;
+  /* 명조는 자간을 살짝 벌려야 획이 숨을 쉰다 */
+  letter-spacing: 0.005em;
+  color: var(--ink);
+}
+
+/* 잉크가 앉는 시간 — 명조는 획이 정갈해서 오래 끌 필요가 없다 */
+.chat-text.pen .ink-char {
+  animation-duration: 460ms;
+}
+
+/* 토글 버튼 */
+.pen-toggle {
+  font-size: var(--t-xs);
+  font-weight: 640;
+  color: var(--ink-3);
+  background: var(--surface-band);
+  border-radius: var(--r-full);
+  padding: 4px 12px;
+  margin-left: 6px;
+  transition: background 0.16s var(--ease), color 0.16s var(--ease);
+}
+.pen-toggle:hover {
+  background: var(--surface-active);
+  color: var(--ink);
+}
+.pen-toggle.on {
+  background: var(--gold-soft);
+  color: var(--gold-deep);
+}

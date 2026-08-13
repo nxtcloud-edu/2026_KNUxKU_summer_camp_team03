@@ -1,1 +1,11 @@
 .DS_Store
+node_modules/
+frontend/dist/
+.venv/
+__pycache__/
+*.pyc
+
+# 환경변수 — 실키는 절대 커밋하지 않는다
+.env
+frontend/.env
+backend/.env

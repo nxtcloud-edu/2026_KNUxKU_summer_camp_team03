@@ -15,10 +15,18 @@ from __future__ import annotations
 
 import os
 
+from dotenv import load_dotenv
+
+# .env는 어떤 모듈보다 먼저 읽는다 — 아래 import되는 에이전트들이
+# 환경변수를 참조하기 때문. (backend/.env 또는 프로젝트 루트의 .env)
+load_dotenv()
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import quant
+from .chat_schemas import ChatRequest, ChatResponse
+from .supervisor import handle as handle_chat
 from .gemini_agent import propose_adjustments
 from .guardrails import DISCLAIMER
 from .schemas import (
@@ -34,10 +42,23 @@ from .schemas import (
 
 app = FastAPI(title="Quill · 추천 알고리즘 API", version="0.1.0")
 
+
+@app.get("/")
+def root():
+    return {
+        "status": "ok",
+        "service": "Quill API",
+        "docs": "/docs",
+        "health": "/health",
+    }
+
 _allowed_origin = os.environ.get("ALLOWED_ORIGIN", "http://localhost:5174")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[_allowed_origin],
+    # 개발 편의: vite가 5174가 아닌 포트(5173/5175…)로 떠도 붙게 해 둔다.
+    # 배포 시에는 ALLOWED_ORIGIN만 남기고 이 regex를 지울 것.
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -143,3 +164,13 @@ def recommend(body: RecommendRequest):
         explain_baseline=quant.explain_baseline(profile, result.baseline),
         disclaimer=DISCLAIMER,
     )
+
+
+@app.post("/api/chat", response_model=ChatResponse)
+def chat(body: ChatRequest):
+    """멀티턴 챗 — Supervisor가 판단해 report_retriever/evidence_finder를 호출.
+
+    자세한 흐름은 supervisor.py 참고.
+    실패해도 500을 내지 않는다 — 폴백 문구가 항상 준비돼 있다.
+    """
+    return handle_chat(body)

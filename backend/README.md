@@ -8,9 +8,27 @@
 
 ## 실행하기
 
+**Windows (PowerShell)**
+
+```powershell
+cd backend
+python -m venv .venv
+.venv\Scripts\Activate.ps1     # "스크립트 실행 불가" 에러가 나면 아래 참고
+pip install -r requirements.txt
+copy .env.example .env          # 메모장 등으로 열어 GEMINI_API_KEY 채워넣기
+uvicorn app.main:app --reload --port 8000
+```
+
+> `Activate.ps1` 실행이 막히면 (실행 정책 에러):
+> `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+> 를 한 번 실행한 뒤 다시 activate 하세요. cmd를 쓴다면
+> `.venv\Scripts\activate.bat`을 대신 실행하면 됩니다.
+
+**macOS / Linux**
+
 ```bash
 cd backend
-python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env   # GEMINI_API_KEY 채워넣기
 uvicorn app.main:app --reload --port 8000
@@ -20,9 +38,9 @@ uvicorn app.main:app --reload --port 8000
 
 테스트:
 
-```bash
+```powershell
 pip install pytest
-python -m pytest tests/ -v
+python -m pytest tests/ -v      # Windows·맥 동일. 39개 통과해야 정상
 ```
 
 ## 파일 구조
@@ -34,10 +52,22 @@ backend/
 │   ├─ guardrails.py     ★ guardrails.ts 1:1 포팅 — 입력 검사·출력 치환·면책 문구
 │   ├─ gemini_agent.py   ★ 3단계 델타 "제안"만 생성 (최종 숫자는 절대 안 씀)
 │   ├─ schemas.py        Pydantic 요청/응답 모델 (mock.ts의 Report 필드명과 맞춤)
-│   └─ main.py           FastAPI 라우트
+│   ├─ main.py           FastAPI 라우트 (/api/risk-profile · /api/portfolio/recommend · /api/chat)
+│   │
+│   │  ── 챗 백엔드 (feature/chat-backend에서 추가) ──
+│   ├─ chat_service.py   ★ 챗 오케스트레이터 — 가드레일→세션→triage→유형별 라우팅
+│   ├─ chat_agent.py     ★ 챗의 유일한 LLM 지점 + 의사결정형 낙관/보수 페르소나 2종
+│   ├─ triage.py         질문 유형 분류 6종 (규칙 기반, LLM 0회) + 후속질문 재구성
+│   ├─ session_store.py  세션 = STM (최근 턴 기억, 만료 24h)
+│   ├─ glossary.py       용어 사전 8개 × 수준 3벌 (개념형 눈높이 교육)
+│   ├─ report_store.py   리포트 검색 단일 진입점 (Supabase 우선 → 시드 폴백)
+│   └─ chat_schemas.py   챗 요청/응답 모델 (FE ChatAnswer와 일치)
+├─ data/
+│   └─ reports.json      검색 시드 — FE mock과 동일 파일 (리포트 ID 일치)
 └─ tests/
     ├─ test_quant.py       라운딩·클램프·근거검증·세부분류 로직 테스트
-    └─ test_guardrails.py  입력 판정·출력 치환 테스트
+    ├─ test_guardrails.py  입력 판정·출력 치환 테스트
+    └─ test_chat.py        챗 전 경로 — 가드레일·버튼·개념형·멀티턴·의사결정형
 ```
 
 ## v3에서 달라진 것 (quant.ts 대비)
@@ -152,10 +182,9 @@ capacity/tolerance 내부 세부 가중치(운용기간·저축여력·나이, M
   직접 조회하도록 바꾸면 됩니다.
 - `.env`의 `ALLOWED_ORIGIN`을 프론트 개발 서버 주소(`http://localhost:5174`)에
   맞춰뒀습니다. 배포 시 실제 도메인으로 교체하세요.
-- `guardrails.py`도 포팅했습니다. `check_input`은 아직 어느 라우트에도 안
-  걸었습니다 — 챗봇 답변 엔드포인트가 생기면 거기서 먼저 걸어야 합니다.
-  `sanitize_output`은 이미 `gemini_agent.py`에서 각 조정의 `reason`
-  텍스트에 적용 중입니다.
+- `guardrails.py`도 포팅했습니다. `check_input`은 `/api/chat`의 첫 관문으로
+  배선됐습니다 (매 턴 재실행). `sanitize_output`은 `gemini_agent.py`의
+  `reason`과 챗 응답 본문 양쪽에 적용 중입니다.
 
 ## 설계 원칙 (변하지 않는 부분)
 
