@@ -189,3 +189,18 @@ def test_all_llm_failure(mock_call):
     assert used_llm is False
     for d in personas_list:
         assert d["message"] == "지금 답변을 만들지 못했어요."
+
+
+# ── 7. concept 질문은 리서치 탭으로 리다이렉트 ────────────────
+def test_concept_question_redirects_to_research_tab():
+    """훈수 탭에서 개념/용어 질문을 하면 redirect 응답이 나온다."""
+    from app.chat_schemas import ChatRequest
+    from app.supervisor import _handle_persona
+
+    req = ChatRequest(message="듀레이션이 뭐야?", mode="persona")
+    resp = _handle_persona(req)
+
+    assert resp.turn_type == "redirect"
+    assert resp.used_llm is False
+    assert resp.personas == []
+    assert "리서치 탭" in resp.text

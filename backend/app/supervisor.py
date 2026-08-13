@@ -168,8 +168,18 @@ def _handle_persona(req: ChatRequest) -> ChatResponse:
         return ChatResponse(text=OFF_TOPIC_NOTICE, evidence=[], trace=trace,
                             session_id=sess.session_id, turn_type="off_topic", used_llm=False)
 
+    # ── concept 질문 리다이렉트 (용어/개념은 리서치 탭이 더 적합) ──
+    from .triage import classify as _classify, extract_tags
+    plan = _classify(req.message)
+    if plan.turn_type == "concept":
+        redirect_msg = "이건 용어나 개념을 설명하는 질문 같아요. 🔬 리서치 탭에서 물어보시면 더 정확하게 답해드릴 수 있어요!"
+        trace.append(_step("Triage", "concept 감지", "훈수 탭 → 리서치 탭 리다이렉트", 3))
+        store.append(sess, "user", req.message, "redirect")
+        store.append(sess, "assistant", redirect_msg, "redirect")
+        return ChatResponse(text=redirect_msg, personas=[], evidence=[], trace=trace,
+                            session_id=sess.session_id, turn_type="redirect", used_llm=False)
+
     # ── 리포트 검색 (evidence 모드) ──
-    from .triage import extract_tags
     tags = extract_tags(req.message)
     reports = report_retriever.search("evidence", req.message, tags,
                                       seen_ids=sess.seen_report_ids)
