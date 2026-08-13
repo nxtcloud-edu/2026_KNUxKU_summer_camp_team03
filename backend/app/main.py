@@ -60,7 +60,7 @@ def _weights_to_schema(w: quant.Weights) -> WeightsSchema:
     return WeightsSchema(
         cash=w.cash,
         etf_passive=w.etf_passive,
-        etf_theme=w.etf_theme,
+        etf_active=w.etf_active,
         bond_short=w.bond_short,
         bond_long=w.bond_long,
         bond_corp=w.bond_corp,

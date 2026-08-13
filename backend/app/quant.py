@@ -14,7 +14,7 @@ quant.ts는 세부 스펙이 확정되기 전에 화면 검증용으로 먼저 �
 
 v3에서 달라진 것:
     - 대분류(현금/ETF/채권) 산출 후, 각 대분류를 세부분류로 한 번 더 쪼갠다
-      (ETF → 패시브/테마, 채권 → 단기/장기).
+      (ETF → 패시브/액티브, 채권 → 단기/장기/회사채).
     - 3단계 조정은 대분류가 아니라 이 세부분류 단위로 이뤄진다.
     - capacity/tolerance 내부 가중치는 문서에 구체적 수치가 없어, 합리적인
       기본값을 정해 allocation_params에 넣었다 — 코드 수정 없이 튜닝 가능.
@@ -61,9 +61,14 @@ ALLOCATION_PARAMS = {
     "etf_share_at_100": 0.95,
 
     # ── 2단계: 세부분류 산출 (NEW — v3 문서의 "세부 분류 비중 쪼개기") ──
-    # ETF 대분류를 패시브(코어) : 테마(새틀라이트)로 쪼개는 기본 비율
-    "etf_passive_share": 2 / 3,   # 예시: ETF 60% → 패시브 40% : 테마 20%
-    "etf_theme_share": 1 / 3,
+    # ETF 대분류를 패시브 : 액티브로 쪼개는 기본 비율.
+    # 주의: "지수추종 vs 테마"는 이 축이 아니다 — mock.ts의 ALL_TAGS를 보면
+    # ETF-패시브-지수/ETF-패시브-테마/ETF-액티브-지수/ETF-액티브-테마 4개
+    # 태그가 있고, 패시브 상품도 테마형일 수 있다(P-ETFP-03: 배당성장 테마
+    # ETF인데 asset은 etfPassive). 지수추종/테마는 각 버킷 안에서 상품·리포트를
+    # 매칭하는 태그일 뿐, 돈이 갈리는 배분 축은 어디까지나 패시브 vs 액티브다.
+    "etf_passive_share": 2 / 3,   # 예시: ETF 60% → 패시브 40% : 액티브 20%
+    "etf_active_share": 1 / 3,
     # 채권 대분류를 장기 : 단기 : 회사채로 쪼개는 기본 비율 (3분할, 합 1.0)
     # 회사채는 신용위험이 있는 만큼 비중을 가장 작게 뒀다 — mock.ts 상품군에서도
     # AA- 등급 우량 회사채 하나만 다루는 수준이라 시작 비중을 보수적으로 잡았다.
@@ -177,9 +182,9 @@ def risk_profile(inp: OnboardingInput) -> RiskProfile:
 
 # ── 2단계 · 기준 비중 산출 (대분류 → 세부분류) ────────────────
 
-Asset = Literal["cash", "etf_passive", "etf_theme", "bond_short", "bond_long", "bond_corp"]
+Asset = Literal["cash", "etf_passive", "etf_active", "bond_short", "bond_long", "bond_corp"]
 ASSETS: tuple[Asset, ...] = (
-    "cash", "etf_passive", "etf_theme", "bond_short", "bond_long", "bond_corp",
+    "cash", "etf_passive", "etf_active", "bond_short", "bond_long", "bond_corp",
 )
 
 
@@ -189,14 +194,14 @@ class Weights:
 
     cash: int
     etf_passive: int
-    etf_theme: int
+    etf_active: int
     bond_short: int
     bond_long: int
     bond_corp: int
 
     @property
     def etf_total(self) -> int:
-        return self.etf_passive + self.etf_theme
+        return self.etf_passive + self.etf_active
 
     @property
     def bond_total(self) -> int:
@@ -218,9 +223,9 @@ def baseline_weights(risk: int) -> Weights:
     etf_total = _round(remaining * share)
     bond_total = remaining - etf_total
 
-    # 세부분류 — 코어/새틀라이트로 쪼갠다 (NEW)
+    # 세부분류 — 패시브/액티브로 쪼갠다 (NEW)
     etf_passive = _round(etf_total * p["etf_passive_share"])
-    etf_theme = etf_total - etf_passive
+    etf_active = etf_total - etf_passive
 
     # 채권은 장기/단기/회사채 3분할. 앞의 둘을 반올림하고 회사채가 잔여를
     # 흡수하게 해서, 반올림 오차가 있어도 세 값의 합이 항상 bond_total과 같다.
@@ -231,7 +236,7 @@ def baseline_weights(risk: int) -> Weights:
     return Weights(
         cash=floor,
         etf_passive=etf_passive,
-        etf_theme=etf_theme,
+        etf_active=etf_active,
         bond_short=bond_short,
         bond_long=bond_long,
         bond_corp=bond_corp,
@@ -325,7 +330,7 @@ def explain_baseline(p: RiskProfile, w: Weights) -> str:
         f"수용력 {p.capacity}점과 선호도 {p.tolerance}점을 4:6으로 섞어 "
         f"위험 점수 {p.risk}점이 나왔어요. 비상금 몫으로 현금성 {w.cash}%를 먼저 떼고, "
         f"남은 {100 - w.cash}%를 점수에 비례해 ETF {w.etf_total}%(패시브 {w.etf_passive}·"
-        f"테마 {w.etf_theme}) · 채권 {w.bond_total}%(장기 {w.bond_long}·단기 {w.bond_short}·"
+        f"액티브 {w.etf_active}) · 채권 {w.bond_total}%(장기 {w.bond_long}·단기 {w.bond_short}·"
         f"회사채 {w.bond_corp})로 나눴습니다."
     )
 
@@ -333,7 +338,7 @@ def explain_baseline(p: RiskProfile, w: Weights) -> str:
 ASSET_LABEL = {
     "cash": "현금성",
     "etf_passive": "패시브 ETF",
-    "etf_theme": "테마 ETF",
+    "etf_active": "액티브 ETF",
     "bond_short": "단기채",
     "bond_long": "장기채",
     "bond_corp": "회사채",
@@ -341,8 +346,8 @@ ASSET_LABEL = {
 
 ASSET_NOTE = {
     "cash": "파킹 · 비상금",
-    "etf_passive": "지수추종 · 코어",
-    "etf_theme": "테마형 · 새틀라이트",
+    "etf_passive": "지수추종 · 낮은 보수",
+    "etf_active": "운용역 개입 · 테마/초과성과 추구",
     "bond_short": "방어용 · 만기 1년 이내",
     "bond_long": "금리 인하 국면 시세차익 · 듀레이션 6년 내외",
     "bond_corp": "AA- 이상 우량 회사채 · 국채 대비 캐리 매력",

@@ -23,7 +23,7 @@ class WeightsSchema(BaseModel):
 
     cash: int
     etf_passive: int
-    etf_theme: int
+    etf_active: int
     bond_short: int
     bond_long: int
     bond_corp: int
@@ -68,7 +68,7 @@ class ReportEvidence(BaseModel):
 
 
 class AdjustmentSchema(BaseModel):
-    asset: Literal["cash", "etf_passive", "etf_theme", "bond_short", "bond_long", "bond_corp"]
+    asset: Literal["cash", "etf_passive", "etf_active", "bond_short", "bond_long", "bond_corp"]
     delta_pp: float
     reason: str
     evidence_report_id: Optional[str] = None

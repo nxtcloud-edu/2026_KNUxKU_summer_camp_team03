@@ -46,15 +46,21 @@ backend/
 (현금/ETF/채권) 산출은 quant.ts와 개념이 같지만, 그 뒤에 **세부분류로 한
 번 더 쪼갭니다**:
 
-- ETF → **패시브**(코어) / **테마**(새틀라이트)
+- ETF → **패시브** / **액티브** (mock.ts의 `AssetKey: etfPassive | etfActive`와 동일한 축)
 - 채권 → **장기채** / **단기채** / **회사채**(AA- 이상 우량등급, 신용위험 반영)
 
 3단계 조정도 대분류가 아니라 **세부분류 단위**로 이뤄집니다. 자산 키는
-6개입니다: `cash`, `etf_passive`, `etf_theme`, `bond_short`, `bond_long`, `bond_corp`.
+6개입니다: `cash`, `etf_passive`, `etf_active`, `bond_short`, `bond_long`, `bond_corp`.
 
 채권의 3분할 비율은 `bond_long_share=0.55 / bond_short_share=0.25 /
 bond_corp_share=0.20`을 기본값으로 뒀습니다. 회사채는 신용위험이 있어
 가장 작게 시작했고, `allocation_params`에서 언제든 바꿀 수 있습니다.
+
+**"지수추종 vs 테마"는 배분 축이 아닙니다.** `mock.ts`의 `ALL_TAGS`를 보면
+`ETF-패시브-지수/ETF-패시브-테마/ETF-액티브-지수/ETF-액티브-테마` 4개 태그가
+있고, `P-ETFP-03`(배당성장 테마 ETF)처럼 패시브인데 테마형인 상품도 실제로
+있습니다. 즉 돈이 갈리는 배분 축은 어디까지나 패시브/액티브(운용방식) 하나뿐이고,
+지수추종/테마(전략유형)는 각 버킷 안에서 상품·리포트를 매칭하는 태그입니다.
 
 capacity/tolerance 내부 세부 가중치(운용기간·저축여력·나이, MDD·손실반응·
 목표수익률)는 설계문서에 구체적 수치가 없어서 새로 합리적인 기본값을
@@ -102,11 +108,13 @@ capacity/tolerance 내부 세부 가중치(운용기간·저축여력·나이, M
 {
   "profile": { "capacity": 99, "tolerance": 69, "risk": 81, "gap_warning": false },
   "baseline": {
-    "cash": 5, "etf_passive": 49, "etf_theme": 25, "bond_short": 7, "bond_long": 14,
+    "cash": 5, "etf_passive": 49, "etf_active": 25,
+    "bond_short": 5, "bond_long": 12, "bond_corp": 4,
     "etf_total": 74, "bond_total": 21
   },
   "adjusted": {
-    "cash": 5, "etf_passive": 43, "etf_theme": 25, "bond_short": 7, "bond_long": 20,
+    "cash": 5, "etf_passive": 43, "etf_active": 25,
+    "bond_short": 5, "bond_long": 18, "bond_corp": 4,
     "etf_total": 68, "bond_total": 27
   },
   "applied": [
@@ -133,12 +141,12 @@ capacity/tolerance 내부 세부 가중치(운용기간·저축여력·나이, M
 - `reports` 필드는 `lib/mock.ts`의 `Report` 타입에 맞춰뒀습니다. mock.ts가
   갱신되면 `schemas.py`의 `ReportEvidence`도 같이 고쳐야 합니다.
 - **`AssetKey`(6종: cash/govShort/govLong/corp/etfPassive/etfActive)와 알고리즘의
-  6버킷(`cash/etf_passive/etf_theme/bond_short/bond_long/bond_corp`)이 이제
-  거의 1:1로 대응합니다** (`govShort`→`bond_short`, `govLong`→`bond_long`,
-  `corp`→`bond_corp`). 다만 이름이 다릅니다 — mock.ts는 ETF의 두 번째 세부분류를
-  "액티브(`etfActive`)"라고 부르고, 이 백엔드/설계문서는 "테마(`etf_theme`)"라고
-  부릅니다. 액티브 운용과 테마 투자는 원래 다른 개념이라 프론트/설계문서 중
-  어느 쪽 용어로 통일할지 팀에서 한 번 정리하면 좋을 것 같습니다.
+  6버킷(`cash/etf_passive/etf_active/bond_short/bond_long/bond_corp`)이 이제
+  1:1로 대응합니다** (`govShort`→`bond_short`, `govLong`→`bond_long`,
+  `corp`→`bond_corp`, `etfPassive`→`etf_passive`, `etfActive`→`etf_active`).
+  ~~이전 버전에서 `etf_theme`이라는 이름을 썼던 건 "지수추종 vs 테마"와
+  "패시브 vs 액티브"라는 서로 다른 두 축을 하나로 뭉갠 실수였습니다 —
+  `etf_active`로 정정했습니다.~~ (해결됨)
 - DB/RAG가 아직 없는 상태라 리포트 후보를 요청 바디로 그대로 실어 보내는
   구조로 짰습니다. Supabase가 붙으면 `reports`를 요청에서 빼고 서버가
   직접 조회하도록 바꾸면 됩니다.

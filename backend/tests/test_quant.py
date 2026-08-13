@@ -39,7 +39,7 @@ def test_baseline_weights_sum_to_100():
 
 def test_baseline_rollups_match_sub_buckets():
     w = quant.baseline_weights(70)
-    assert w.etf_total == w.etf_passive + w.etf_theme
+    assert w.etf_total == w.etf_passive + w.etf_active
     assert w.bond_total == w.bond_short + w.bond_long + w.bond_corp
     assert w.cash + w.etf_total + w.bond_total == 100
 
