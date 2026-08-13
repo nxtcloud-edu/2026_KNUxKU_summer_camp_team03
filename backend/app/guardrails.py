@@ -22,18 +22,28 @@ class InputVerdict:
     notice: Optional[str] = None
 
 
-# 매수/매도 직접 지시를 요구하는 표현
-ASK_FOR_ORDER = [
-    "사야", "살까", "사도 돼", "매수해", "매도해", "팔까", "팔아야",
-    "지금 사", "얼마나 사", "몇 주", "종목 찍어", "추천해 줘", "추천해줘",
-    "골라 줘", "골라줘",
-]
+# 매수/매도 직접 지시를 요구하는 표현 — 어간 변형까지 커버하는 정규식
+ASK_FOR_ORDER_PAT = re.compile(
+    # "사야", "살까(요)", "사도 돼/될까/되나(요)", "사면 돼/될까/되나(요)"
+    r"사(야|도\s?(돼|될까|되나요?)|면\s?(돼|될까|되나요?))"
+    r"|살까"
+    # "매수해/할까/하면/해도/할", "매도해/할까/하면/해도/할"
+    r"|매수(해|할까|하면|해도|할)"
+    r"|매도(해|할까|하면|해도|할)"
+    # "팔까(요)", "팔아야", "팔면 돼", "팔아도"
+    r"|팔(까|아야|면\s?돼|아도)"
+    # 기존 고정 표현
+    r"|지금\s사|얼마나\s사|몇\s주|종목\s찍어|추천해\s?줘|골라\s?줘"
+)
 
-# 확정적 예측·수익 보장을 요구하는 표현
-ASK_FOR_PREDICTION = [
-    "오를까", "내릴까", "얼마나 벌", "수익률 얼마", "확실", "보장",
-    "무조건", "언제 오르", "전망 맞",
-]
+# 확정적 예측·수익 보장을 요구하는 표현 — 어간 변형 포함
+ASK_FOR_PREDICTION_PAT = re.compile(
+    # "오를까(요)", "오르나(요)", "내릴까(요)", "내리나(요)"
+    r"오를까|오르나요?|내릴까|내리나요?"
+    r"|얼마나\s벌|수익률\s얼마"
+    r"|확실|보장|무조건"
+    r"|언제\s오르|전망\s맞"
+)
 
 # 서비스가 다루지 않는 자산군
 OUT_OF_SCOPE = [
@@ -55,25 +65,23 @@ def check_input(text: str) -> InputVerdict:
                 ),
             )
 
-    for w in ASK_FOR_ORDER:
-        if w in q:
-            return InputVerdict(
-                mode="explain",
-                notice=(
-                    "무엇을 사고팔지는 정해 드릴 수 없어요. 대신 리포트가 어떤 관점을 "
-                    "제시하는지 풀어서 해설해 드릴게요. 판단은 회원님이 하십니다."
-                ),
-            )
+    if ASK_FOR_ORDER_PAT.search(q):
+        return InputVerdict(
+            mode="explain",
+            notice=(
+                "무엇을 사고팔지는 정해 드릴 수 없어요. 대신 리포트가 어떤 관점을 "
+                "제시하는지 풀어서 해설해 드릴게요. 판단은 회원님이 하십니다."
+            ),
+        )
 
-    for w in ASK_FOR_PREDICTION:
-        if w in q:
-            return InputVerdict(
-                mode="explain",
-                notice=(
-                    "앞으로 오를지 내릴지는 말씀드릴 수 없어요. 리포트에 적힌 전망과 "
-                    "그 근거를 그대로 옮겨 드립니다."
-                ),
-            )
+    if ASK_FOR_PREDICTION_PAT.search(q):
+        return InputVerdict(
+            mode="explain",
+            notice=(
+                "앞으로 오를지 내릴지는 말씀드릴 수 없어요. 리포트에 적힌 전망과 "
+                "그 근거를 그대로 옮겨 드립니다."
+            ),
+        )
 
     return InputVerdict(mode="ok")
 
