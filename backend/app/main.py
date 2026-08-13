@@ -42,10 +42,24 @@ from .schemas import (
 
 app = FastAPI(title="Quill · 추천 알고리즘 API", version="0.1.0")
 
+
+@app.get("/")
+def root():
+    return {
+        "status": "ok",
+        "service": "Quill API",
+        "docs": "/docs",
+        "health": "/health",
+    }
+
+
 _allowed_origin = os.environ.get("ALLOWED_ORIGIN", "http://localhost:5174")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[_allowed_origin],
+    # 개발 편의: vite가 5174가 아닌 포트(5173/5175…)로 떠도 붙게 해 둔다.
+    # 배포 시에는 ALLOWED_ORIGIN만 남기고 이 regex를 지울 것.
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
     allow_methods=["*"],
     allow_headers=["*"],
 )

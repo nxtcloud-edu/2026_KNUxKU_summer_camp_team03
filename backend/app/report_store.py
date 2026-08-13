@@ -85,11 +85,20 @@ def _score(report: dict, keywords: list[str], tags: list[str]) -> int:
     return s
 
 
-def search(turn_type: str, query: str, tags: list[str]) -> list[dict]:
+def search(turn_type: str, query: str, tags: list[str],
+           seen_ids: set | None = None) -> list[dict]:
     """검색 계획(triage 출력) → 근거 리포트 목록. 0건이면 빈 리스트 —
-    폴백 문구를 만드는 건 호출자(main)의 몫이다."""
+    폴백 문구를 만드는 건 호출자(main)의 몫이다.
+
+    seen_ids: 이 세션에서 이미 근거로 쓴 리포트. 신선한 후보가 충분하면
+    제외하고, 부족하면 다시 포함한다 — 멀티턴에서 같은 답 반복 방지."""
     reports = all_reports()
     p = SEARCH_PARAMS
+    if seen_ids:
+        fresh = [r for r in reports if r["id"] not in seen_ids]
+        # 신선한 후보가 top_k 이상 남아 있을 때만 제외 적용
+        if len(fresh) >= p["top_k"]:
+            reports = fresh
 
     if turn_type == "market":
         # 게시판 교차: 최신순으로 게시판별 per_board건

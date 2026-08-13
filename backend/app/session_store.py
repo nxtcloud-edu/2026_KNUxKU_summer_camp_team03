@@ -40,6 +40,8 @@ class Session:
     session_id: str
     turns: deque = field(default_factory=lambda: deque(maxlen=MAX_TURNS_KEPT))
     last_topic_tags: list[str] = field(default_factory=list)  # 후속 질문 재구성용
+    seen_report_ids: set = field(default_factory=set)  # 이미 근거로 보여준 리포트 —
+    #   다음 턴 검색에서 후순위로 밀어, 후속 질문에 같은 답이 반복되지 않게 한다
     created: float = field(default_factory=time.time)
 
 

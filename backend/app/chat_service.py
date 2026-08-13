@@ -6,16 +6,18 @@
     portfolio → quant 재계산 (LLM 0회)
     schedule  → 준비 중 안내 (경로 C, LLM 0회)
     market/evidence → report_store 검색 → 0건이면 폴백 / 있으면 chat_agent (LLM ≤1회)
+    decision  → 검색 → 낙관(한기회)/보수(차보수) 두 관점 병렬 (LLM ≤2회)
   → 턴 기록(STM 저장)
 
-LLM은 최대 1회다. triage가 규칙이라 "경로당 2회" 예산에서 1회가 남고,
-그 여유는 데모 후 triage LLM 승격에 쓴다.
+LLM 예산: 일반 턴 ≤1회, 의사결정 턴 ≤2회 — "경로당 2회" 상한 안이다.
+triage가 규칙 기반이라 이 예산이 남는다.
 """
 
 from __future__ import annotations
 
 from . import glossary, quant, report_store, triage
 from .chat_agent import answer as agent_answer
+from .chat_agent import answer_decision
 from .chat_schemas import ChatProfileSchema, ChatRequest, ChatResponse, TraceStepSchema
 from .guardrails import DISCLAIMER, NO_EVIDENCE_FALLBACK, check_input, sanitize_output
 from .session_store import store
@@ -111,8 +113,35 @@ def handle(req: ChatRequest) -> ChatResponse:
         text = SCHEDULE_NOTICE
         trace.append(_step("Supervisor", "일정형 → 경로 C", "캘린더 미구현 — 정직한 안내", 2))
 
+    elif plan.turn_type == "decision":
+        # 의사결정형: 태그가 있으면 근거 검색, 없으면 시장정세 교차 검색으로 재료 수집
+        reports = report_store.search("evidence" if plan.tags else "market",
+                                      plan.query, plan.tags, seen_ids=sess.seen_report_ids)
+        if not reports:
+            reports = report_store.search("market", plan.query, plan.tags,
+                                          seen_ids=sess.seen_report_ids)
+        trace.append(_step("Triage", "리포트 검색(코드)",
+                           f"의사결정 재료 수집 → {len(reports)}건", 19))
+        if not reports:
+            text = NO_EVIDENCE_FALLBACK
+            trace.append(_step("Supervisor", "폴백 응답", "근거 0건 — 생성 금지", 3))
+        else:
+            evidence = [r["id"] for r in reports]
+            text, used_llm = answer_decision(
+                plan.query, reports,
+                profile_ctx=_profile_ctx(req.profile),
+                history_ctx=store.context_text(sess),
+            )
+            trace.append(_step("Analysis", "낙관 관점 (한기회)",
+                               "같은 근거를 기회의 렌즈로 · LLM 1회", 360 if used_llm else 5))
+            trace.append(_step("Analysis", "신중 관점 (차보수)",
+                               "같은 근거를 리스크의 렌즈로 · LLM 1회", 350 if used_llm else 5))
+            trace.append(_step("Supervisor", "병렬 제시",
+                               "우열 판정 없음 — 갈렸다는 사실 자체를 보여줌", 4))
+
     elif plan.turn_type in ("market", "evidence"):
-        reports = report_store.search(plan.turn_type, plan.query, plan.tags)
+        reports = report_store.search(plan.turn_type, plan.query, plan.tags,
+                                      seen_ids=sess.seen_report_ids)
         trace.append(_step("Triage", "리포트 검색(코드)",
                            f"{'4보드 교차 최신순' if plan.turn_type == 'market' else '태그·키워드 매칭'} "
                            f"→ {len(reports)}건", 21))
@@ -134,6 +163,7 @@ def handle(req: ChatRequest) -> ChatResponse:
     # ── 4. STM 기록 — 다음 턴의 기억 ──
     store.append(sess, "user", req.message, plan.turn_type)
     store.append(sess, "assistant", text, plan.turn_type, evidence)
+    sess.seen_report_ids.update(evidence)  # 다음 턴엔 새 리포트가 우선
     if plan.tags:
         sess.last_topic_tags = plan.tags
 

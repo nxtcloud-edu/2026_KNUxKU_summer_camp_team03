@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 # schedule   일정형: 금통위·FOMC 날짜 → 경로 C (데모: 준비 중 안내)
 # market     시장정세형: 전반 시황·전망 → 4보드 교차 검색 → analysis
 # evidence   근거형: 특정 자산·상품 → 태그 검색 → analysis
+# decision   의사결정형: 포트폴리오 피드백·선택 고민 → 낙관/보수 두 관점 병렬 (LLM 2회)
 TurnType = str
 
 
@@ -41,7 +42,12 @@ BUTTON_MAP: dict[str, tuple[TurnType, list[str]]] = {
 }
 
 # ── 자유 입력 규칙 (위에서부터 우선) ─────────────────────────
-PORTFOLIO_PAT = re.compile(r"내 (비중|성향|포트|점수)|비중은 어떻게|배분.*(알려|보여)|포트폴리오.*(알려|보여|어때)")
+PORTFOLIO_PAT = re.compile(r"내 (비중|성향|점수)|비중은 어떻게|배분.*(알려|보여)|포트폴리오.*(알려|보여)")
+# 의사결정형 — 선택·고민·피드백을 묻는다. "뭘 살까"는 가드레일이 먼저
+# explain 모드로 바꾸고 오므로, 여기서는 관점 병렬 제시로 응답한다.
+DECISION_PAT = re.compile(
+    r"할까|말까|살까|팔까|괜찮(아|을까|나)|나을까|나아|어떤 게|어느 쪽|해도 되|해도 돼"
+    r"|늘릴|줄일|바꿀|피드백|평가해|점검해|포트폴리오 어때|내 포트.*(어때|봐줘)")
 SCHEDULE_PAT = re.compile(r"언제|일정|날짜|캘린더|다음 (금통위|fomc)", re.I)
 CONCEPT_PAT = re.compile(r"뭐야|뭐예요|무엇|뭔가요|차이가|다른가|어떤 건가|이란\s|이 뭐")
 MARKET_PAT = re.compile(r"요즘|최근|분위기|시장.*(어때|상황)|시황|전망|어떻게 (될|봐)|흐름")
@@ -90,9 +96,11 @@ def classify(message: str, prev_tags: list[str] | None = None,
             query = f"{prev_user_text} — 후속 질문: {text}"
         rewritten = True
 
-    # 3) 유형 규칙 (포트폴리오 > 일정 > 개념 > 시장정세 > 근거)
+    # 3) 유형 규칙 (포트폴리오 > 의사결정 > 일정 > 개념 > 시장정세 > 근거)
     if PORTFOLIO_PAT.search(text):
         return TriagePlan("portfolio", query, tags, rewritten)
+    if DECISION_PAT.search(text):
+        return TriagePlan("decision", query, tags, rewritten)
     if SCHEDULE_PAT.search(text) and extract_tags(text) != ["매크로"]:
         return TriagePlan("schedule", query, tags, rewritten)
     if CONCEPT_PAT.search(text):
