@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import os
+import re as _re
 
 import requests
 
@@ -112,6 +113,10 @@ def answer_persona(question: str, reports: list[dict],
             reply = _call_gemini_for_persona(persona["system_prompt"], user_prompt)
             any_success = True
             message = sanitize_output(_strip_contact_info(reply))
+            # LLM이 프롬프트 구조를 답변에 그대로 출력하는 경우 제거
+            message = _re.sub(r"^##\s.*\n.*\n?", "", message).strip()
+            # LLM이 상품명 목록을 글머리로 나열하는 경우 제거 (지어낸 상품명 차단)
+            message = _re.sub(r"^[\*\-]\s+.*\n?", "", message, flags=_re.MULTILINE).strip()
         except (RuntimeError, requests.RequestException, KeyError,
                 IndexError, json.JSONDecodeError) as exc:
             print(f"[persona_agent] {persona['name']} 실패: {exc}", flush=True)
