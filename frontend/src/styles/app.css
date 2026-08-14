@@ -964,6 +964,28 @@
   padding: 0 4px;
 }
 
+/* ── 캘린더 ───────────────────────────────────────────────── */
+.cal-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-5);
+  padding: var(--sp-5) var(--sp-6);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+.cal-row-date {
+  flex: none;
+  width: 168px;
+  padding-top: 2px;
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+}
+.cal-row-body {
+  flex: 1;
+  min-width: 0;
+}
+
 /* ── 챗봇 ─────────────────────────────────────────────────── */
 .chat-fab {
   position: fixed;

@@ -24,7 +24,7 @@ import { useProfile } from '../lib/store'
 import { TODAY_REPORTS } from '../lib/chatEngine'
 import Notifications from './Notifications'
 import AccountMenu from './AccountMenu'
-import { IconArrowLeft, IconArrowRight, IconBook, IconChat, IconPie, IconQuill, IconTarget, IconUser } from './icons'
+import { IconArrowLeft, IconArrowRight, IconBook, IconCalendar, IconChat, IconPie, IconQuill, IconTarget, IconUser } from './icons'
 
 export default function AppSidebar({
   newChat,
@@ -78,6 +78,10 @@ export default function AppSidebar({
           {TODAY_REPORTS.length > 0 && (
             <span className="side-badge">{TODAY_REPORTS.length}</span>
           )}
+        </NavLink>
+        <NavLink to="/calendar" className="side-link">
+          <IconCalendar size={18} />
+          <span>캘린더</span>
         </NavLink>
         <NavLink to="/mypage" className="side-link">
           <IconUser size={18} />
