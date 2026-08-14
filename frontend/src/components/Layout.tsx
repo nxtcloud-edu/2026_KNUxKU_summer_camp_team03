@@ -15,7 +15,7 @@ export function SiteFooter() {
             <div className="row" style={{ gap: 9 }}>
               <IconQuill size={22} style={{ color: 'var(--brand)' }} />
               <span className="brand-name" style={{ fontSize: 30 }}>
-                맥미리
+                macmiri
               </span>
             </div>
             <p className="small muted keep mt-3" style={{ maxWidth: 380, lineHeight: 1.9 }}>
@@ -51,7 +51,7 @@ export function SiteFooter() {
           결과를 보여 주기 위한 값입니다. 어떤 내용도 투자 권유나 자문이 아니고, 투자 판단과 그
           결과에 대한 책임은 투자자 본인에게 있습니다. 원금 손실이 발생할 수 있습니다.
           <br />
-          <br />© 2026 맥미리 · 화면 프로토타입 (DB · 추천 알고리즘 미연결)
+          <br />© 2026 macmiri · 화면 프로토타입 (DB · 추천 알고리즘 미연결)
         </p>
       </div>
     </footer>

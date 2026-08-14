@@ -95,7 +95,7 @@ export default function Login() {
   return (
     <div className="auth-shell">
       <div className="auth-card">
-        <div className="auth-mark script-en script-sign">맥미리</div>
+        <div className="auth-mark script-en script-sign">macmiri</div>
 
         <h1 className="auth-title">
           {mode === 'in' ? '로그인' : mode === 'up' ? '계정 만들기' : '비밀번호 재설정'}

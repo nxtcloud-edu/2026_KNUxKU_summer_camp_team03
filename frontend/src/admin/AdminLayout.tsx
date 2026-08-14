@@ -81,7 +81,7 @@ export default function AdminLayout() {
         <aside className="admin-side">
           <Link to="/admin" className="admin-brand">
             <IconQuill size={22} style={{ color: 'var(--brand)' }} />
-            <span className="brand-name">맥미리</span>
+            <span className="brand-name">macmiri</span>
             <span className="chip-console">CONSOLE</span>
           </Link>
 
