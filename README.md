@@ -76,7 +76,7 @@ npm run dev            # → http://localhost:5174
 ```
 사용자 질문
   → Guardrails (범위 밖 차단 / 매수 지시 검출)
-  → Triage Agent (질문 유형 자율 분류: concept / portfolio / market / evidence / decision)
+  → Triage Agent (질문 유형 자율 분류: concept / portfolio / market / evidence)
   → Report Retriever Agent (Chroma 의미검색 → 키워드 폴백 → 3단 소스 자동 전환)
   → Evidence Finder Agent (뉴스 보조 — 지역 자동 판별 → NewsAPI/네이버 양방향 폴백)
   → Chat Agent (Gemini 해설 생성 — 근거 기반, 상품명 안내, 무관 정보 자동 필터링)
@@ -144,13 +144,13 @@ macmiri는 **Supervisor/Specialist 패턴**을 채택합니다. 하나의 Superv
          │ (규칙 분류)  │   │ (안전장치) │   │ (자율 관련성 판정)   │
          └──────┬──────┘   └───────────┘   └─────────────────────┘
                 │
-    ┌───────────┼───────────┬──────────────┬──────────────┐
-    │           │           │              │              │
-┌───▼───┐ ┌────▼────┐ ┌────▼────┐  ┌─────▼─────┐ ┌─────▼─────┐
-│Concept│ │Portfolio│ │ Market/ │  │ Decision  │ │ Persona   │
-│Agent  │ │ Engine  │ │Evidence │  │  Agent    │ │ Agent ×3  │
-│(용어) │ │(퀀트)   │ │ Agent   │  │(의사결정) │ │(병렬 의견) │
-└───────┘ └─────────┘ └────┬────┘  └───────────┘ └───────────┘
+    ┌───────────┼───────────┬──────────────┐
+    │           │           │              │              
+┌───▼───┐ ┌────▼────┐ ┌────▼────┐  ┌─────▼─────┐ 
+│Concept│ │Portfolio│ │ Market/ │  │ Persona   │ 
+│Agent  │ │ Engine  │ │Evidence │  │  Agent ×3 │ 
+│(용어)  │ │(퀀트)   │ │ Agent   │  │(병렬 의견) │ 
+└───────┘ └─────────┘ └────┬────┘  └───────────┘ 
                             │
               ┌─────────────┼─────────────┐
               │             │             │
@@ -344,7 +344,6 @@ macmiri는 **Supervisor/Specialist 패턴**을 채택합니다. 하나의 Superv
 │   │   ├── chat_agent.py        리서치 탭 LLM 해설
 │   │   ├── persona_agent.py     훈수 탭 페르소나 호출
 │   │   ├── personas.py          3인 페르소나 프롬프트
-│   │   ├── decision_agent.py    의사결정형 (chat_agent 임시 대체)
 │   │   ├── report_retriever.py  리포트 검색 (Chroma → Supabase → 시드)
 │   │   ├── evidence_finder.py   뉴스 검색 (NewsAPI / 네이버)
 │   │   ├── guardrails.py        가드레일 + 관련성 게이트
