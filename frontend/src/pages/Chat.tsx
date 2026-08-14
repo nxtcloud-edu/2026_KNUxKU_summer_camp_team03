@@ -246,7 +246,7 @@ export default function Chat() {
       setMsgs((m) => [...m, userMsg])
 
       // 훈수 탭: 페르소나 이름 감지 + 이전 대화 맥락 구성
-      const personaNames = ['김원칙', '한사이클', '오선점']
+      const personaNames = ['워런 버핏', '레이 달리오', '캐시 우드']
       let askOptions: import('../lib/api').AskChatOptions | undefined
       if (chatMode === 'persona') {
         const detected = personaNames.find((n) => value.includes(n))
@@ -403,7 +403,7 @@ export default function Chat() {
                         {m.data.personas.length > 1 && (
                           <p className="persona-followup-hint">
                             특정 페르소나와 이어가려면 이름을 붙여서 질문해보세요
-                            (예: "김원칙, 그럼 지금 사도 될까요?")
+                            (예: "워런 버핏, 그럼 지금 사도 될까요?")
                           </p>
                         )}
                       </div>
