@@ -72,8 +72,8 @@
 /* 에이전트 표식 — 면 없는 골드 깃펜 하나. 아바타도 원 배경도 쓰지 않는다 */
 .bubble-mark {
   flex: none;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
   color: var(--gold);

@@ -359,7 +359,7 @@ export default function Chat() {
               ) : (
                 <div className="bubble-row agent" key={m.id}>
                   <span className="bubble-mark" aria-hidden>
-                    <IconQuill size={15} />
+                    <IconQuill size={22} />
                   </span>
                   <div className="grow">
                     {m.data?.notice && (
@@ -441,7 +441,7 @@ export default function Chat() {
             {busy && msgs[msgs.length - 1]?.role === 'user' && (
               <div className="bubble-row agent">
                 <span className="bubble-mark" aria-hidden>
-                  <IconQuill size={15} />
+                  <IconQuill size={22} />
                 </span>
                 <div className="bubble bubble-agent thinking">
                   <span className="dot" />
