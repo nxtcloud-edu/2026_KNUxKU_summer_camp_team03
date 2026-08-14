@@ -82,7 +82,8 @@ import re as _re
 
 _PRODUCT_QUERY_PAT = _re.compile(
     r"상품|뭐\s?있|뭘\s?살\s?수|어떤\s?(etf|상품|채권|펀드)|종류|목록|리스트"
-    r"|추천.*(etf|상품|채권)|etf.*(뭐|뭘|어떤|종류|있)",
+    r"|추천.*(etf|상품|채권)|etf.*(뭐|뭘|어떤|종류|있)"
+    r"|테마.*(있|뭐|어떤|괜찮)|괜찮은.*(테마|etf|상품)",
     _re.I,
 )
 _ASSET_HINTS = [
