@@ -41,3 +41,32 @@
 ## 테스트
 
 `cd backend && .venv/Scripts/python.exe -m pytest tests/ -q` → **50 passed**
+
+---
+
+## 추가: `feature/ui-refactor`(유주연) 병합
+
+`origin/feature/ui-refactor`는 백엔드가 생기기 전 최초 커밋에서 갈라져 나간 브랜치라
+`frontend/src/lib/api.ts` 자체가 없었음 — 그쪽 `Chat.tsx`는 `chatEngine.ts` 로컬
+목업만 호출. **그대로 가져오면 UI는 새로워지는데 실제 백엔드(가드레일·STM·훈수탭)가
+화면에서 전혀 안 뜨는 상태가 됨** — 병합 전에 이 사실을 확인하고 진행.
+
+충돌 20개 파일 개별 검토:
+- CSS 5개 + `icons.tsx`/`main.tsx`/`Login.tsx`/`Layout.tsx`/`AccountMenu.tsx`/
+  `EvidencePanel.tsx`/`Library.tsx`/`MyPage.tsx`/`Portfolio.tsx`/`Onboarding.tsx`
+  → **ui-refactor 쪽 채택** (순수 UX 개편, 백엔드 무관. `Onboarding.tsx`는
+  wizard/free 모드라는 실제 새 기능 포함하지만 역시 백엔드 비의존)
+- **`Chat.tsx`** → 구조(사이드바 통합 `AppSidebar`)는 ui-refactor 채택, `chatEngine.
+  answer()` 폴백 호출만 `api.ts askChat()`(실제 `/api/chat` 호출)로 재이식
+- `.gitignore` → 양쪽 항목 유니온
+- `package-lock.json` → `package.json`이 두 브랜치에서 동일함을 확인 후 기존 유지
+
+검증: `npx tsc -b` 통과, `npm run build` 통과(dist 생성 확인), 백엔드 pytest 50개
+그대로 통과(프론트 변경이라 원래 영향 없음, 확인 차 재실행).
+
+새로 들어온 것(순수 추가): `AppSidebar.tsx`, `WelcomeModal.tsx`, `SelectionAsk.tsx`,
+`shell.css`, `collector/`(수집기 스크립트), `supabase/`(schema·rls), `start.ps1`/`stop.ps1`.
+
+병합 안 한 것 — 원격에 있는 다른 브랜치(참고용, 손 안 댐):
+- `feature/backend-chroma` — DB 담당 팀원 작업으로 추정, 미병합
+- `feature/chat-persona` — 이미 `main`으로 PR 머지된 훈수탭의 소스 브랜치로 보임
