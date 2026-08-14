@@ -68,13 +68,13 @@ def _build_user_prompt(question: str, reports: list[dict],
 
     # 상품 관련 질문이면 관련 상품 목록 주입
     from .chat_agent import _detect_product_query
-    from .product_store import format_products_for_prompt, search_products
+    from .product_store import format_products_for_prompt, search_products, PRODUCT_HALLUCINATION_GUARD
     _product_hints = _detect_product_query(question)
     if _product_hints:
         prods = search_products(**_product_hints)
-        prod_text = format_products_for_prompt(prods)
-        if prod_text:
-            parts.append(prod_text)
+        parts.append(format_products_for_prompt(prods))
+    else:
+        parts.append(PRODUCT_HALLUCINATION_GUARD)
 
     parts.append("## 질문\n" + question)
     return "\n\n".join(parts)

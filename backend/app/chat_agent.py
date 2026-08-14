@@ -150,13 +150,14 @@ def _build_user_prompt(question: str, reports: list[dict],
         parts.append("## 최신 뉴스 (보조 근거 — 인용 시 '(로이터 8/10 보도)'처럼 출처·날짜를 밝힐 것)\n"
                      + "\n".join(nlines))
 
-    # 상품 관련 키워드가 질문에 있으면 관련 상품 목록 주입
+    # 상품 관련 키워드가 질문에 있으면 관련 상품 목록 주입, 없어도 환각 방지 경고
     _product_hints = _detect_product_query(question)
     if _product_hints:
         prods = search_products(**_product_hints)
-        prod_text = format_products_for_prompt(prods)
-        if prod_text:
-            parts.append(prod_text)
+        parts.append(format_products_for_prompt(prods))
+    else:
+        from .product_store import PRODUCT_HALLUCINATION_GUARD
+        parts.append(PRODUCT_HALLUCINATION_GUARD)
     if profile_ctx:
         parts.append("## 사용자 컨텍스트\n" + profile_ctx)
     if history_ctx:

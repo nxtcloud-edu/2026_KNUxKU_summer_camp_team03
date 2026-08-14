@@ -67,12 +67,21 @@ def search_products(
     return results
 
 
+# 모든 상품 프롬프트 끝에 붙는 경고문 (환각 방지)
+PRODUCT_HALLUCINATION_GUARD = (
+    "⚠ 위 목록에 있는 상품명만 언급할 수 있다. 목록에 없는 ETF/펀드 이름이나 "
+    "티커(JEPI, DIVO, QQQ, SPY, ARKK, SCHD 등 해외 상품 포함)를 절대 지어내지 마라. "
+    "마땅한 상품이 없으면 구체적 상품명 없이 자산군 수준으로만 말하라."
+)
+
+
 def format_products_for_prompt(products: list[dict]) -> str:
-    """LLM 프롬프트에 삽입할 상품 목록 텍스트."""
+    """LLM 프롬프트에 삽입할 상품 목록 텍스트. 항상 환각 방지 경고 포함."""
     if not products:
-        return ""
+        return f"## 관련 상품 목록\n(해당하는 상품 없음)\n\n{PRODUCT_HALLUCINATION_GUARD}"
     lines = ["## 관련 상품 목록"]
     for p in products:
         theme = f" (테마: {', '.join(p['theme_keywords'])})" if p["theme_keywords"] else ""
         lines.append(f"- {p['name']} ({p['ticker']}) · 보수 {p['fee']}% · {p['desc']}{theme}")
+    lines.append(f"\n{PRODUCT_HALLUCINATION_GUARD}")
     return "\n".join(lines)
