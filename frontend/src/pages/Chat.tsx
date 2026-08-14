@@ -375,20 +375,6 @@ export default function Chat() {
                             <p className={`persona-card-body${pen ? ' pen' : ''}`}>
                               {p.message}
                             </p>
-                            {p.evidence.length > 0 && (
-                              <button
-                                className="persona-evidence-pill"
-                                onClick={() => {
-                                  for (const id of p.evidence) {
-                                    window.dispatchEvent(
-                                      new CustomEvent('quill:open-report', { detail: id }),
-                                    )
-                                  }
-                                }}
-                              >
-                                📄 근거 {p.evidence.length}건
-                              </button>
-                            )}
                           </div>
                         ))}
                         {m.data.disclaimer && (
