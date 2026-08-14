@@ -117,7 +117,7 @@ def test_no_reports_returns_fallback():
 
         from app.supervisor import _handle_persona
 
-        req = ChatRequest(message="국채 금리 전망 알려줘", mode="persona")
+        req = ChatRequest(message="국채 금리 전망 어때?", mode="persona")
         resp = _handle_persona(req)
 
     assert resp.text == NO_EVIDENCE_FALLBACK

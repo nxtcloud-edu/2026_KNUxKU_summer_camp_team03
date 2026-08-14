@@ -95,6 +95,51 @@ def _llm_topic_check(message: str) -> bool:
         return False
 
 
+def _explain_concept(question: str) -> tuple[str, bool]:
+    """glossary에 없는 개념을 LLM에게 직접 설명 요청. 리포트 검색 안 함."""
+    import os
+    import requests as _requests
+
+    key = os.environ.get("GEMINI_API_KEY", "")
+    if not key:
+        return "이 개념에 대한 설명을 준비하지 못했어요. 리서치 탭에서 관련 리포트를 검색해 보시겠어요?", False
+
+    model = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+    endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+
+    try:
+        resp = _requests.post(
+            endpoint,
+            params={"key": key},
+            json={
+                "systemInstruction": {"parts": [{"text":
+                    "너는 초보 투자자를 위한 금융 용어 해설 도우미다. "
+                    "다음 규칙을 지켜라: "
+                    "1) 2~3문장으로 짧고 쉽게 설명한다. "
+                    "2) 전문용어가 나오면 괄호로 풀어준다. "
+                    "3) 비유를 적극 활용한다. "
+                    "4) 매수/매도 지시, 종목 추천, 수익 보장 금지. "
+                    "5) 존댓말. 면책 문구 붙이지 않는다."
+                }]},
+                "contents": [{"role": "user", "parts": [{"text": question}]}],
+                "generationConfig": {
+                    "temperature": 0.3,
+                    "maxOutputTokens": 300,
+                    "thinkingConfig": {"thinkingBudget": 0},
+                },
+            },
+            timeout=8,
+        )
+        resp.raise_for_status()
+        text = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+        from .guardrails import sanitize_output
+        from .chat_agent import _strip_contact_info
+        return sanitize_output(_strip_contact_info(text)), True
+    except Exception as exc:
+        print(f"[explain_concept] LLM 실패: {exc}", flush=True)
+        return "이 개념에 대한 설명을 준비하지 못했어요. 리서치 탭에서 관련 리포트를 검색해 보시겠어요?", False
+
+
 def _step(agent: str, label: str, detail: str, ms: int) -> TraceStepSchema:
     return TraceStepSchema(agent=agent, label=label, detail=detail, ms=ms)
 
@@ -331,8 +376,11 @@ def _handle(req: ChatRequest) -> ChatResponse:
             trace.append(_step("Analysis", "용어 사전 응답",
                                f"「{term}」 {level} 수준 · 검수된 해설 · LLM 0회", 3))
         else:
-            # 사전에 없는 개념 → 리포트 검색으로 강등, 아래 공통 검색 경로로
-            plan.turn_type = "evidence"
+            # 사전에 없는 개념 → LLM에게 직접 설명 요청 (리포트 검색 없이)
+            text, used_llm = _explain_concept(req.message)
+            trace.append(_step("Analysis", "개념 LLM 설명",
+                               f"glossary 미등록 → LLM 직접 설명 · {'성공' if used_llm else '폴백'}", 3))
+            evidence = []
 
     if plan.turn_type == "portfolio":
         if req.profile:

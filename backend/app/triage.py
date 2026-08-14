@@ -44,7 +44,7 @@ BUTTON_MAP: dict[str, tuple[TurnType, list[str]]] = {
 }
 
 # ── 자유 입력 규칙 (위에서부터 우선) ─────────────────────────
-PORTFOLIO_PAT = re.compile(r"내 (비중|성향|점수)|비중은 어떻게|배분.*(알려|보여)|포트폴리오.*(알려|보여)")
+PORTFOLIO_PAT = re.compile(r"내 (비중|성향|점수)|내.*비중|비중은 어떻게|배분.*(알려|보여)|포트폴리오.*(알려|보여|뭐|어떻게)")
 # 의사결정형 — 선택·고민·피드백을 묻는다. "뭘 살까"는 가드레일이 먼저
 # explain 모드로 바꾸고 오므로, 여기서는 관점 병렬 제시로 응답한다.
 DECISION_PAT = re.compile(
@@ -56,7 +56,7 @@ DECISION_PAT = re.compile(
     # 시장정세형으로 흘리면 동문서답이 되므로, 낙관/보수 병렬 관점으로 응답
     r"|뭐\s?사|뭘\s?사")
 SCHEDULE_PAT = re.compile(r"언제|일정|날짜|캘린더|다음 (금통위|fomc)", re.I)
-CONCEPT_PAT = re.compile(r"뭐야|뭐예요|무엇|뭔가요|차이가|다른가|어떤 건가|이란\s|이 뭐")
+CONCEPT_PAT = re.compile(r"뭐야|뭐예요|무엇|뭔가요|차이가|다른가|어떤 건가|이란\s|이 뭐|알아\?|알려줘|설명해|뜻이")
 MARKET_PAT = re.compile(r"요즘|최근|분위기|시장.*(어때|상황)|시황|전망|어떻게 (될|봐)|흐름")
 
 # 키워드 → reports.json 태그 어휘 매핑 (asset_tags 6버킷과 별개인 리포트 태그)
