@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getCalendarEvents, type CalendarEvent } from '../lib/calendarApi'
 import { Badge, Empty, Spinner } from '../components/ui'
-import { IconArrowLeft, IconArrowRight } from '../components/icons'
+import { IconArrowLeft, IconArrowRight, IconChevronDown } from '../components/icons'
 
 const CATEGORY_TONE: Record<string, 'info' | 'brand' | 'outline'> = {
   FOMC: 'info',
@@ -9,8 +9,31 @@ const CATEGORY_TONE: Record<string, 'info' | 'brand' | 'outline'> = {
   '지수 리밸런싱': 'outline',
 }
 
+// 하루·한 카테고리 안에 이 개수를 넘으면 접어서 "N건"으로만 보여준다.
+// 실적발표처럼 종목을 필터링 안 하는 소스는 하루에도 수십 건씩 나온다.
+const COLLAPSE_THRESHOLD = 3
+
+const WEEKDAY_KR = ['일', '월', '화', '수', '목', '금', '토']
+
+function formatDayHeading(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const dt = new Date(y, m - 1, d)
+  return `${m}월 ${d}일 (${WEEKDAY_KR[dt.getDay()]})`
+}
+
 function formatRange(start: string, end: string): string {
   return start === end ? start : `${start} ~ ${end}`
+}
+
+function groupBy<T>(items: T[], keyFn: (item: T) => string): Map<string, T[]> {
+  const map = new Map<string, T[]>()
+  for (const item of items) {
+    const k = keyFn(item)
+    const arr = map.get(k)
+    if (arr) arr.push(item)
+    else map.set(k, [item])
+  }
+  return map
 }
 
 export default function CalendarPage() {
@@ -18,6 +41,7 @@ export default function CalendarPage() {
   const [failed, setFailed] = useState(false)
   // 지금은 FOMC만 있어 2026-08부터 보여준다 — 화살표로 다른 달로 이동 가능.
   const [cursor, setCursor] = useState({ year: 2026, month: 8 })
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     getCalendarEvents()
@@ -37,6 +61,22 @@ export default function CalendarPage() {
       .filter((e) => e.date_start.startsWith(monthKey) || e.date_end.startsWith(monthKey))
       .sort((a, b) => (a.date_start < b.date_start ? -1 : 1))
   }, [events, monthKey])
+
+  const byDate = useMemo(() => groupBy(list, (e) => e.date_start), [list])
+
+  // 달이 바뀌면 이전 달에서 펼쳐 둔 상태가 그대로 남아 있을 이유가 없다.
+  useEffect(() => {
+    setExpanded(new Set())
+  }, [monthKey])
+
+  const toggle = (key: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
 
   const goMonth = (delta: number) => {
     setCursor((prev) => {
@@ -79,20 +119,59 @@ export default function CalendarPage() {
       ) : list.length === 0 ? (
         <Empty title="이번 달 예정된 일정이 없습니다" description="화살표로 다른 달을 확인해 보세요." />
       ) : (
-        <div className="col gap-3">
-          {list.map((e) => (
-            <div key={e.id} className="cal-row">
-              <div className="cal-row-date num">{formatRange(e.date_start, e.date_end)}</div>
-              <div className="cal-row-body">
-                <div className="row gap-2" style={{ alignItems: 'center' }}>
-                  <Badge tone={CATEGORY_TONE[e.category] ?? 'info'}>{e.category}</Badge>
-                  <span className="strong">{e.title}</span>
-                </div>
-                {e.note && (
-                  <div className="mt-1">
-                    <Badge tone="outline">{e.note}</Badge>
-                  </div>
-                )}
+        <div className="col gap-5">
+          {[...byDate.entries()].map(([dateKey, dayEvents]) => (
+            <div key={dateKey}>
+              <div className="cal-day-head num">{formatDayHeading(dateKey)}</div>
+              <div className="col gap-2">
+                {[...groupBy(dayEvents, (e) => e.category).entries()].map(([category, catEvents]) => {
+                  const tone = CATEGORY_TONE[category] ?? 'info'
+
+                  if (catEvents.length <= COLLAPSE_THRESHOLD) {
+                    return catEvents.map((e) => (
+                      <div key={e.id} className="cal-row">
+                        <div className="row gap-2" style={{ alignItems: 'center' }}>
+                          <Badge tone={tone}>{category}</Badge>
+                          <span className="strong">{e.title}</span>
+                        </div>
+                        {e.date_start !== e.date_end && (
+                          <div className="small muted mt-1 num">{formatRange(e.date_start, e.date_end)}</div>
+                        )}
+                        {e.note && (
+                          <div className="mt-1">
+                            <Badge tone="outline">{e.note}</Badge>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  }
+
+                  const key = `${dateKey}:${category}`
+                  const isOpen = expanded.has(key)
+                  return (
+                    <div key={key} className="cal-cat-group">
+                      <button
+                        className="cal-cat-toggle"
+                        onClick={() => toggle(key)}
+                        aria-expanded={isOpen}
+                      >
+                        <Badge tone={tone}>{category}</Badge>
+                        <span className="small muted">{catEvents.length}건</span>
+                        <IconChevronDown size={14} className={isOpen ? 'cal-cat-chevron open' : 'cal-cat-chevron'} />
+                      </button>
+                      {isOpen && (
+                        <div className="cal-cat-list">
+                          {catEvents.map((e) => (
+                            <div key={e.id} className="cal-mini-row">
+                              <span className="strong">{e.title}</span>
+                              {e.note && <span className="small muted"> · {e.note}</span>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           ))}
