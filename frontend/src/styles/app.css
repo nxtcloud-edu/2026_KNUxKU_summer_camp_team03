@@ -964,6 +964,62 @@
   padding: 0 4px;
 }
 
+/* ── 캘린더 ───────────────────────────────────────────────── */
+.cal-day-head {
+  margin-bottom: var(--sp-2);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--ink-3);
+}
+.cal-row {
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-4) var(--sp-6);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+/* 하루·한 카테고리 안에 이벤트가 몇 개 안 되면(≤3, COLLAPSE_THRESHOLD) 이렇게
+   낱개로 보여준다. 실적발표처럼 종목을 안 가리고 다 나오는 소스는 하루에도
+   수십 건이라, 그 이상이면 .cal-cat-group으로 접어서 보여준다. */
+.cal-cat-group {
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+}
+.cal-cat-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: var(--sp-4) var(--sp-6);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.cal-cat-toggle:hover {
+  background: var(--surface-hover);
+}
+.cal-cat-chevron {
+  margin-left: auto;
+  transition: transform 0.18s var(--ease);
+}
+.cal-cat-chevron.open {
+  transform: rotate(180deg);
+}
+.cal-cat-list {
+  padding: 0 var(--sp-6) var(--sp-4);
+  border-top: 1px solid var(--line);
+}
+.cal-mini-row {
+  padding: var(--sp-2) 0;
+  font-size: var(--t-sm);
+}
+.cal-mini-row + .cal-mini-row {
+  border-top: 1px dashed var(--line);
+}
+
 /* ── 챗봇 ─────────────────────────────────────────────────── */
 .chat-fab {
   position: fixed;
