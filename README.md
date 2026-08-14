@@ -71,46 +71,174 @@ npm run dev            # → http://localhost:5174
 
 ## 3. 핵심 기능 흐름
 
-### 3.1 리서치 탭 — 1:1 해설
+### 3.1 리서치 탭 — 1:1 해설 (Autonomous Agent)
 
 ```
 사용자 질문
   → Guardrails (범위 밖 차단 / 매수 지시 검출)
-  → Triage (질문 유형 분류: concept / portfolio / market / evidence / decision)
-  → Report Retriever (Chroma 의미검색 → 키워드 폴백)
-  → Evidence Finder (뉴스 보조 — NewsAPI 폴백)
-  → Chat Agent (Gemini 해설 생성 — 근거 기반, 상품명 안내)
+  → Triage Agent (질문 유형 자율 분류: concept / portfolio / market / evidence / decision)
+  → Report Retriever Agent (Chroma 의미검색 → 키워드 폴백 → 3단 소스 자동 전환)
+  → Evidence Finder Agent (뉴스 보조 — 지역 자동 판별 → NewsAPI/네이버 양방향 폴백)
+  → Chat Agent (Gemini 해설 생성 — 근거 기반, 상품명 안내, 무관 정보 자동 필터링)
   → 응답: { text, evidence[], trace[] }
 ```
 
-### 3.2 훈수 탭 — 3인 페르소나 병렬 의견
+### 3.2 훈수 탭 — Multi-Agent 병렬 의견
 
 ```
 사용자 질문
-  → 동일 검색 파이프라인
-  → Persona Agent: 워런 버핏(가치) / 레이 달리오(매크로) / 캐시 우드(성장)
-    각각 Gemini 1회 호출 (3문장, 150자 이내, 인용 없이 의견만)
-  → 응답: { personas: [{persona, label, emoji, message, evidence}×3] }
+  → 동일 검색 파이프라인 (에이전트 재사용)
+  → Persona Agent × 3 (각각 독립 LLM 호출, 서로 다른 투자 철학):
+      📐 워런 버핏 (가치투자 — 내재가치·안전마진)
+      🔄 레이 달리오 (매크로 — 경제 사이클·자산 상관관계)
+      🚀 캐시 우드 (성장/테마 — 파괴적 혁신·기회비용)
+  → 부분 실패 허용 (1개 실패해도 나머지 2개 정상 반환)
+  → 후속 대화: target_persona 지정 시 1:1 멀티턴 가능
+  → 응답: { personas: [{persona, label, emoji, message, evidence}×N] }
 ```
 
-### 3.3 퀀트 3단계 추천
+### 3.3 퀀트 3단계 추천 (Code + LLM 협업)
 
 ```
-1단계: 성향 진단 6문항 → capacity(객관) + tolerance(주관) → risk 점수
-2단계: risk 점수 → 6버킷 기준 비중 (현금/패시브ETF/액티브ETF/단기채/장기채/회사채)
-3단계: Gemini가 오늘 리포트를 읽고 ±10%p 델타 제안 → 코드가 검증·클램프·정규화
+1단계: 성향 진단 6문항 → capacity(객관) + tolerance(주관) → risk 점수 [순수 코드]
+2단계: risk 점수 → 6버킷 기준 비중 (현금/패시브ETF/액티브ETF/단기채/장기채/회사채) [순수 코드]
+3단계: Gemini Agent가 오늘 리포트를 읽고 ±10%p 델타 제안 [LLM]
+       → Quant Engine이 검증·클램프·정규화 [코드가 LLM 출력을 통제]
+       → 근거 없는 제안은 자동 폐기 (코드 레벨 안전장치)
+```
+
+### 3.4 캘린더 탭 — 금융 소식 알림 (실시간 API Agent)
+
+```
+페이지 로드
+  → Calendar Data Agent:
+      · FOMC 2026 일정 (하드코딩 기본 데이터)
+      · 한국은행 금통위 일정
+      · 지수 리밸런싱 (KOSPI 200, MSCI 등)
+  → Calendar Sources Agent (실시간 API 3종 자동 수집):
+      · 실적발표 일정 API
+      · 경제지표 발표 API
+      · 국채입찰 일정 API
+  → 날짜·카테고리별 자동 그룹핑 + UI 렌더링
+  → 사용자가 일정 클릭 → 관련 리포트/뉴스 연결 가능
 ```
 
 ---
 
-## 4. 가드레일 (안전장치)
+## 4. Agentic AI 아키텍처 — 에이전트 워크플로우
+
+### 4.1 Supervisor 패턴 (자율 라우팅)
+
+macmiri는 **Supervisor/Specialist 패턴**을 채택합니다. 하나의 Supervisor가
+사용자 의도를 자율적으로 판단하고, 적합한 Specialist Agent를 호출합니다.
+
+```
+                         ┌─────────────────┐
+                         │   Supervisor    │  ← 모든 요청의 진입점
+                         │  (자율 라우팅)   │
+                         └────────┬────────┘
+                ┌─────────────────┼─────────────────────┐
+                │                 │                     │
+         ┌──────▼──────┐   ┌─────▼─────┐   ┌──────────▼──────────┐
+         │   Triage    │   │ Guardrails│   │  LLM Topic Check    │
+         │ (규칙 분류)  │   │ (안전장치) │   │ (자율 관련성 판정)   │
+         └──────┬──────┘   └───────────┘   └─────────────────────┘
+                │
+    ┌───────────┼───────────┬──────────────┬──────────────┐
+    │           │           │              │              │
+┌───▼───┐ ┌────▼────┐ ┌────▼────┐  ┌─────▼─────┐ ┌─────▼─────┐
+│Concept│ │Portfolio│ │ Market/ │  │ Decision  │ │ Persona   │
+│Agent  │ │ Engine  │ │Evidence │  │  Agent    │ │ Agent ×3  │
+│(용어) │ │(퀀트)   │ │ Agent   │  │(의사결정) │ │(병렬 의견) │
+└───────┘ └─────────┘ └────┬────┘  └───────────┘ └───────────┘
+                            │
+              ┌─────────────┼─────────────┐
+              │             │             │
+        ┌─────▼─────┐ ┌────▼────┐  ┌─────▼─────┐
+        │  Report   │ │Evidence │  │  Product  │
+        │ Retriever │ │ Finder  │  │  Store    │
+        │(벡터검색) │ │(뉴스API)│  │(상품매칭) │
+        └───────────┘ └─────────┘  └───────────┘
+```
+
+### 4.2 에이전트 자율성 — 어디서 "스스로 판단"하는가
+
+| 에이전트 | 자율 판단 내용 | 실패 시 행동 |
+|----------|---------------|-------------|
+| **Supervisor** | 질문 유형 분류, 검색 필요 여부, 페르소나 호출 여부 | — |
+| **Triage** | 규칙 기반 분류 + 후속 질문 자동 재구성 | 기본값(market)으로 폴백 |
+| **LLM Topic Check** | 금융 관련성을 대화 맥락까지 고려해 자율 판정 | 안전하게 off_topic 처리 |
+| **Report Retriever** | 3단 소스(Chroma→Supabase→시드) 자동 전환 | 하위 소스로 폴백 |
+| **Evidence Finder** | 지역 판별(해외/국내) + 양방향 키 폴백 | 빈 리스트 (서비스 안 죽음) |
+| **Chat Agent** | 무관한 리포트 자동 필터링, 상품 감지 시 목록 주입 | 템플릿 폴백 (LLM 0회) |
+| **Persona Agent** | 부분 실패 허용, 프롬프트 잔재 자동 제거 | 실패 자리만 안내 메시지 |
+| **Gemini Delta Agent** | 리포트를 읽고 자산 조정 제안 (±10%p) | 빈 배열 (조정 없음 = 안전) |
+| **Concept Agent** | glossary miss 시 LLM 직접 설명으로 자동 전환 | 고정 안내 문구 |
+| **Calendar Agent** | 3종 실시간 API 수집 + 날짜 그룹핑 | 기본 일정만 표시 |
+
+### 4.3 핵심 설계 원칙 — "AI가 죽어도 서비스는 안 죽는다"
+
+```
+모든 LLM 호출 지점:
+  try → LLM 정상 응답
+  except → 템플릿/폴백/빈 배열 (서비스는 계속 동작)
+
+모든 외부 API 호출:
+  성공 → 정상 처리
+  실패 → 대체 소스로 자동 전환 또는 조용히 빈 리스트
+```
+
+| 장애 시나리오 | 서비스 동작 |
+|--------------|-----------|
+| Gemini API 다운 | 템플릿 폴백 (리포트 요약 조립, LLM 0회) |
+| Chroma 벡터DB 다운 | 키워드 스코어 검색으로 자동 전환 |
+| NewsAPI 쿼터 초과 | 조용히 빈 리스트 (리포트만으로 답변) |
+| 네이버 뉴스 키 없음 | NewsAPI(global)로 자동 폴백 |
+| 페르소나 1개 타임아웃 | 나머지 2개는 정상 반환 |
+| Supabase 인증 미설정 | 비로그인 모드로 전체 기능 동작 |
+
+### 4.4 에이전트 간 협업 흐름 (종합)
+
+```
+[사용자] "국고채 사도 될까?"
+
+ ① Guardrails Agent
+    → "살까" 감지 → explain 모드 (차단 아닌 안내 표시)
+
+ ② Triage Agent  
+    → "사도 될까" → DECISION_PAT 매칭 → decision 유형
+    → 태그 추출: ['채권-장기-국채']
+
+ ③ Supervisor 자율 판단
+    → decision이므로 report_retriever + evidence_finder 모두 호출 결정
+
+ ④ Report Retriever Agent
+    → Chroma 의미검색 "국고채 사도 될까?" → 관련 리포트 4건
+
+ ⑤ Evidence Finder Agent  
+    → pick_region("국고채") → domestic
+    → 네이버 키 없음 → 자동으로 NewsAPI 폴백 → 영문 검색 → 3건
+
+ ⑥ Chat Agent (LLM)
+    → 시스템 프롬프트 + 리포트 4건 + 뉴스 3건 + 프로필
+    → 무관한 뉴스 자동 필터링 (프롬프트 규칙)
+    → 상품 목록 감지 → PRODUCT_HALLUCINATION_GUARD 주입
+    → Gemini 생성 → sanitize_output → PII 제거
+
+ ⑦ 응답 조립
+    → { text, evidence[4], trace[5], turn_type: "decision" }
+```
+
+---
+
+## 5. 가드레일 (안전장치)
 
 | 계층 | 역할 |
 |------|------|
 | **OUT_OF_SCOPE** | 코인/선물/옵션/레버리지 → 즉시 차단 (deny) |
 | **ASK_FOR_ORDER** | 매수/매도 직접 지시 → explain 모드 전환 (답은 하되 안내 표시) |
 | **ASK_FOR_PREDICTION** | 확정적 예측 요구 → explain 모드 전환 |
-| **관련성 게이트** | FINANCE_VOCAB + triage 태그 + LLM 판정 (3중 체크) |
+| **관련성 게이트** | FINANCE_VOCAB + triage 태그 + LLM 판정 (3중 체크, 대화 맥락 참조) |
 | **sanitize_output** | "추천합니다"→"해설해 드립니다" 등 표현 치환 |
 | **PII 제거** | 애널리스트 이메일/전화번호 자동 제거 |
 | **상품 환각 차단** | PRODUCT_HALLUCINATION_GUARD — 목록에 없는 상품명 생성 금지 |
