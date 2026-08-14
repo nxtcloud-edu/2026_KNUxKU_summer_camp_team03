@@ -19,27 +19,21 @@ const base = (size: number) => ({
   xmlns: 'http://www.w3.org/2000/svg',
 })
 
-/** 브랜드 마크 — 만년필 촉. 가운데 슬릿과 브리더 홀까지 그린다 */
+/** 브랜드 마크 — 골드 타원 두 개 (macmiri 로고) */
 export function IconQuill({ size = 26, style, className }: P) {
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 24 24"
-      fill="none"
+      viewBox="0 0 240 240"
       xmlns="http://www.w3.org/2000/svg"
       style={style}
       className={className}
       aria-hidden
     >
-      <path
-        d="M12 2.6 6.4 8.9c-1.5 1.7-2.1 3.6-1.9 5.7l.6 5.4c.05.5.5.85 1 .77l5.3-.9c2-.35 3.6-1.4 4.8-3l4-5.4c.6-.8.55-1.9-.1-2.6L12 2.6Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <path d="M12 8.4v8.9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="12" cy="8.4" r="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <rect width="240" height="240" rx="54" fill="#FFF8ED" />
+      <ellipse cx="95" cy="110" rx="70" ry="52" fill="#E8B923" transform="rotate(-24 95 110)" />
+      <ellipse cx="145" cy="130" rx="70" ry="52" fill="#B8860B" transform="rotate(24 145 130)" />
     </svg>
   )
 }

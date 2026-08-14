@@ -19,7 +19,7 @@ interface Msg {
 
 const GREETING: Msg = {
   role: 'bot',
-  text: '안녕하세요. 리포트를 읽어 드리는 Quill입니다.\n금융 용어든 상품이든, 궁금한 걸 편하게 물어보세요. 답할 때는 어느 리포트를 근거로 삼았는지 꼭 같이 보여 드립니다.',
+  text: '안녕하세요. 리포트를 읽어 드리는 맥미리입니다.\n금융 용어든 상품이든, 궁금한 걸 편하게 물어보세요. 답할 때는 어느 리포트를 근거로 삼았는지 꼭 같이 보여 드립니다.',
 }
 
 async function reply(q: string): Promise<Msg> {
@@ -91,7 +91,7 @@ export default function ChatWidget() {
       <div className="chat-head">
         <IconQuill size={22} style={{ color: 'var(--brand)', flex: 'none' }} />
         <div className="grow">
-          <div className="small strong">Quill에게 묻기</div>
+          <div className="small strong">맥미리에게 묻기</div>
           <div className="xs faint">근거 리포트를 붙여서 답합니다</div>
         </div>
         <button

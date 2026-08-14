@@ -1,0 +1,5 @@
+<svg width="512" height="512" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+<rect width="240" height="240" rx="54" fill="#FFF8ED"/>
+<ellipse cx="95" cy="110" rx="70" ry="52" fill="#E8B923" transform="rotate(-24 95 110)"/>
+<ellipse cx="145" cy="130" rx="70" ry="52" fill="#B8860B" transform="rotate(24 145 130)"/>
+</svg>

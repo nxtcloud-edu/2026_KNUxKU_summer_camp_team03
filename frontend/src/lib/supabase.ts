@@ -37,7 +37,7 @@ export const supabase: SupabaseClient | null = authEnabled
 /** service_role 키를 실수로 넣었는지 본다. 넣으면 브라우저에 관리자 권한이 새 나간다 */
 if (anonKey && anonKey.includes('service_role')) {
   console.error(
-    '[Quill] service_role 키가 프런트에 들어와 있습니다. 즉시 제거하고 키를 새로 발급하세요. ' +
+    '[맥미리] service_role 키가 프런트에 들어와 있습니다. 즉시 제거하고 키를 새로 발급하세요. ' +
       '이 키는 RLS를 우회합니다.',
   )
 }
