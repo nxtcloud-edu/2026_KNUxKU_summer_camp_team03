@@ -24,7 +24,7 @@ load_dotenv()
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import quant
+from . import calendar_data, quant
 from .chat_schemas import ChatRequest, ChatResponse
 from .supervisor import handle as handle_chat
 from .gemini_agent import propose_adjustments
@@ -164,6 +164,12 @@ def recommend(body: RecommendRequest):
         explain_baseline=quant.explain_baseline(profile, result.baseline),
         disclaimer=DISCLAIMER,
     )
+
+
+@app.get("/api/calendar")
+def get_calendar():
+    """캘린더 탭 — 지금은 FOMC뿐이지만 앞으로 다른 소스가 합쳐질 자리."""
+    return {"events": calendar_data.all_events()}
 
 
 @app.post("/api/chat", response_model=ChatResponse)

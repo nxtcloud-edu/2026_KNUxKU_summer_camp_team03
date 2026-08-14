@@ -13,6 +13,7 @@ import Onboarding from './pages/Onboarding'
 import Portfolio from './pages/Portfolio'
 import MyPage from './pages/MyPage'
 import Library from './pages/Library'
+import Calendar from './pages/Calendar'
 import RequireAuth from './components/RequireAuth'
 import ReportPage from './pages/ReportPage'
 
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/library" element={<Library />} />
         <Route path="/library/:id" element={<ReportPage />} />
+        <Route path="/calendar" element={<Calendar />} />
       </Route>
 
 

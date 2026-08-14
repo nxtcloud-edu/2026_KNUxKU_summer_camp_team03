@@ -241,6 +241,12 @@ export const IconBell = ({ size = 18, style, className }: P) => (
     <path d="M13.7 18.5a2 2 0 0 1-3.4 0" />
   </svg>
 )
+export const IconCalendar = ({ size = 18, style }: P) => (
+  <svg {...base(size)} style={style} aria-hidden>
+    <rect x="3.6" y="5.2" width="16.8" height="15.2" rx="1.6" />
+    <path d="M3.6 9.6h16.8M8 3.4v3.6M16 3.4v3.6" />
+  </svg>
+)
 export const IconUser = ({ size = 18, style }: P) => (
   <svg {...base(size)} style={style} aria-hidden>
     <circle cx="12" cy="8.2" r="3.6" />
