@@ -3,10 +3,11 @@
  *
  * 범용 LLM과의 차이를 이 위젯에서 제일 먼저 보여 준다 —
  * 답변 밑에는 항상 근거 리포트가 붙고, 근거가 없으면 없다고 말한다.
- * 지금은 규칙 매칭이며, 나중에 RAG 응답으로 갈아 끼울 자리다.
+ * api.ts를 통해 서버에 질문하고, 서버 연결 실패 시 로컬 폴백.
  */
 import { useEffect, useRef, useState } from 'react'
-import { CANNED, SUGGESTS } from '../lib/mock'
+import { SUGGESTS } from '../lib/mock'
+import { askChat } from '../lib/api'
 import { SourceList } from './Evidence'
 import { IconChat, IconQuill, IconSend, IconX } from './icons'
 
@@ -21,13 +22,12 @@ const GREETING: Msg = {
   text: '안녕하세요. 리포트를 읽어 드리는 Quill입니다.\n금융 용어든 상품이든, 궁금한 걸 편하게 물어보세요. 답할 때는 어느 리포트를 근거로 삼았는지 꼭 같이 보여 드립니다.',
 }
 
-function reply(q: string): Msg {
-  const lower = q.toLowerCase()
-  const hit = CANNED.find((c) => c.match.some((m) => lower.includes(m)))
-  if (hit) return { role: 'bot', text: hit.text, sources: hit.sources }
+async function reply(q: string): Promise<Msg> {
+  const res = await askChat(q, undefined, 'chat')
   return {
     role: 'bot',
-    text: '아직 이 질문에 근거로 삼을 리포트를 못 찾았어요.\n\n지어내서 답하면 이 서비스를 쓰실 이유가 없어지니, 모를 때는 모른다고 말씀드립니다. 금리·채권·ETF·환율·투자 시작 방법 쪽으로 물어보시면 수집해 둔 리포트를 근거로 답할 수 있어요.',
+    text: res.text || res.notice || '답변을 준비하지 못했어요.',
+    sources: res.evidence.length > 0 ? res.evidence : undefined,
   }
 }
 
@@ -42,16 +42,15 @@ export default function ChatWidget() {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' })
   }, [msgs, typing])
 
-  const send = (q: string) => {
+  const send = async (q: string) => {
     const question = q.trim()
     if (!question || typing) return
     setMsgs((m) => [...m, { role: 'user', text: question }])
     setText('')
     setTyping(true)
-    window.setTimeout(() => {
-      setMsgs((m) => [...m, reply(question)])
-      setTyping(false)
-    }, 700)
+    const response = await reply(question)
+    setMsgs((m) => [...m, response])
+    setTyping(false)
   }
 
   // 대문 입력창에서 던진 질문을 그대로 받아 연다
@@ -62,10 +61,10 @@ export default function ChatWidget() {
       if (!q?.trim()) return
       setMsgs((m) => [...m, { role: 'user', text: q.trim() }])
       setTyping(true)
-      window.setTimeout(() => {
-        setMsgs((m) => [...m, reply(q)])
+      reply(q).then((response) => {
+        setMsgs((m) => [...m, response])
         setTyping(false)
-      }, 700)
+      })
     }
     window.addEventListener('quill:ask', onAsk)
     return () => window.removeEventListener('quill:ask', onAsk)
