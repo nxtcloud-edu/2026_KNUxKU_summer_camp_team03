@@ -65,6 +65,17 @@ def _build_user_prompt(question: str, reports: list[dict],
         )
     if profile_ctx:
         parts.append("## 사용자 컨텍스트\n" + profile_ctx)
+
+    # 상품 관련 질문이면 관련 상품 목록 주입
+    from .chat_agent import _detect_product_query
+    from .product_store import format_products_for_prompt, search_products
+    _product_hints = _detect_product_query(question)
+    if _product_hints:
+        prods = search_products(**_product_hints)
+        prod_text = format_products_for_prompt(prods)
+        if prod_text:
+            parts.append(prod_text)
+
     parts.append("## 질문\n" + question)
     return "\n\n".join(parts)
 
@@ -114,7 +125,7 @@ def answer_persona(question: str, reports: list[dict],
             any_success = True
             message = sanitize_output(_strip_contact_info(reply))
             # LLM이 프롬프트 구조를 답변에 그대로 출력하는 경우 제거
-            message = _re.sub(r"^##\s.*\n.*\n?", "", message).strip()
+            message = _re.sub(r"^##\s.*(?:\n(?!##).*)*", "", message, flags=_re.MULTILINE).strip()
             # LLM이 상품명 목록을 글머리로 나열하는 경우 제거 (지어낸 상품명 차단)
             message = _re.sub(r"^[\*\-]\s+.*\n?", "", message, flags=_re.MULTILINE).strip()
         except (RuntimeError, requests.RequestException, KeyError,
@@ -174,7 +185,7 @@ def answer_single_persona(
     try:
         reply = _call_gemini_for_persona(persona["system_prompt"], user_prompt)
         message = sanitize_output(_strip_contact_info(reply))
-        message = _re.sub(r"^##\s.*\n.*\n?", "", message).strip()
+        message = _re.sub(r"^##\s.*(?:\n(?!##).*)*", "", message, flags=_re.MULTILINE).strip()
         message = _re.sub(r"^[\*\-]\s+.*\n?", "", message, flags=_re.MULTILINE).strip()
         used_llm = True
     except (RuntimeError, requests.RequestException, KeyError,
