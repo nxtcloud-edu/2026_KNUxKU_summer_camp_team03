@@ -133,51 +133,50 @@ export default function Portfolio() {
         </h1>
       </div>
 
-      {/* ── 위 · 위험점수·슬라이더·배분·근거를 한 덩어리로 ──────────
-          예전엔 이 내용이 카드 두 개로 나뉘어 있었는데, 하나는 곧장
-          다른 하나를 낳는 값이라(슬라이더→배분) 따로 쪼개면 관계없는
-          두 블록처럼 보였다. 헤어라인 하나로만 안을 나눈다. */}
-      <section className="pf-summary">
-        <div className="row-between wrap gap-4">
-          <div>
-            <div className="pf-card-t">위험 점수</div>
-            <div className="pf-risk num">{risk}</div>
+      {/* ── 위험 점수 · 슬라이더 · 배분 — 패널 하나, 안쪽은 헤어라인으로만 ── */}
+      <section className="pf-panel">
+        <div className="pf-sec">
+          <div className="row-between wrap gap-4">
+            <div>
+              <div className="pf-card-t">위험 점수</div>
+              <div className="pf-risk num">{risk}</div>
+            </div>
+            <div className="pf-scores">
+              <span>
+                Capacity <b className="num">{profile.capacity}</b>
+              </span>
+              <span>
+                Tolerance <b className="num">{profile.tolerance}</b>
+              </span>
+            </div>
           </div>
-          <div className="pf-scores">
-            <span>
-              Capacity <b className="num">{profile.capacity}</b>
-            </span>
-            <span>
-              Tolerance <b className="num">{profile.tolerance}</b>
-            </span>
+
+          {/* 슬라이더 — 1박자 */}
+          <div className="pf-slider mt-5">
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={1}
+              value={risk}
+              onChange={(e) => setRisk(Number(e.target.value))}
+              onMouseUp={() => setOverride(risk)}
+              onTouchEnd={() => setOverride(risk)}
+              aria-label="위험 점수 조정"
+            />
+            <div className="pf-slider-scale">
+              <span>안정</span>
+              <span>공격</span>
+            </div>
           </div>
+
+          <p className="xs faint keep mt-3" style={{ lineHeight: 1.7 }}>
+            슬라이더를 움직이면 기준 비중이 즉시 다시 계산됩니다. 손을 떼고 잠시 뒤
+            에이전트가 오늘 리포트를 다시 읽고 조정을 제안해요.
+          </p>
         </div>
 
-        {/* 슬라이더 — 1박자 */}
-        <div className="pf-slider mt-5">
-          <input
-            type="range"
-            min={0}
-            max={100}
-            step={1}
-            value={risk}
-            onChange={(e) => setRisk(Number(e.target.value))}
-            onMouseUp={() => setOverride(risk)}
-            onTouchEnd={() => setOverride(risk)}
-            aria-label="위험 점수 조정"
-          />
-          <div className="pf-slider-scale">
-            <span>안정</span>
-            <span>공격</span>
-          </div>
-        </div>
-
-        <p className="xs faint keep mt-3" style={{ lineHeight: 1.7 }}>
-          슬라이더를 움직이면 기준 비중이 즉시 다시 계산됩니다. 손을 떼고 잠시 뒤
-          에이전트가 오늘 리포트를 다시 읽고 조정을 제안해요.
-        </p>
-
-        <div className="pf-alloc-block">
+        <div className="pf-sec">
           <AllocBar
             baseline={baseline}
             adjusted={alloc?.adjusted}
@@ -234,18 +233,14 @@ export default function Portfolio() {
               </div>
             </div>
           )}
-        </div>
 
-        <p className="pf-disc">{DISCLAIMER}</p>
+          <p className="pf-disc">{DISCLAIMER}</p>
+        </div>
       </section>
 
-      {/* ── 아래 · 자산군 3열 ─────────────────────────────────────
-          세로로 쌓지 않는다 — 성격이 같은 셋을 나란히 놓으면 grid가
-          알아서 세 칸의 높이를 맞춰 준다. 카드 안에 또 카드를 넣지
-          않고, 상품 사이도 헤어라인으로만 나눈다. */}
-      <section className="pf-assets">
-        {/* 배분 막대(AllocBar)가 그리는 순서(현금성·ETF·채권)와 맞춘다 —
-            달랐던 예전엔 위 다이어그램과 아래 카드 순서가 서로 어긋나 보였다 */}
+      {/* ── 자산군 3열 — 패널 하나를 세로 헤어라인으로만 나눈다 ── */}
+      <section className="pf-panel pf-assets">
+        {/* 순서는 AllocBar의 ORDER와 같게 — 막대에서 읽은 순서 그대로 아래에서 찾게 */}
         {(['cash', 'etf', 'bond'] as (keyof Weights)[]).map((k) => (
           <div className="pf-asset" key={k}>
             <div className="row-between">
@@ -277,31 +272,26 @@ export default function Portfolio() {
         ))}
       </section>
 
-      {/* ── 파라미터 — 얇은 한 줄. 이것도 굳이 카드로 안 세운다 ──── */}
-      <div className="pf-params">
-        <span className="eyebrow">적용된 파라미터</span>
-        <div className="pf-params-row">
-          <Row k="현금 하한" v={`${ALLOCATION_PARAMS.cash_floor}%`} />
-          <Row k="조정 한도" v={`±${ALLOCATION_PARAMS.adjust_cap_pp}%p`} />
-          <Row
-            k="스코어 배합"
-            v={`capacity ${ALLOCATION_PARAMS.capacity_weight} : tolerance ${ALLOCATION_PARAMS.tolerance_weight}`}
-          />
-        </div>
-        <p className="xs faint keep mt-3" style={{ lineHeight: 1.7 }}>
-          이 값들은 코드가 아니라 파라미터 테이블에 있습니다. 운영 중 튜닝할 때 배포
-          없이 바꿉니다.
-        </p>
+      {/* ── 적용된 파라미터 — 카드 대신 얇은 한 줄 스트립 ── */}
+      <div className="pf-strip">
+        <span className="pf-strip-k">적용된 파라미터</span>
+        <span>
+          현금 하한 <b className="num">{ALLOCATION_PARAMS.cash_floor}%</b>
+        </span>
+        <span>
+          조정 한도 <b className="num">±{ALLOCATION_PARAMS.adjust_cap_pp}%p</b>
+        </span>
+        <span>
+          스코어 배합{' '}
+          <b className="num">
+            capacity {ALLOCATION_PARAMS.capacity_weight} : tolerance{' '}
+            {ALLOCATION_PARAMS.tolerance_weight}
+          </b>
+        </span>
+        <span className="pf-strip-note">
+          파라미터 테이블 값 — 운영 중 배포 없이 튜닝합니다
+        </span>
       </div>
-    </div>
-  )
-}
-
-function Row({ k, v }: { k: string; v: string }) {
-  return (
-    <div className="pf-param-row">
-      <span className="xs faint">{k}</span>
-      <b className="num small">{v}</b>
     </div>
   )
 }

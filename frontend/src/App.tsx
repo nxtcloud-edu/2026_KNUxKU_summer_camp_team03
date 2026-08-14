@@ -13,7 +13,6 @@ import Onboarding from './pages/Onboarding'
 import Portfolio from './pages/Portfolio'
 import MyPage from './pages/MyPage'
 import Library from './pages/Library'
-import Login from './pages/Login'
 import RequireAuth from './components/RequireAuth'
 import ReportPage from './pages/ReportPage'
 
@@ -44,7 +43,6 @@ export default function App() {
         <Route path="/library/:id" element={<ReportPage />} />
       </Route>
 
-      <Route path="/login" element={<Login />} />
 
       {/* ── 관리자 콘솔 (별도 셸) ─────────────────────
              인증이 켜져 있으면 로그인 없이는 못 들어온다.

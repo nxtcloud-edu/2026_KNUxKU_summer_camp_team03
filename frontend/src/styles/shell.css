@@ -150,9 +150,35 @@
   flex: 1;
 }
 
-.side-cta {
+/* 버튼의 블럭(면·상자)을 전부 걷어낸다 — 근거 각주처럼 글자와
+   헤어라인 하나만으로. 위에 골드 헤어라인을 긋고 글자는 골드로. */
+.btn.side-cta {
   width: 100%;
   margin-top: var(--sp-4);
+  justify-content: space-between;
+  background: var(--gold-hairline) top / 100% 1px no-repeat;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 13px 2px 4px;
+  color: var(--gold-deep);
+}
+.btn.side-cta:hover:not(:disabled) {
+  background: var(--gold-hairline) top / 100% 1px no-repeat;
+  box-shadow: none;
+  color: var(--ink);
+}
+/* 확인 키 만들기 등 보조 버튼 — 잉크 헤어라인 위 글자만 */
+.app-sidebar .btn-soft {
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  border-top: 1px solid var(--line);
+  padding: 11px 2px 3px;
+  color: var(--ink-2);
+}
+.app-sidebar .btn-soft:hover:not(:disabled) {
+  background: none;
+  color: var(--ink);
 }
 
 .side-foot {
@@ -195,12 +221,10 @@
   right: 2px;
   margin-left: 0;
 }
+/* 라벨이 span이 아니라 텍스트 노드라 span만 숨기면 글자가 레일 밖으로
+   삐져나온다 — 접힌 폭에는 글자 버튼이 설 자리가 없으니 통째로 숨긴다 */
 .app-sidebar.collapsed .side-cta {
-  padding: 0;
-  width: 36px;
-  height: 36px;
-  margin-left: auto;
-  margin-right: auto;
+  display: none;
 }
 .app-sidebar.collapsed .side-foot {
   flex-direction: column;

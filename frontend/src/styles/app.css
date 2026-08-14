@@ -864,38 +864,96 @@
 }
 
 /* ── 리포트 서재 ──────────────────────────────────────────── */
-.lib-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: var(--sp-4);
+/* ── 리포트 팬 덱 (ReportFan) — 손에 쥔 카드처럼 부채꼴로 ──
+   카드 덱은 물리적 카드 은유라 여기서는 면·그림자가 본질이다.
+   위치·회전·크기는 전부 GSAP이 transform으로 잡는다. */
+.fan-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  /* 양옆 카드가 컨테이너 폭을 넘으면 페이지에 가로 스크롤이 생긴다 —
+     세로(그림자·호버 부양)는 두고 가로만 자른다 */
+  overflow-x: clip;
 }
-/* 그리드·플렉스 아이템은 기본값이 min-width:auto라, 내용이 짧은 카드
-   (예: 제목이 짧은 리포트)는 칸을 꽉 채우는 대신 제 내용 크기로 줄어들
-   수 있다. 0으로 내려서 항상 칸 너비를 그대로 채우게 한다. */
-.lib-grid > .reveal {
-  min-width: 0;
+.fan-layout {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 80rem;
+  /* 스테이지를 낮춰 덱을 위로 — 카드 좌표·크기(디자인)는 그대로다 */
+  height: 30rem;
 }
-.rep {
+.fan-card {
+  position: absolute;
+  width: 21rem;
+  height: 24rem;
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
-  width: 100%;
-  padding: var(--sp-6);
-  border-radius: var(--r-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-xs);
+  padding: var(--sp-5);
   text-align: left;
-  transition: box-shadow 0.24s var(--ease), transform 0.24s var(--ease-out);
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: inset 0 0 0 1px var(--line), 0 12px 34px rgba(31, 26, 17, 0.14);
+  overflow: hidden;
+  opacity: 0; /* 첫 프레임 번쩍임 방지 — 곧바로 GSAP이 잡는다 */
+  will-change: transform;
 }
-.rep:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-3px);
+.fan-card-title {
+  font-size: var(--t-md);
+  line-height: 1.5;
+  word-break: keep-all;
 }
-/* 리포트마다 제목·요약·태그 길이가 다 달라 카드 높이가 행마다 들쭉날쭉했다.
-   min-height(최소값)로는 실제로 다 안 맞아서, 각 칸을 아예 고정 height +
-   overflow:hidden으로 못박는다 — 내용이 넘치면 잘리고, 모자라면 빈 자리가
-   남을 뿐, 칸 자체 크기는 절대 안 바뀐다. 카드 전체 높이는 이 고정 칸들의
-   합이라 자동으로 전부 똑같아진다. */
+.fan-card-tags {
+  margin-top: auto;
+  /* 태그는 마크업·데이터로는 남긴다 — 눈에서만 치운다 */
+  display: none;
+}
+.fan-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-top: var(--sp-6);
+}
+/* 캐러셀 화살표 — 관례상 원형 */
+.fan-arrow {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-full);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line), var(--shadow-sm);
+  color: var(--ink-3);
+  transition: color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+}
+.fan-arrow:hover {
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--gold-line), var(--shadow-sm);
+}
+.fan-count {
+  min-width: 64px;
+  text-align: center;
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+}
+@media (max-width: 1023px) {
+  .fan-layout { height: 27rem; }
+}
+@media (max-width: 767px) {
+  .fan-layout { height: 24rem; }
+  .fan-card { width: 18rem; height: 21rem; }
+}
+@media (max-width: 639px) {
+  .fan-layout { height: 22rem; }
+}
+@media (max-width: 479px) {
+  .fan-layout { height: 19rem; }
+  .fan-card { width: 15.5rem; height: 19rem; }
+}
 .rep-meta {
   display: flex;
   align-items: center;
@@ -945,23 +1003,20 @@
   border-radius: 50%;
   background: var(--gold);
 }
+/* 태그 — 면 칩 대신 글자와 가운데점만 */
 .tag {
   display: inline-flex;
   align-items: center;
-  height: 22px;
-  padding: 0 9px;
-  border-radius: var(--r-xs);
-  background: var(--surface-sunken);
   font-size: var(--t-xs);
   font-weight: 600;
-  color: var(--ink-3);
+  color: var(--ink-4);
   font-family: var(--font-mono);
   letter-spacing: -0.02em;
 }
-.tag-more {
-  background: none;
-  color: var(--ink-4);
-  padding: 0 4px;
+.tag + .tag::before {
+  content: '·';
+  margin-right: 7px;
+  opacity: 0.5;
 }
 
 /* ── 챗봇 ─────────────────────────────────────────────────── */
@@ -1078,4 +1133,38 @@
   color: var(--ink-4);
   word-break: keep-all;
   border-top: 1px solid var(--line);
+}
+
+/* ── 드래그 질문 마커 (SelectionAsk) ──────────────────────────
+   선택 영역 위 가운데 뜨는 작은 점. 앱의 각진 문법에서 벗어난
+   의도적 예외다 — 선택 마커는 관례적으로 동그라미라야 읽힌다. */
+.selection-ask-wrap {
+  position: relative;
+  /* 스크롤 컨테이너(app-main) 안에서 콘텐츠 높이를 그대로 따른다 */
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+/* 면도 경계도 없이 — 골드 말풍선 하나만 띄운다 */
+.selection-ask-dot {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 6px));
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  color: var(--gold);
+  z-index: 60;
+  transition: transform 0.14s var(--ease-out), color 0.14s var(--ease);
+  animation: ask-dot-in 0.16s var(--ease-out);
+}
+.selection-ask-dot:hover {
+  color: var(--gold-hover);
+  transform: translate(-50%, calc(-100% - 6px)) scale(1.18);
+}
+@keyframes ask-dot-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% - 2px)) scale(0.6);
+  }
 }

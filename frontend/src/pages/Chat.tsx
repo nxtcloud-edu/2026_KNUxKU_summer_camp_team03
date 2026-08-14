@@ -30,9 +30,9 @@ import ParallelViews from '../components/ParallelViews'
 import RichText from '../components/RichText'
 import InkText from '../components/InkText'
 import ChatVault, { type VaultState } from '../components/ChatVault'
-import WelcomeModal from '../components/WelcomeModal'
+import OnboardingStepper from '../components/OnboardingStepper'
 import AppSidebar from '../components/AppSidebar'
-import { IconChat, IconQuill, IconSend, IconShield } from '../components/icons'
+import { IconChat, IconCheck, IconPlus, IconQuill, IconSearch, IconSend, IconShield } from '../components/icons'
 
 interface Msg {
   id: string
@@ -78,6 +78,7 @@ function penDelay(ch: string): number {
 export default function Chat() {
   const { profile, effectiveRisk } = useCopilot()
   const [chatMode, setChatMode] = useState<'chat' | 'persona'>('chat')
+  const [modeMenuOpen, setModeMenuOpen] = useState(false)
   const [chatMsgs, setChatMsgs] = useState<Msg[]>([])
   const [personaMsgs, setPersonaMsgs] = useState<Msg[]>([])
   const msgs = chatMode === 'chat' ? chatMsgs : personaMsgs
@@ -342,29 +343,13 @@ export default function Chat() {
       />
 
     <div className="chat-shell">
-      <WelcomeModal />
+      <OnboardingStepper />
 
       {/* ── 대화 ─────────────────────────────────────── */}
       <section className="chat-main">
-        {/* ── 리서치/훈수 탭 전환 ── */}
-        <div className="chat-mode-tabs">
-          <button
-            className={`chat-mode-tab${chatMode === 'chat' ? ' active' : ''}`}
-            onClick={() => setChatMode('chat')}
-          >
-            🔬 리서치
-          </button>
-          <button
-            className={`chat-mode-tab${chatMode === 'persona' ? ' active' : ''}`}
-            onClick={() => setChatMode('persona')}
-          >
-            💬 훈수
-          </button>
-        </div>
-
         <div className="chat-scroll" ref={scrollRef}>
           <div className={`chat-inner${msgs.length === 0 ? ' chat-inner-empty' : ''}`}>
-            {msgs.length === 0 && <Opening onPick={send} />}
+            {msgs.length === 0 && <Opening mode={chatMode} onPick={send} />}
 
             {msgs.map((m) =>
               m.role === 'user' ? (
@@ -480,6 +465,57 @@ export default function Chat() {
               send(q)
             }}
           >
+            {/* 모드 선택 — 입력창 왼쪽 + 버튼. 훈수 모드일 땐 말풍선으로 바뀐다 */}
+            <div className="composer-mode">
+              {modeMenuOpen && (
+                <>
+                  <div className="mode-menu-backdrop" onClick={() => setModeMenuOpen(false)} />
+                  <div className="mode-menu" role="menu">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className={chatMode === 'chat' ? 'on' : ''}
+                      onClick={() => {
+                        setChatMode('chat')
+                        setModeMenuOpen(false)
+                      }}
+                    >
+                      <span className="mode-menu-t">
+                        <IconSearch size={15} />
+                        리서치
+                        {chatMode === 'chat' && <IconCheck size={13} />}
+                      </span>
+                      <span className="mode-menu-s">수집한 리포트를 근거로 해설</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className={chatMode === 'persona' ? 'on' : ''}
+                      onClick={() => {
+                        setChatMode('persona')
+                        setModeMenuOpen(false)
+                      }}
+                    >
+                      <span className="mode-menu-t">
+                        <IconChat size={15} />
+                        훈수
+                        {chatMode === 'persona' && <IconCheck size={13} />}
+                      </span>
+                      <span className="mode-menu-s">세 전문가가 관점을 나눠 훈수</span>
+                    </button>
+                  </div>
+                </>
+              )}
+              <button
+                type="button"
+                className={`composer-plus${modeMenuOpen ? ' open' : ''}`}
+                onClick={() => setModeMenuOpen((v) => !v)}
+                aria-label="모드 선택"
+                aria-expanded={modeMenuOpen}
+              >
+                <IconPlus size={20} />
+              </button>
+            </div>
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -487,8 +523,8 @@ export default function Chat() {
               aria-label="질문 입력"
               disabled={busy}
             />
-            <button className="btn btn-primary btn-icon composer-send" disabled={!q.trim() || busy} aria-label="보내기">
-              <IconSend size={16} />
+            <button className="composer-send" disabled={!q.trim() || busy} aria-label="보내기">
+              <IconSend size={20} />
             </button>
           </form>
           <div className="composer-foot">
@@ -523,22 +559,41 @@ export default function Chat() {
 
 /* ── 대화 시작 화면 ─────────────────────────────────────── */
 
-function Opening({ onPick }: { onPick: (s: string) => void }) {
+/** 훈수 탭 전용 예시 — 정보형이 아니라 '살까 말까' 고민형으로.
+ *  triage의 DECISION_PAT(할까/말까/살까/어떤 게…)에 걸리는 문형을 쓴다. */
+const PERSONA_SUGGESTS = [
+  '지금 국고채 비중을 늘릴까 말까?',
+  '금리 인하 기대로 장기채, 지금 사도 될까요?',
+  '예금 만기 목돈, ETF로 옮길까 고민이에요',
+  '회사채가 흔들리는데 갈아타야 할까요?',
+]
+
+function Opening({
+  mode,
+  onPick,
+}: {
+  mode: 'chat' | 'persona'
+  onPick: (s: string) => void
+}) {
+  const suggests =
+    mode === 'persona' ? PERSONA_SUGGESTS : [...SUGGESTS, '내 비중은 어떻게 되나요?']
+
   return (
     <div className="opening">
-      <IconQuill size={24} style={{ color: 'var(--gold)' }} />
+      {/* 깃펜 아이콘 자리 — 골드는 유지하되 글자로 현재 모드를 말한다 */}
+      <span className="eyebrow">
+        <span className="rule-gold" />
+        {mode === 'persona' ? '훈수' : '리서치'}
+      </span>
 
       <h1 className="opening-title">무엇이 궁금하신가요?</h1>
 
       <div className="opening-suggests">
-        {SUGGESTS.map((s) => (
+        {suggests.map((s) => (
           <button key={s} className="sug" onClick={() => onPick(s)}>
             {s}
           </button>
         ))}
-        <button className="sug" onClick={() => onPick('내 비중은 어떻게 되나요?')}>
-          내 비중은 어떻게 되나요?
-        </button>
       </div>
     </div>
   )

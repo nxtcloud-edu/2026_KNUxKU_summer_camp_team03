@@ -66,6 +66,11 @@ export const IconX = ({ size = 18, style }: P) => (
     <path d="m6 6 12 12M18 6 6 18" />
   </svg>
 )
+export const IconPlus = ({ size = 18, style }: P) => (
+  <svg {...base(size)} style={style} aria-hidden>
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+)
 export const IconCheck = ({ size = 18, style }: P) => (
   <svg {...base(size)} style={style} aria-hidden>
     <path d="m5 12.6 4.4 4.4L19 6.6" />

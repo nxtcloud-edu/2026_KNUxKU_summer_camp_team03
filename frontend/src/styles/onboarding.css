@@ -234,6 +234,9 @@
 .ob-mdd input[type="range"],
 .pf-slider input[type="range"] {
   flex: 1;
+  /* pf-slider는 flex 컨테이너가 아니라 기본 폭(약 260px)으로 줄어든다 —
+     바를 패널 폭에 맞춰야 아래 안정/공격 눈금과 끝이 맞는다 */
+  width: 100%;
   min-width: 0;
   -webkit-appearance: none;
   appearance: none;
@@ -388,16 +391,20 @@
 .pf-head {
   margin-bottom: var(--sp-8);
 }
-/* 위험점수·슬라이더·배분·근거 — 한 패널. 안쪽은 헤어라인으로만 나눈다 */
-.pf-summary {
+/* 위→아래 한 흐름. 패널 안에서는 상자를 다시 만들지 않고
+   헤어라인 하나로만 구간을 나눈다. */
+.pf-panel {
   background: var(--surface);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-sm);
   padding: var(--sp-6);
 }
-.pf-alloc-block {
+.pf-panel + .pf-panel {
+  margin-top: var(--sp-4);
+}
+.pf-sec + .pf-sec {
   margin-top: var(--sp-6);
-  padding-top: var(--sp-5);
+  padding-top: var(--sp-6);
   border-top: 1px solid var(--line);
 }
 .pf-card-t {
@@ -485,22 +492,39 @@
   line-height: 1.7;
   word-break: keep-all;
 }
-/* 자산군 3열 — 패널 하나, 세로 헤어라인으로만 나눈다. 카드 속 카드를
-   안 만든다(상품도 배경 없이 헤어라인으로만 구분) */
+/* 자산군 3열 — 패널 하나를 세로 헤어라인으로만 나눈다 */
 .pf-assets {
-  margin-top: var(--sp-5);
-  background: var(--surface);
-  border-radius: var(--r-lg);
-  box-shadow: var(--shadow-sm);
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
 }
 .pf-asset {
-  padding: var(--sp-5);
   min-width: 0;
+  padding: 0 var(--sp-6);
+}
+.pf-asset:first-child {
+  padding-left: 0;
+}
+.pf-asset:last-child {
+  padding-right: 0;
 }
 .pf-asset + .pf-asset {
   border-left: 1px solid var(--line);
+}
+/* 좁은 화면 — 3열이 1열로 접히고, 세로 헤어라인이 가로로 눕는다 */
+@media (max-width: 900px) {
+  .pf-assets {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pf-asset {
+    padding: 0;
+  }
+  .pf-asset + .pf-asset {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    margin-top: var(--sp-5);
+    padding-top: var(--sp-5);
+  }
 }
 .pf-dot {
   width: 10px;
@@ -513,6 +537,7 @@
   font-weight: 700;
   letter-spacing: -0.035em;
 }
+/* 상품 목록 — 작은 박스 대신 상품끼리 헤어라인으로만 구분 */
 .pf-prods {
   margin-top: var(--sp-4);
   display: flex;
@@ -522,29 +547,36 @@
   padding: var(--sp-3) 0;
 }
 .pf-prod + .pf-prod {
-  border-top: 1px solid var(--line-soft);
+  border-top: 1px solid var(--line);
 }
-
-/* 파라미터 — 카드로 세우지 않는다. 옅은 바탕에 한 줄로 지나가는 정보 */
-.pf-params {
-  margin-top: var(--sp-5);
-  padding: var(--sp-4) var(--sp-5);
-  background: var(--surface-sunken);
-  border-radius: var(--r-md);
-}
-.pf-params-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-2) var(--sp-8);
-  margin-top: var(--sp-3);
-}
-.pf-param-row {
+/* 적용된 파라미터 — 카드 대신 옅은 배경의 얇은 한 줄 스트립 */
+.pf-strip {
+  margin-top: var(--sp-4);
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-6);
+  background: var(--surface-sunken);
+  border-radius: var(--r-md);
+  padding: 10px 16px;
+  font-size: var(--t-sm);
+  color: var(--ink-3);
 }
-.pf-param-row b {
+.pf-strip-k {
+  font-size: var(--t-xs);
+  font-weight: 640;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.pf-strip b {
   color: var(--ink);
+  margin-left: 4px;
+}
+.pf-strip-note {
+  margin-left: auto;
+  font-size: var(--t-xs);
+  color: var(--ink-4);
 }
 
 @media (max-width: 1000px) {
@@ -1026,4 +1058,166 @@
   .my-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* ── 첫 진입 온보딩 스테퍼 (OnboardingStepper) ──────────────
+   배경은 welcome-overlay를 그대로 쓰고 카드만 문항 하나에 맞게 좁힌다.
+   문항 전환은 key 교체 → obs-step-in 애니메이션으로 처리한다. */
+.obs-card {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  background: var(--surface);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+  padding: var(--sp-6) var(--sp-6) var(--sp-5);
+  animation: welcome-in 0.24s var(--ease-out);
+}
+.obs-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 34px; /* 닫기 버튼 자리 */
+}
+.obs-count {
+  font-size: var(--t-xs);
+  font-weight: 640;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
+.obs-progress {
+  height: 3px;
+  margin-top: var(--sp-3);
+  border-radius: var(--r-full);
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+.obs-progress i {
+  display: block;
+  height: 100%;
+  background: var(--gold);
+  border-radius: var(--r-full);
+  transition: width 0.28s var(--ease-out);
+}
+.obs-lead {
+  margin-top: var(--sp-4);
+  font-size: var(--t-sm);
+  line-height: 1.7;
+  color: var(--ink-3);
+}
+.obs-body {
+  min-height: 248px; /* 문항마다 카드 높이가 널뛰지 않게 */
+  margin-top: var(--sp-4);
+  animation: obs-step-in 0.22s var(--ease-out);
+}
+@keyframes obs-step-in {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+}
+.obs-q {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.4;
+}
+.obs-hint {
+  margin-top: 4px;
+  font-size: var(--t-sm);
+  line-height: 1.65;
+  color: var(--ink-3);
+}
+.obs-body .ob-maps {
+  display: inline-block;
+  margin-top: var(--sp-3);
+}
+.obs-result {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--hairline);
+}
+.obs-score-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--sp-3);
+  font-size: var(--t-sm);
+}
+.obs-score-row b {
+  font-family: var(--font-display);
+  font-size: 20px;
+  margin-left: 2px;
+}
+.obs-score-sub {
+  font-size: var(--t-xs);
+  color: var(--ink-3);
+}
+.obs-warn {
+  margin-top: var(--sp-3);
+  font-size: var(--t-xs);
+  line-height: 1.65;
+  color: var(--gold-deep, #8a6d1f);
+}
+.obs-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--sp-5);
+}
+.obs-nav {
+  display: flex;
+  gap: var(--sp-2);
+}
+.obs-nav .btn:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* ── 스테퍼 선택지 — 근거 각주 문법으로 ──────────────────────
+   면 블럭 대신 골드 번호 + 헤어라인. 선택은 같은 잉크 톤에서
+   연하게(미선택) → 진하게(선택)로만 말한다. 체크는 골드. */
+.obs-body .ob-choices {
+  gap: 0;
+  counter-reset: obs-choice;
+}
+.obs-body .ob-choice {
+  background: none;
+  border-radius: 0;
+  padding: 13px 34px 13px 30px;
+  color: var(--ink-3);
+  transition: color 0.16s var(--ease);
+}
+.obs-body .ob-choice + .ob-choice {
+  border-top: 1px solid var(--line);
+}
+/* 각주 번호 — 명조 골드 */
+.obs-body .ob-choice::before {
+  counter-increment: obs-choice;
+  content: counter(obs-choice);
+  position: absolute;
+  left: 4px;
+  top: 13px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold);
+}
+.obs-body .ob-choice:hover {
+  background: none;
+  color: var(--ink-2);
+}
+.obs-body .ob-choice.on {
+  background: none;
+  color: var(--ink);
+}
+.obs-body .ob-choice.on .ob-choice-t {
+  font-weight: 700;
+}
+.obs-body .ob-choice.on .ob-choice-s {
+  opacity: 0.8;
+}
+.obs-body .ob-choice-c {
+  color: var(--gold-bright);
 }
