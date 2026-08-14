@@ -115,7 +115,9 @@ def classify(message: str, prev_tags: list[str] | None = None,
         rewritten = True
 
     # 3) 유형 규칙 (포트폴리오 > 의사결정 > 일정 > 개념 > 시장정세 > 근거)
-    if PORTFOLIO_PAT.search(text):
+    # 포트폴리오 단순 조회 vs 시나리오 질문 구분: "~하면/바꿔/대응/변화/가져갈"이 있으면 decision/market으로
+    _SCENARIO_PAT = re.compile(r"하면|바꿔|대응|변화|가져갈|조정|리밸런싱|바꿀까|줄일까|늘릴까")
+    if PORTFOLIO_PAT.search(text) and not _SCENARIO_PAT.search(text):
         return TriagePlan("portfolio", query, tags, rewritten)
     if DECISION_PAT.search(text):
         return TriagePlan("decision", query, tags, rewritten)
