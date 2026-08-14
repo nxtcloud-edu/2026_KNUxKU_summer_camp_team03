@@ -1,311 +1,332 @@
-# 맥미리 · 리포트를 읽어주는 금융 과외
+# macmiri · 리포트를 읽어주는 금융 과외
 
-> **2026_KNUxKU_summer_camp_team03** · `DESIGN` 브랜치, 그 위 `feature/ui-refactor`
-> 강원대x고려대 Summer Agentic AI 심화 몰입 캠프 3팀 레포지토리입니다.
-> 이 브랜치에는 **디자인/프런트엔드 프로토타입**이 들어 있습니다.
-
-증권사 리포트를 근거로, 사회초년생과 바쁜 직장인에게 **채권·ETF 중심 자산 배분**을
-눈높이에 맞춰 설명하는 서비스의 **화면 프로토타입**입니다.
-
-> ⚠️ **화면 검증용입니다.** DB·수집 파이프라인·실제 LLM은 아직 붙지 않았습니다.
-> 화면에 나오는 증권사 리포트·발췌문·수익률·시황은 **전부 지어낸 샘플**이며 실제 자료가
-> 아닙니다. 투자 권유나 자문이 아닙니다.
+> 증권사 리서치 리포트를 근거로, 사회초년생과 바쁜 직장인을 위한
+> 채권·ETF 중심 자산배분을 눈높이에 맞춰 해설하는 AI 금융 어시스턴트.
+> **리서치 탭**(1:1 해설) + **훈수 탭**(3인 페르소나 병렬 의견) + **캘린더 탭**(금융 일정).
 
 ---
 
-## 0. 지금 이 브랜치가 하고 있는 것
+## ⚡ 빠른 실행 — 5분 안에
 
-`DESIGN` 위에서 UI/UX를 다시 손보는 중입니다. 원래 있던 화면 구조(상단 헤더 + 3칸 배치)를
-**좌측 고정 사이드바 하나로 합치는 개편**을 축으로, 그 김에 눈에 밟히는 사용성 문제들을
-같이 정리하고 있습니다.
-
-**지금 라운드에서 다루는 것** — 기능·조작 편의성·가독성 중심입니다.
-- 메뉴가 두 군데(상단 헤더 / 대화 보관함)로 나뉘어 있던 걸 사이드바 하나로 통합
-- 사이드바·근거 패널 접기·펼치기, 접었을 때 요소가 밖으로 삐져나오는 버그들
-- 대화창·설문·마이페이지·리포트 서재에서 스크롤을 강요하던 불필요한 여백·큰 표제
-- 리포트 읽다가 모르는 부분을 드래그하면 바로 챗봇에게 물어보는 것 같은, 있으면
-  편한 상호작용 추가
-- 온보딩을 "처음엔 설문처럼 한 문항씩, 재방문 땐 한눈에 펼쳐서 토글"로 이원화
-- 챗봇 말투처럼 읽히는 카피("제가 읽을게요 / 당신은…", "내 자리" 같은 과한 은유) 정리
-
-**아직 손 안 댄 것** — 전체 색감·서체 구성(고운바탕·Italianno 손글씨 워드마크)·답변이
-잉크 번지듯 스트리밍되는 연출 같은, `DESIGN` 브랜치가 원래 잡아 둔 **비주얼 테마·톤**은
-이번 라운드의 초점이 아닙니다. 바꿀 수도 있고 그대로 둘 수도 있는데, 아직 결정된 방향은
-없습니다 — 팀 논의가 필요한 부분입니다. 아래 "4. 디자인"은 그 원래 설계를 그대로
-설명해 둔 것이지, 지금 라운드에서 새로 정한 게 아닙니다.
-
-**백엔드 관련** — `feature/chat-backend` 브랜치에 별도로 FastAPI 백엔드(Supervisor +
-검색 에이전트 2종 + 해설 에이전트)가 있습니다. 아직 `DESIGN`에 합쳐지지 않았고, 합칠지
-어떻게 합칠지도 미확정입니다. 지금 프론트는 그 백엔드 없이 `lib/chatEngine.ts`의 규칙
-매칭만으로 돕니다.
-
----
-
-## 1. 실행하기
-
-### 준비물 — Node.js 하나면 됩니다
-
-| 필요한 것 | 확인 방법 | 없다면 |
-|---|---|---|
-| Node.js 18 이상 | 터미널에 `node -v` | [nodejs.org](https://nodejs.org)에서 LTS 설치 |
-| Git | `git --version` | [git-scm.com](https://git-scm.com) |
-
-DB도, API 키도, 회원가입도 필요 없습니다. 받아서 바로 실행하면 됩니다.
-
-### 처음 한 번
+> 사전 요구사항: **Node.js 18+** · **Python 3.12+** · **pip** · **git**
 
 ```bash
-git clone -b feature/ui-refactor https://github.com/nxtcloud-edu/2026_KNUxKU_summer_camp_team03.git
-cd 2026_KNUxKU_summer_camp_team03/frontend
+# 1) 클론 + 진입
+git clone <repo-url> macmiri && cd macmiri
+
+# 2) 백엔드 설치 + 실행
+cd backend
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env   # Gemini API 키 설정 필수
+uvicorn app.main:app --reload --port 8000
+
+# 3) 프론트 설치 + 실행 (새 터미널)
+cd frontend
 npm install
+npm run dev            # → http://localhost:5174
 ```
 
-`npm install`은 1~2분 걸립니다. 폰트까지 같이 받기 때문입니다.
+→ 브라우저에서 `http://localhost:5174` 접속. 질문 입력 → AI 답변 + 근거 리포트 확인.
 
-### 실행
+---
+
+## 1. 서비스 핵심 — 어떤 문제를 푸는가
+
+| 문제 | macmiri의 해결 |
+|------|----------------|
+| 증권사 리포트가 너무 어렵다 | **눈높이 해설** — 전문용어를 괄호로 풀어주고, 비유로 설명 |
+| 근거 없는 AI 답변은 믿을 수 없다 | **리포트 기반 답변** — 모든 답에 근거 리포트를 함께 제시 |
+| 사도 될까? 에 대한 답이 없다 | **3인 페르소나** — 가치/매크로/성장 관점에서 병렬 의견 제공 |
+| 성향에 맞는 비중을 모르겠다 | **퀀트 3단계** — 6문항 진단 → 기준 비중 → AI 근거 조정 |
+| 어떤 상품을 고르는지 | **32개 큐레이션** — 6버킷 × 검증된 ETF/채권 상품 매핑 |
+
+---
+
+## 2. 시스템 아키텍처
+
+```
+┌──────────────────────┐         ┌──────────────────────────────────┐
+│     Frontend         │         │           Backend                │
+│   (React + Vite)     │  HTTP   │        (FastAPI + Gemini)        │
+│                      │ ◄─────► │                                  │
+│  · 리서치 탭 (Chat)   │         │  · Supervisor (라우팅)            │
+│  · 훈수 탭 (Persona)  │         │  · Triage (질문 분류)             │
+│  · 캘린더 탭          │         │  · Chat Agent (LLM 해설)         │
+│  · 포트폴리오         │         │  · Persona Agent (3인 의견)       │
+│  · 리포트 서재        │         │  · Report Retriever (검색)        │
+│  · 성향 진단          │         │  · Evidence Finder (뉴스)         │
+└──────────────────────┘         │  · Guardrails (안전장치)          │
+                                 │  · Quant Engine (배분 계산)       │
+                                 └───────────┬──────────────────────┘
+                                             │
+                              ┌──────────────┼──────────────┐
+                         ┌────▼────┐    ┌────▼────┐    ┌────▼────┐
+                         │ Chroma  │    │ Gemini  │    │NewsAPI/ │
+                         │(벡터DB) │    │  API    │    │ 네이버  │
+                         └─────────┘    └─────────┘    └─────────┘
+```
+
+---
+
+## 3. 핵심 기능 흐름
+
+### 3.1 리서치 탭 — 1:1 해설
+
+```
+사용자 질문
+  → Guardrails (범위 밖 차단 / 매수 지시 검출)
+  → Triage (질문 유형 분류: concept / portfolio / market / evidence / decision)
+  → Report Retriever (Chroma 의미검색 → 키워드 폴백)
+  → Evidence Finder (뉴스 보조 — NewsAPI 폴백)
+  → Chat Agent (Gemini 해설 생성 — 근거 기반, 상품명 안내)
+  → 응답: { text, evidence[], trace[] }
+```
+
+### 3.2 훈수 탭 — 3인 페르소나 병렬 의견
+
+```
+사용자 질문
+  → 동일 검색 파이프라인
+  → Persona Agent: 워런 버핏(가치) / 레이 달리오(매크로) / 캐시 우드(성장)
+    각각 Gemini 1회 호출 (3문장, 150자 이내, 인용 없이 의견만)
+  → 응답: { personas: [{persona, label, emoji, message, evidence}×3] }
+```
+
+### 3.3 퀀트 3단계 추천
+
+```
+1단계: 성향 진단 6문항 → capacity(객관) + tolerance(주관) → risk 점수
+2단계: risk 점수 → 6버킷 기준 비중 (현금/패시브ETF/액티브ETF/단기채/장기채/회사채)
+3단계: Gemini가 오늘 리포트를 읽고 ±10%p 델타 제안 → 코드가 검증·클램프·정규화
+```
+
+---
+
+## 4. 가드레일 (안전장치)
+
+| 계층 | 역할 |
+|------|------|
+| **OUT_OF_SCOPE** | 코인/선물/옵션/레버리지 → 즉시 차단 (deny) |
+| **ASK_FOR_ORDER** | 매수/매도 직접 지시 → explain 모드 전환 (답은 하되 안내 표시) |
+| **ASK_FOR_PREDICTION** | 확정적 예측 요구 → explain 모드 전환 |
+| **관련성 게이트** | FINANCE_VOCAB + triage 태그 + LLM 판정 (3중 체크) |
+| **sanitize_output** | "추천합니다"→"해설해 드립니다" 등 표현 치환 |
+| **PII 제거** | 애널리스트 이메일/전화번호 자동 제거 |
+| **상품 환각 차단** | PRODUCT_HALLUCINATION_GUARD — 목록에 없는 상품명 생성 금지 |
+
+---
+
+## 5. 데이터
+
+### 5.1 리포트
+
+| 소스 | 수량 | 갱신 |
+|------|------|------|
+| 네이버 리서치 (채권분석/경제분석/투자정보) | 124건 (JSON 시드) | `collector/collect.py` |
+| Chroma 벡터 인덱싱 (의미검색용) | 9건 202청크 | `scripts/index_reports.py` |
+
+### 5.2 상품
+
+| 버킷 | 상품 수 | 예시 |
+|------|:---:|------|
+| 현금성 | 3 | TIGER CD금리투자KIS, KODEX 머니마켓액티브 |
+| 단기채 | 3 | RISE 국고채3년, KIWOOM 통안채1년 |
+| 장기채 | 3 | KIWOOM 국고채10년, KODEX 국고채30년액티브 |
+| 회사채 | 3 | RISE 중기우량회사채, TIGER 우량회사채액티브 |
+| 패시브 ETF | 3 | KODEX 200, TIGER 미국S&P500, TIGER 미국나스닥100 |
+| 액티브 테마 ETF | 17 | AI, 반도체, 2차전지, 로봇, 바이오, 우주항공 등 |
+
+---
+
+## 6. API
+
+### 6.1 엔드포인트
+
+| Method | Path | 설명 |
+|--------|------|------|
+| `POST` | `/api/chat` | 챗 (리서치/훈수 통합) |
+| `POST` | `/api/risk-profile` | 1~2단계 성향 계산 |
+| `POST` | `/api/portfolio/recommend` | 3단계 추천 |
+| `GET`  | `/api/calendar/events` | 금융 일정 |
+| `GET`  | `/health` | 헬스 체크 |
+
+### 6.2 POST /api/chat — 요청/응답
+
+```json
+// 요청
+{
+  "message": "국고채 사도 될까?",
+  "mode": "chat",           // "chat" | "persona"
+  "session_id": "abc123",   // null이면 서버 발급
+  "profile": { "capacity": 55, "tolerance": 70, "risk": 64, "literacy_level": "beginner" },
+  "target_persona": null,   // 훈수 탭 후속 대화 시 특정 페르소나 지정
+  "persona_history": null   // 이전 대화 맥락
+}
+
+// 응답 (리서치 탭)
+{
+  "text": "장기 금리 상승 속도가 둔화될 것으로 예상됩니다...",
+  "evidence": ["20260810_debenture_560384000", ...],
+  "turn_type": "decision",
+  "session_id": "abc123",
+  "used_llm": true,
+  "trace": [...]
+}
+
+// 응답 (훈수 탭)
+{
+  "text": "",
+  "personas": [
+    { "persona": "워런 버핏", "label": "가치투자", "emoji": "📐", "message": "...", "evidence": [...] },
+    { "persona": "레이 달리오", "label": "매크로", "emoji": "🔄", "message": "...", "evidence": [...] },
+    { "persona": "캐시 우드", "label": "성장/테마", "emoji": "🚀", "message": "...", "evidence": [...] }
+  ],
+  "disclaimer": "표시된 비중은 예시이며 투자 권유가 아닙니다...",
+  "turn_type": "persona"
+}
+```
+
+---
+
+## 7. 기술 스택
+
+| 계층 | 기술 |
+|------|------|
+| Frontend | React 18, TypeScript, Vite, React Router |
+| Backend | Python 3.12+, FastAPI, Pydantic |
+| LLM | Google Gemini 2.5 Flash (REST API 직접 호출) |
+| 벡터 DB | ChromaDB + SentenceTransformers (paraphrase-multilingual-mpnet) |
+| 뉴스 | NewsAPI (해외) + 네이버 뉴스 검색 (국내, 폴백) |
+| 인증 | Supabase Auth (선택 — 키 없으면 비로그인 모드) |
+| 배포 | 로컬 uvicorn + Vite dev server |
+
+---
+
+## 8. 디렉토리 구조
+
+```
+.
+├── README.md
+├── backend/
+│   ├── app/
+│   │   ├── main.py              FastAPI 앱 + 라우트
+│   │   ├── supervisor.py        Supervisor (질문 라우팅)
+│   │   ├── triage.py            Triage (규칙 기반 분류)
+│   │   ├── chat_agent.py        리서치 탭 LLM 해설
+│   │   ├── persona_agent.py     훈수 탭 페르소나 호출
+│   │   ├── personas.py          3인 페르소나 프롬프트
+│   │   ├── decision_agent.py    의사결정형 (chat_agent 임시 대체)
+│   │   ├── report_retriever.py  리포트 검색 (Chroma → Supabase → 시드)
+│   │   ├── evidence_finder.py   뉴스 검색 (NewsAPI / 네이버)
+│   │   ├── guardrails.py        가드레일 + 관련성 게이트
+│   │   ├── product_store.py     상품 검색 + 환각 방지
+│   │   ├── quant.py             퀀트 3단계 계산
+│   │   ├── gemini_agent.py      3단계 델타 제안
+│   │   ├── glossary.py          용어 사전
+│   │   ├── session_store.py     STM (인메모리 세션)
+│   │   ├── chat_schemas.py      요청/응답 스키마
+│   │   ├── schemas.py           퀀트 스키마
+│   │   └── calendar_data.py     캘린더 일정 데이터
+│   ├── data/
+│   │   ├── reports.json         리포트 시드 (124건)
+│   │   ├── products.json        상품 데이터 (32건)
+│   │   └── reports/             리포트 원문 txt (Chroma 인덱싱용)
+│   ├── scripts/
+│   │   └── index_reports.py     Chroma 벡터 인덱싱
+│   ├── tests/                   pytest (105+개)
+│   ├── requirements.txt
+│   └── .env.example
+├── frontend/
+│   ├── src/
+│   │   ├── pages/               Chat, Portfolio, Library, Calendar, ...
+│   │   ├── components/          AppSidebar, EvidencePanel, ChatWidget, ...
+│   │   ├── lib/                 api.ts, chatEngine.ts, quant.ts, ...
+│   │   ├── styles/              CSS (토큰, 셸, 챗, 온보딩)
+│   │   └── data/reports.json    프론트 리포트 데이터
+│   ├── public/logo.svg
+│   ├── index.html
+│   └── package.json
+├── collector/
+│   ├── collect.py               네이버 리서치 수집기 (SQLite → JSON)
+│   └── viewer.py                수집 DB 뷰어
+├── supabase/
+│   ├── schema.sql               Supabase 스키마 (선택)
+│   └── rls.sql                  RLS 정책
+└── docs/
+    ├── chatbot-architecture.md
+    ├── backend-handoff.md
+    └── decision-agent-handoff.md
+```
+
+---
+
+## 9. 환경 변수
+
+```env
+# 필수
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-2.5-flash
+
+# 프론트 허용 origin
+ALLOWED_ORIGIN=http://localhost:5174
+
+# 선택 — Chroma 벡터 검색 (없으면 키워드 스코어 폴백)
+CHROMA_PATH=./db/chroma
+CHROMA_COLLECTION=reports
+
+# 선택 — 뉴스 보조 근거 (없으면 리포트만으로 동작)
+NEWSAPI_KEY=your_newsapi_key
+NAVER_CLIENT_ID=
+NAVER_CLIENT_SECRET=
+
+# 선택 — Supabase 인증 (없으면 비로그인 모드)
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+```
+
+---
+
+## 10. 테스트
 
 ```bash
-npm run dev
+cd backend
+source .venv/bin/activate
+python -m pytest tests/ -v
+# → 105+ passed
 ```
 
-터미널에 아래처럼 뜨면 성공입니다. 주소를 브라우저에 붙여 넣으세요.
-
-```
-  ➜  Local:   http://localhost:5174/
-```
-
-**끄는 법**: 터미널에서 `Ctrl + C`
-
-### 윈도우에서 더 간단하게
-
-프로젝트 폴더(`frontend`가 아니라 그 위)에서 PowerShell로:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\start.ps1   # 실행 + 브라우저 자동 열기
-powershell -ExecutionPolicy Bypass -File .\stop.ps1    # 종료
-```
-
-> `start.ps1`과 `stop.ps1`은 **UTF-8 BOM**으로 저장돼 있어야 합니다. BOM이 없으면
-> Windows PowerShell 5.1이 CP949로 읽어서 한글 부분에서 에러가 납니다.
-
-### 잘 안 될 때
-
-| 증상 | 원인과 해결 |
-|---|---|
-| `npm: command not found` | Node.js가 없습니다. 설치 후 터미널을 새로 여세요 |
-| 포트 5174가 이미 사용 중 | 다른 창에서 이미 켜져 있습니다. `stop.ps1` 실행 또는 그 창에서 `Ctrl+C` |
-| 화면이 하얗게만 나옴 | `frontend` 폴더에서 실행했는지 확인. `npm install`을 건너뛰지 않았는지도 |
-| Windows에서 git이 "dubious ownership" 에러 | WSL 경로를 쓰는 경우 흔합니다. `git config --global --add safe.directory <경로>`로 예외 등록 |
+| 테스트 파일 | 범위 |
+|------------|------|
+| `test_chat.py` | 전체 흐름 (23개 시나리오) |
+| `test_guardrails.py` | 가드레일 + 어간 변형 (30개) |
+| `test_persona.py` | 훈수 탭 (11개) |
+| `test_quant.py` | 퀀트 계산 (12개) |
+| `test_pii_strip.py` | PII 제거 (8개) |
+| `test_evidence_finder.py` | 뉴스 폴백 (5개) |
+| `test_products.py` | 상품 검색 (10개) |
+| `test_calendar.py` | 캘린더 (6개) |
 
 ---
 
-## 2. 화면 구조 — 사이드바 하나
+## 11. 팀
 
-예전엔 상단 헤더(메뉴) + 대화 화면 안의 별도 대화 보관함, 이렇게 내비게이션이 두 군데로
-나뉘어 있었습니다. 지금은 **좌측 고정 사이드바 하나**로 합쳐져 있습니다.
-
-```
-사이드바 (위 → 아래)
-  브랜드
-  새 대화                 ← 항상 맨 위. 대화 화면에서는 실제로 새 대화를 시작하고,
-                            다른 화면에서는 대화 화면으로 이동하는 링크
-  내 포트폴리오 · 리포트 서재 · 마이페이지
-  대화 기록                ← 대화 화면에서만 채워짐. 확인 키를 만들어야 쌓인다
-  성향 진단 CTA
-  알림 · 계정
-```
-
-사이드바 자체와, 대화 화면 오른쪽의 "근거 자료" 패널은 각자 접고 펼 수 있습니다.
-
-| 주소 | 화면 | 여기서 볼 것 |
-|---|---|---|
-| `/` | **대화** (메인) | 첫 진입 시 온보딩 유도 안내창이 세션당 한 번 뜬다. 근거 자료 패널은 기본 접힘 → 근거가 처음 쌓이면 한 번만 자동으로 펼쳐진다 |
-| `/onboarding` | 성향 진단 | **처음 오는 사람**: 문항을 하나씩 넘기는 설문 모드. **답해 본 적 있는 사람**: 6문항이 한눈에 펼쳐진 자유 모드로 바로 진입 |
-| `/portfolio` | 내 포트폴리오 | 슬라이더를 놓으면 1.2초 뒤 에이전트 조정안이 도착한다 |
-| `/library`, `/library/:id` | 리포트 서재 | 목록·상세. 상세 페이지에서 문장을 드래그하면 그 자리에 점이 뜨고, 누르면 그 문장 그대로 챗봇 질문으로 들어간다 |
-| `/mypage` | 마이페이지 | 내 성향·배분·알림·저장된 대화 |
-
-우하단 "무엇이든 물어보세요" 위젯은 **대화 화면(`/`)을 제외한 모든 화면**에 뜹니다 —
-다른 화면 보다가 궁금한 걸 대화 화면까지 갔다 오지 않고 바로 물어보라는 용도입니다.
-리포트 드래그 질문 기능도 이 위젯이 뜨는 범위와 정확히 같이 움직입니다(같은 셸에서
-한 번에 걸려 있어서, 이 셸을 쓰는 화면이 늘면 자동으로 같이 적용됩니다).
-
-### 꼭 눌러 보셔야 하는 것
-
-**1. `/` 에서 "금리가 내리면 뭘 사야 하나요?"**
-- 위에 **가드레일 안내**가 붙습니다 — "무엇을 사고팔지는 정해 드릴 수 없어요"
-- 답변이 **출처를 밝히며** 시작합니다 — "○○증권 「…」에 따르면"
-- 리포트끼리 의견이 갈리면 **합치지 않고 나란히** 보여 줍니다
-- 아래에 **각주 번호**가 붙고, 오른쪽 패널의 같은 번호와 이어집니다
-
-**2. 입력창 아래 "에이전트 트레이스"**
-어떤 에이전트가 몇 ms 걸렸는지 그대로 펼쳐집니다.
-Guardrails → Supervisor → Triage → Analysis → Recommendation
-
-**3. `/portfolio` 에서 슬라이더를 좌우로**
-숫자가 즉시 따라오고, 손을 떼면 한 박자 늦게 에이전트 의견이 옵니다.
-**"근거 없는 제안 1건 폐기"**가 화면에 그대로 남는 것도 확인해 보세요.
+| 역할 | 담당 |
+|------|------|
+| 백엔드 아키텍처 + AI 파이프라인 | sunwhopark |
+| 프론트엔드 디자인 + UI | yuju-yn |
+| Chroma 인덱싱 + Agent-as-Tool | kminbo |
+| 챗봇 백엔드 + 인수인계 문서 | yeono1220 |
 
 ---
 
-## 3. 이 프로토타입이 지키는 약속
+## 12. 알려진 제약
 
-화면을 어떻게 고치든 아래는 안 바뀝니다. 문서가 아니라 **코드로** 강제합니다.
-
-| 약속 | 강제하는 곳 |
-|---|---|
-| 배분 숫자는 코드가 계산한다. LLM은 못 쓴다 | `src/lib/quant.ts` |
-| 근거 없는 조정은 폐기한다 | `applyAdjustments()` |
-| 조정은 ±10%p를 넘을 수 없다 | 하드 클램프 |
-| 현금성은 5% 아래로 안 내려간다 | 조정 후에도 재확인 |
-| 매수·매도·예측은 답하지 않는다 | `src/lib/guardrails.ts` |
-| 근거가 없으면 답을 만들지 않는다 | 고정 폴백 문구 |
-| 의견이 갈리면 합치지 않는다 | `ParallelViews` |
-
-### 추천 알고리즘 3단계
-
-```
-1단계  Capacity(객관: 기간·저축여력·나이) / Tolerance(주관: MDD·손실반응·목표)
-       따로 산출 → risk_score = capacity × 0.4 + tolerance × 0.6
-                                                    ↓
-2단계  현금성 5% 먼저 떼기 → 남은 95%를 risk_score에 비례 배분 (선형 보간)
-                                                    ↓
-3단계  에이전트가 델타(±%p)만 제안 → 코드가 검증
-       · 근거 리포트 ID 없으면 폐기 · ±10%p 하드 클램프 · 합계 100 재정규화
-```
-
-1~2단계는 순수 연산이라 밀리초 단위로 끝나 슬라이더가 즉시 반응합니다.
-3단계만 한 박자 늦게 옵니다 — 이 시차가 "즉각 계산"과 "에이전트 의견"의 차이를
-그대로 보여 주려는 의도입니다.
-
----
-
-## 4. 디자인 (원래 설계 — 이번 라운드에서 새로 정한 것 아님)
-
-`DESIGN` 브랜치가 처음부터 잡아 둔 비주얼 테마입니다. 바탕은 노란기를 뺀 중성
-아이보리(`#F7F6F3`), 글자는 먹색, 강조는 골드 한 톤(`#A8843C`, WCAG AA 통과)만
-씁니다. 서체는 3단 구성(고운바탕 = 답변 본문·큰 제목, Italianno = 영문 워드마크,
-Pretendard = 나머지 전부)이고, 답변이 만년필로 쓰이듯 왼쪽에서 오른쪽으로 흐르며
-글자마다 속도가 다른 스트리밍 애니메이션이 있습니다(입력창 아래 토글로 끌 수
-있습니다).
-
-이번 UI 개편에서는 이 톤·테마 자체는 건드리지 않고, 그 위에서 레이아웃·상호작용만
-바꿨습니다 — 예를 들어 말풍선·알약 버튼은 걷어내고 각진 모서리(`--r-md` 이하)와
-옅은 그림자로 정리했지만, 색·서체·손글씨 연출은 그대로입니다. 톤을 더 바꿀지는
-아직 팀 논의가 필요합니다.
-
----
-
-## 5. 폴더 구조
-
-```
-frontend/src/
-├─ pages/
-│   ├─ Chat.tsx         대화 (메인) — 스트리밍·근거·첫 세션 안내창
-│   ├─ Onboarding.tsx   설문 모드(처음) / 자유 모드(재방문) 이원화
-│   ├─ Portfolio.tsx    기준 비중 vs 조정 예시, 슬라이더 2박자
-│   ├─ Library.tsx      리포트 서재 목록
-│   ├─ ReportPage.tsx   리포트 상세 — 드래그 선택 질문 지원
-│   ├─ MyPage.tsx       마이페이지 — 내 성향·배분·알림·데이터 삭제
-│   └─ Login.tsx        로그인 (키가 있을 때만 동작)
-├─ lib/
-│   ├─ quant.ts         ★ 추천 알고리즘 3단계 — 배분 숫자는 전부 여기서
-│   ├─ guardrails.ts    ★ 금지 표현·폴백·치환 규칙
-│   ├─ chatEngine.ts    답변 생성 (지금은 규칙 매칭, 실 백엔드는 별도 브랜치)
-│   ├─ vault.ts         대화 보관함 AES-GCM 암호화
-│   ├─ mock.ts          샘플 리포트·상품·용어사전
-│   └─ supabase.ts      인증 클라이언트 (키 없으면 null)
-├─ components/
-│   ├─ AppSidebar.tsx     좌측 고정 사이드바 — 메뉴 + 대화 기록 + 계정
-│   ├─ WelcomeModal.tsx   첫 세션 안내창
-│   ├─ SelectionAsk.tsx   드래그 선택 → 챗봇에게 바로 물어보기
-│   ├─ ChatWidget.tsx     우하단 플로팅 챗봇 (대화 화면 제외 전 화면)
-│   ├─ ChatVault.tsx      대화 기록 목록·PIN 잠금 (사이드바 안 내용물)
-│   ├─ EvidencePanel.tsx  근거 패널
-│   ├─ ParallelViews.tsx  상반된 관점 병렬 제시
-│   └─ AgentTrace.tsx     에이전트 호출 트레이스
-└─ styles/              tokens · base · app · shell · chat · onboarding
-supabase/
-├─ schema.sql           테이블 정의 (ERD 그대로)
-└─ rls.sql              ★ Row Level Security 정책
-```
-
-★ 표시가 이 프로토타입의 핵심입니다.
-
----
-
-## 6. 로그인 (선택)
-
-**키가 없으면 로그인 없이 그냥 돌아갑니다.** 지금 상태가 그렇습니다.
-켜려면 아래 순서를 **반드시 지켜야** 합니다.
-
-```
-1) Supabase 프로젝트 생성
-2) SQL Editor에서  supabase/schema.sql  실행
-3) 이어서          supabase/rls.sql     실행   ← 절대 건너뛰지 말 것
-4) frontend/.env.local 파일을 만들고 아래 두 줄 입력
-5) npm run dev 다시 시작
-```
-
-```bash
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-public-key
-```
-
-> ### ⚠️ 3번을 건너뛰면 안 되는 이유
->
-> anon 키는 브라우저에 그대로 노출됩니다. **보안은 키가 아니라 RLS 정책이 만듭니다.**
-> RLS를 걸지 않은 채 키만 넣으면, 그 키를 주운 사람이 **모든 사용자의 시드머니와 대화
-> 기록을 읽을 수 있습니다.**
->
-> **`service_role` 키는 절대 넣지 마세요.** 그 키는 RLS를 통째로 우회합니다.
-
-`.env.local`은 `.gitignore`에 있어 커밋되지 않습니다.
-
----
-
-## 7. 아직 안 된 것 (정직하게)
-
-- **실데이터 연동** — 리포트는 전부 `lib/mock.ts`의 샘플입니다
-- **실제 LLM** — 챗봇은 규칙 매칭입니다. 실제 백엔드(FastAPI + Gemini)는
-  `feature/chat-backend` 브랜치에 따로 있고, 아직 이 브랜치에 안 합쳐졌습니다
-- **DB 연결** — 온보딩 답과 대화는 브라우저에만 저장됩니다
-- **법률 검토** — "권유"가 아닌 "해설"로 쓰고 있지만 법률 의견은 아닙니다
-- **폰트 용량** — 한글 웹폰트 3.5MB. 배포 전 서브셋 필요
-- **비주얼 톤 재검토 여부** — 위 "4. 디자인" 참고. 팀에서 정해야 합니다
-
----
-
-## 8. 명령어 요약
-
-```bash
-npm install        # 처음 한 번
-npm run dev        # 개발 서버 (http://localhost:5174)
-npm run build      # 타입 검사 + 배포용 빌드
-npm run preview    # 빌드 결과 미리보기
-```
-
----
-
-## 9. 지금까지 어떻게 왔는지 (요약)
-
-자세한 커밋별 이유가 궁금하면 `git log`를 보세요. 여기는 큰 흐름만 적습니다.
-
-1. **롤백 지점** (`8b50018`) — 랜딩(7섹션) + 설문 8문항 + 결과 페이지였던 초기 구조
-2. **챗봇 중심 개편** (`7040e4e`) — 대화 화면이 `/`로. 퀀트 3단계 엔진, 온보딩 6문항,
-   포트폴리오 슬라이더 신설
-3. **기능 추가** (`e9def8c`) — 의견 병렬 제시, 알림, 대화 보관함(PIN 암호화), 용어 툴팁
-4. **로그인** (`6d5df2f`) — Supabase 인증, 키 없으면 비로그인으로 자동 폴백
-5. **손글씨 연출 다듬기** (`ac16555`~`8c83c80`) — 네 번 시행착오 끝에 답변에만
-   만년필체 적용, 글자별 필기 속도 차등
-6. **마이페이지 신설** (`d66b8e9`) — 내 성향·배분·알림·저장된 대화·데이터 삭제를
-   한 화면에
-7. **사이드바 기반 전면 개편** (`480ef1b`, 지금 브랜치) — 상단 헤더 폐지, 메뉴와
-   대화 기록을 좌측 사이드바 하나로 통합. 말풍선·알약 버튼 정리, 첫 세션 안내창
-   신설, 패널 접기/펼치기
-8. **편의성 다듬기** (`e50a027`) — 접힘 사이드바 오버플로 수정, 드래그 선택 질문
-   기능, 온보딩 설문/자유 모드 이원화, 챗봇 페르소나 카피 정리
-
----
-
-> 본 서비스의 모든 내용은 참고 자료이며 투자 권유가 아닙니다. 원금 손실이 발생할 수 있습니다.
+| 제약 | 이유 | 실서비스 권장 |
+|------|------|-------------|
+| STM 인메모리 (서버 재시작 시 소실) | 데모용 단일 프로세스 | Supabase conversation_turns 영속화 |
+| Chroma 단일 인스턴스 | 로컬 개발 환경 | 클라우드 벡터 DB (Pinecone 등) |
+| 뉴스 검색어가 영어 고정 폴백 | 태그→영어 매핑 미완성 | 태그별 영어 매핑 테이블 확장 |
+| Gemini 응답 비결정성 | LLM 특성 | temperature 조절 + 후처리 강화 |
+| 회원 인증 선택 사항 | 데모 편의 | Supabase Auth 필수 활성화 |
+| 상품 데이터 정적 JSON | 수동 큐레이션 | 실시간 API 연동 (KRX, 운용사) |
