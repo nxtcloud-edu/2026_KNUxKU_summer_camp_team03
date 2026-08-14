@@ -46,10 +46,11 @@ NEED_PROFILE = (
 )
 
 
-def _llm_topic_check(message: str) -> bool:
+def _llm_topic_check(message: str, context: str = "") -> bool:
     """FINANCE_VOCAB + triage 태그 모두 실패했을 때의 최종 안전망.
 
     Gemini에게 금융 관련 여부만 yes/no로 물어본다. 가볍고 빠르게(3초 타임아웃).
+    context가 있으면 이전 대화 맥락을 포함해 판단한다.
     예외/타임아웃/파싱 실패 → 안전하게 False(off_topic) 반환.
     """
     import os
@@ -65,6 +66,10 @@ def _llm_topic_check(message: str) -> bool:
     model = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
     endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
+    user_text = message
+    if context:
+        user_text = f"이전 대화:\n{context}\n\n현재 메시지: {message}"
+
     try:
         resp = _requests.post(
             endpoint,
@@ -73,10 +78,12 @@ def _llm_topic_check(message: str) -> bool:
                 "systemInstruction": {"parts": [{"text":
                     f"{SERVICE_CONTEXT}\n\n"
                     "위 서비스 맥락을 참고해서 판단하라. "
-                    "사용자 질문이 금융·투자·경제·자산배분·채권·ETF·주식시장과 "
+                    "이전 대화가 있으면 그 흐름 안에서 현재 메시지가 서비스 이용과 관련 있는지 판단하라. "
+                    "예를 들어 투자 진단 대화 중 '이미 했어'는 서비스 이용 맥락이므로 yes다. "
+                    "사용자 질문이 금융·투자·경제·자산배분·채권·ETF·주식시장 또는 이 서비스 이용과 "
                     "관련 있으면 yes, 아니면 no를 한 단어로만 답하라. 다른 말 하지 마라."
                 }]},
-                "contents": [{"role": "user", "parts": [{"text": message}]}],
+                "contents": [{"role": "user", "parts": [{"text": user_text}]}],
                 "generationConfig": {
                     "temperature": 0,
                     "maxOutputTokens": 5,
@@ -264,8 +271,8 @@ def _handle_persona(req: ChatRequest) -> ChatResponse:
 
     # ── 관련성 게이트 (이중 체크: FINANCE_VOCAB + triage 태그 + LLM 판정) ──
     if not is_finance_related(req.message) and not plan.tags:
-        # 최종 안전망: LLM에게 물어본다
-        if not _llm_topic_check(req.message):
+        # 최종 안전망: LLM에게 물어본다 (이전 대화 맥락 포함)
+        if not _llm_topic_check(req.message, store.context_text(sess)):
             trace.append(_step("Guardrails", "범위 밖 주제", "금융 어휘 0건 + 태그 0건 + LLM no → off_topic", 2))
             store.append(sess, "user", req.message, "off_topic")
             store.append(sess, "assistant", OFF_TOPIC_NOTICE, "off_topic")
@@ -360,8 +367,8 @@ def _handle(req: ChatRequest) -> ChatResponse:
     if not plan.rewritten and not plan.tags and not is_finance_related(req.message) \
             and verdict.mode != "explain" \
             and plan.turn_type in ("market", "evidence", "decision"):
-        # 최종 안전망: LLM에게 물어본다
-        if not _llm_topic_check(req.message):
+        # 최종 안전망: LLM에게 물어본다 (이전 대화 맥락 포함)
+        if not _llm_topic_check(req.message, store.context_text(sess)):
             trace.append(_step("Guardrails", "범위 밖 주제", "금융 어휘 0건 + LLM no → off_topic", 2))
             store.append(sess, "user", req.message, "off_topic")
             store.append(sess, "assistant", OFF_TOPIC_NOTICE, "off_topic")
