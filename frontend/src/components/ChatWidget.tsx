@@ -42,15 +42,22 @@ export default function ChatWidget() {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' })
   }, [msgs, typing])
 
+  const pendingRef = useRef(0)
+
   const send = async (q: string) => {
     const question = q.trim()
-    if (!question || typing) return
+    if (!question) return
     setMsgs((m) => [...m, { role: 'user', text: question }])
     setText('')
+    pendingRef.current += 1
     setTyping(true)
     const response = await reply(question)
     setMsgs((m) => [...m, response])
-    setTyping(false)
+    pendingRef.current -= 1
+    if (pendingRef.current <= 0) {
+      pendingRef.current = 0
+      setTyping(false)
+    }
   }
 
   // 대문 입력창에서 던진 질문을 그대로 받아 연다
