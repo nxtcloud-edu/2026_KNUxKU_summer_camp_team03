@@ -126,11 +126,14 @@ def _explain_concept(question: str) -> tuple[str, bool]:
                     "위 서비스 맥락을 참고해서 답하라. "
                     "너는 초보 투자자를 위한 금융 용어 해설 도우미다. "
                     "다음 규칙을 지켜라: "
-                    "1) 2~3문장으로 짧고 쉽게 설명한다. "
+                    "1) 2~3문장으로 짧고 쉽게, 질문에 나온 정확한 개념을 설명한다. "
+                    "   '액티브 ETF가 뭐야?'면 일반 ETF가 아니라 '액티브 ETF'를 설명해야 한다. "
                     "2) 전문용어가 나오면 괄호로 풀어준다. "
                     "3) 비유를 적극 활용한다. "
-                    "4) 매수/매도 지시, 종목 추천, 수익 보장 금지. "
-                    "5) 존댓말. 면책 문구 붙이지 않는다."
+                    "4) 개념 자체에 집중하라. 관련 상품 사례나 시장 코멘트를 장황하게 나열하지 마라. "
+                    "5) '~해볼 만하다', '~고려할 수 있다' 같은 권유성 표현 금지. 사실 설명에 집중. "
+                    "6) 매수/매도 지시, 종목 추천, 수익 보장 금지. "
+                    "7) 존댓말. 면책 문구 붙이지 않는다."
                 }]},
                 "contents": [{"role": "user", "parts": [{"text": question}]}],
                 "generationConfig": {
@@ -384,6 +387,17 @@ def _handle(req: ChatRequest) -> ChatResponse:
         # 후속 질문("그럼 국채는?")은 원문에서 먼저 찾는다 — 재구성 query에는
         # 이전 질문의 용어(회사채)도 섞여 있어 엉뚱한 용어가 잡힐 수 있다
         hit = glossary.lookup(req.message) or glossary.lookup(plan.query)
+        # 수식어가 있는 복합어(예: "액티브 ETF")인데 사전이 일반 항목("ETF")만
+        # 매칭했으면 부정확 — LLM 직접 설명으로 보낸다.
+        if hit:
+            term, entry = hit
+            _q_lower = req.message.lower()
+            _qualifiers = ["액티브", "패시브", "테마", "커버드콜", "레버리지", "인버스",
+                           "장기", "단기", "회사채", "국고채"]
+            has_qualifier = any(q in _q_lower for q in _qualifiers)
+            term_has_qualifier = any(q in term.lower() for q in _qualifiers)
+            if has_qualifier and not term_has_qualifier:
+                hit = None  # 복합어인데 일반 항목만 매칭 → miss로 처리
         if hit:
             term, entry = hit
             text = glossary.explain(term, entry, level)
