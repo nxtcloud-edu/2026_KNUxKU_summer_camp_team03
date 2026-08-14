@@ -136,7 +136,7 @@ def answer_persona(question: str, reports: list[dict],
         results.append({
             "persona": persona["name"],
             "label": persona["label"],
-            "emoji": persona["emoji"],
+            "emoji": persona.get("emoji", ""),
             "message": message,
             "evidence": [r["id"] for r in reports],
         })
@@ -197,7 +197,7 @@ def answer_single_persona(
     return [{
         "persona": persona["name"],
         "label": persona["label"],
-        "emoji": persona["emoji"],
+        "emoji": persona.get("emoji", ""),
         "message": message,
         "evidence": [r["id"] for r in reports],
     }], used_llm

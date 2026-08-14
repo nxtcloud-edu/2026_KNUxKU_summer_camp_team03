@@ -375,7 +375,7 @@ export default function Chat() {
                         {m.data.personas.map((p) => (
                           <div className="persona-card" key={p.persona}>
                             <div className="persona-card-header">
-                              {p.emoji} {p.persona} ({p.label})
+                              {p.emoji ? `${p.emoji} ` : ''}{p.persona} ({p.label})
                             </div>
                             <p className={`persona-card-body${pen ? ' pen' : ''}`}>
                               {p.message}
