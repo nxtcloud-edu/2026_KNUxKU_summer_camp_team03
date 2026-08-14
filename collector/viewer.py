@@ -88,7 +88,7 @@ def page(tab: str, body: str, stats: str = "") -> str:
         for k, v in TABS
     )
     return f"""<!doctype html><html lang=ko><head><meta charset=utf-8>
-<title>Quill DB 뷰어</title><style>{CSS}</style></head><body><div class=wrap>
+<title>맥미리 DB 뷰어</title><style>{CSS}</style></head><body><div class=wrap>
 <h1>수집 데이터</h1>
 <p class=sub>네이버 리서치에서 실제로 긁어 온 리포트입니다. 샘플이 아닙니다.
 · <code>data/quill.db</code></p>

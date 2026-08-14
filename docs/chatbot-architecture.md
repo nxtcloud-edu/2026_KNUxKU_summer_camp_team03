@@ -1,4 +1,4 @@
-# Quill 챗봇 아키텍처 — Supervisor + 2 검색 에이전트 + 해설 2종 (실구현 기준)
+# 맥미리 챗봇 아키텍처 — Supervisor + 2 검색 에이전트 + 해설 2종 (실구현 기준)
 
 ```
 Supervisor (supervisor.py — 질문 판단·호출·조립, 코드)

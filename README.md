@@ -1,4 +1,4 @@
-# Quill · 리포트를 읽어주는 금융 과외
+# 맥미리 · 리포트를 읽어주는 금융 과외
 
 > **2026_KNUxKU_summer_camp_team03** · `DESIGN` 브랜치, 그 위 `feature/ui-refactor`
 > 강원대x고려대 Summer Agentic AI 심화 몰입 캠프 3팀 레포지토리입니다.

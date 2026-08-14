@@ -63,10 +63,10 @@ export default function AdminLayout() {
   const title = TITLES[pathname] ?? { h: '관리자 콘솔', sub: '' }
 
   useEffect(() => {
-    document.title = `${title.h} · Quill 관리자`
+    document.title = `${title.h} · 맥미리 관리자`
     window.scrollTo({ top: 0 })
     return () => {
-      document.title = 'Quill · 리포트를 읽어주는 금융 과외'
+      document.title = '맥미리 · 리포트를 읽어주는 금융 과외'
     }
   }, [pathname, title.h])
 
@@ -81,7 +81,7 @@ export default function AdminLayout() {
         <aside className="admin-side">
           <Link to="/admin" className="admin-brand">
             <IconQuill size={22} style={{ color: 'var(--brand)' }} />
-            <span className="brand-name">Quill</span>
+            <span className="brand-name">맥미리</span>
             <span className="chip-console">CONSOLE</span>
           </Link>
 

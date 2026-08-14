@@ -49,7 +49,7 @@ export default function AppSidebar({
       <div className="side-top">
         <NavLink to="/" end className="side-brand">
           <IconQuill size={20} className="brand-mark" />
-          <span className="brand-name">Quill</span>
+          <span className="brand-name">맥미리</span>
         </NavLink>
         <button
           className="side-collapse"
