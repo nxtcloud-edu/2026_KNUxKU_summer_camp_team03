@@ -1,12 +1,13 @@
 """캘린더 탭용 일정 데이터.
 
-지금은 FOMC·금통위·지수 리밸런싱 세 소스뿐이지만, 나중에 국채 입찰·경제지표
-발표 같은 다른 소스가 추가될 걸 감안해서 이벤트 하나하나에 category를 붙여
-둔다 — 프론트는 카테고리별로 분기하지 않고 그냥 리스트를 통째로 받아 날짜순
-으로 뿌린다.
+FOMC·금통위·지수 리밸런싱은 하드코딩 리스트, 실적발표·미국 경제지표·국채
+입찰은 calendar_sources.py가 외부 API로 실시간 조회한다 — 이벤트 하나하나에
+category를 붙여 둬서 프론트는 카테고리별로 분기하지 않고 그냥 리스트를
+통째로 받아 날짜순으로 뿌린다.
 
 새 소스를 추가할 때는:
-  1) 지금처럼 하드코딩 리스트를 만들거나, 실제 API를 호출하는 함수를 만들고
+  1) 지금처럼 하드코딩 리스트를 만들거나, calendar_sources.py처럼 실제
+     API를 호출하는 함수를 만들고
   2) all_events()에서 리스트를 합쳐서 반환하기만 하면 된다.
 프론트 쪽 코드는 건드릴 필요 없다 — 이게 이번에 확보해 두는 확장 지점이다.
 
@@ -15,6 +16,8 @@ FOMC_2026 출처: federalreserve.gov/monetarypolicy/fomccalendars.htm
 """
 
 from __future__ import annotations
+
+from . import calendar_sources
 
 FOMC_2026: list[dict] = [
     {
@@ -219,6 +222,6 @@ INDEX_REBALANCE_2026: list[dict] = [
 
 def all_events() -> list[dict]:
     """카테고리 상관없이 전부 합쳐서 날짜순으로 반환한다."""
-    events = [*FOMC_2026, *BOK_MPC_2026, *INDEX_REBALANCE_2026]
+    events = [*FOMC_2026, *BOK_MPC_2026, *INDEX_REBALANCE_2026, *calendar_sources.all_api_events()]
     events.sort(key=lambda e: e["date_start"])
     return events
