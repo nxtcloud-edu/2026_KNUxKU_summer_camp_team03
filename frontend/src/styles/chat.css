@@ -5,19 +5,26 @@
      나머지는 먹색과 회색으로 버틴다. 강조가 흔해지면 강조가 아니다.
    ───────────────────────────────────────────────────────────── */
 
+/* 그리드 대신 flex를 쓴다 — 근거 패널이 스스로 접힘 너비를 들고 있어야
+   해서, 부모가 트랙 폭을 강제하는 grid보다 flex가 맞다. */
 .chat-shell {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--panel-w);
-  height: calc(100vh - var(--header-h));
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  height: 100%;
   background: var(--chat-bg);
 }
 
 /* ── 왼쪽 · 대화 ─────────────────────────────────────────── */
+/* 대화 칸만 흰색으로 밝혀 양옆 회색 패널(보관함·근거 자료)과 대비를 준다 —
+   가운데가 가장 밝아야 읽는 자리가 어디인지 한눈에 잡힌다. */
 .chat-main {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  min-width: 0;
   min-height: 0;
+  background: var(--surface);
 }
 .chat-scroll {
   flex: 1;
@@ -43,24 +50,24 @@
   justify-content: flex-end;
 }
 .bubble {
-  border-radius: var(--r-lg);
+  border-radius: var(--r-md);
   padding: 13px 17px;
   line-height: var(--lh-normal);
   font-size: var(--t-base);
   max-width: 100%;
 }
+/* 말풍선 대신 문서 블록 — 꼬리도, 진한 반전색도 쓰지 않는다.
+   사용자 발화는 옅은 면 하나로, 에이전트 발화는 면 없이 그대로 흐르게 둔다. */
 .bubble-user {
-  background: var(--bubble-user);
-  color: var(--bubble-user-ink);
-  border-bottom-right-radius: var(--r-xs);
+  background: var(--surface-band);
+  color: var(--ink);
   max-width: 76%;
   word-break: keep-all;
 }
 .bubble-agent {
-  background: var(--bubble-agent);
+  background: none;
   color: var(--ink);
-  border-bottom-left-radius: var(--r-xs);
-  box-shadow: var(--shadow-sm);
+  padding: 0;
 }
 /* 에이전트 표식 — 작은 골드 원. 아바타 이미지를 쓰지 않는다 */
 .bubble-mark {
@@ -101,12 +108,14 @@
   }
 }
 
-/* 생각 중 */
+/* 생각 중 — 유일하게 카드 면을 쓴다. 로딩 중임을 표시할 자리가 있어야 한다 */
 .bubble-agent.thinking {
   display: flex;
   align-items: center;
   gap: 5px;
   padding: 15px 18px;
+  background: var(--surface-band);
+  border-radius: var(--r-md);
 }
 .thinking .dot {
   width: 5px;
@@ -218,7 +227,7 @@
 .chat-composer {
   flex: none;
   padding: var(--sp-4) var(--sp-6) var(--sp-5);
-  background: linear-gradient(rgba(244, 243, 239, 0), var(--chat-bg) 34%);
+  background: linear-gradient(rgba(255, 255, 255, 0), var(--surface) 34%);
 }
 .composer {
   max-width: 760px;
@@ -227,13 +236,14 @@
   align-items: center;
   gap: var(--sp-3);
   background: var(--surface);
-  border-radius: var(--r-xl);
+  border-radius: var(--r-md);
   padding: 7px 7px 7px 20px;
-  box-shadow: var(--shadow-md);
+  /* 안쪽 헤어라인 + 옅은 그림자 — 흰 대화 칸 위에서도 입력창 경계가 읽히도록 */
+  box-shadow: inset 0 0 0 1px var(--line), var(--shadow-sm);
   transition: box-shadow 0.18s var(--ease);
 }
 .composer:focus-within {
-  box-shadow: var(--shadow-lg), inset 0 0 0 1.5px var(--gold-line);
+  box-shadow: inset 0 0 0 1.5px var(--gold-line), var(--shadow-sm);
 }
 .composer input {
   flex: 1;
@@ -246,6 +256,14 @@
 }
 .composer input::placeholder {
   color: var(--ink-4);
+}
+/* 보내기 — 글자 없이 화살표 아이콘 하나로. "보내기"라고 안 써도
+   입력창 끝에 붙은 이 자리는 늘 전송 버튼으로 읽힌다 */
+.composer-send {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-sm);
 }
 .composer-foot {
   max-width: 760px;
@@ -260,7 +278,7 @@
   font-weight: 640;
   color: var(--ink-3);
   background: var(--surface-band);
-  border-radius: var(--r-full);
+  border-radius: var(--r-sm);
   padding: 4px 12px;
   transition: background 0.16s var(--ease), color 0.16s var(--ease);
 }
@@ -340,40 +358,29 @@
 }
 
 /* ── 대화 시작 화면 ──────────────────────────────────────── */
-.opening {
-  padding: var(--sp-10) 0 var(--sp-4);
+/* LLM 표준 빈 상태 — 인사말과 예시 질문만 남긴다. 소개문·성향 진단 유도·
+   오늘의 리포트 목록은 첫 세션 안내창(WelcomeModal)과 사이드바로 옮겼다.
+   스크롤이 생기지 않도록 화면 가운데에 짧게 앉힌다. */
+.chat-inner-empty {
+  flex: 1;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
-/* 워드마크 — 영문 만년필체가 쓰이는 유일한 자리 */
-.opening-mark {
-  font-size: 54px;
-  line-height: 1;
-  color: var(--gold);
-  margin-bottom: var(--sp-6);
+.opening {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 .opening-title {
   font-family: var(--font-display);
-  font-size: clamp(27px, 3.4vw, 36px);
+  font-size: clamp(22px, 2.6vw, 27px);
   font-weight: 700;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.03em;
   line-height: 1.34;
   word-break: keep-all;
-}
-.opening-title-2 {
-  color: var(--ink-3);
-}
-.opening-lead {
-  color: var(--ink-3);
-  max-width: 34em;
-  word-break: keep-all;
   margin-top: var(--sp-4);
-  line-height: 1.85;
-}
-.opening-card {
-  background: var(--surface);
-  border-radius: var(--r-lg);
-  box-shadow: var(--shadow-sm);
-  padding: var(--sp-5);
-  margin-top: var(--sp-6);
 }
 .opening-suggests {
   display: flex;
@@ -384,44 +391,33 @@
 .sug {
   background: var(--surface);
   color: var(--ink-2);
-  border-radius: var(--r-full);
+  border-radius: var(--r-md);
   padding: 8px 15px;
   font-size: var(--t-sm);
-  box-shadow: var(--shadow-xs);
-  transition: box-shadow 0.16s var(--ease), transform 0.16s var(--ease-out);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: background 0.16s var(--ease), box-shadow 0.16s var(--ease), transform 0.16s var(--ease-out);
 }
 .sug:hover {
-  box-shadow: var(--shadow-sm);
+  background: var(--surface-hover);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
   transform: translateY(-1px);
-}
-.opening-today {
-  margin-top: var(--sp-8);
-  padding-top: var(--sp-5);
-  border-top: 1px solid var(--line);
-}
-.today-row {
-  display: flex;
-  gap: var(--sp-3);
-  align-items: center;
-  font-size: var(--t-sm);
-  color: var(--ink-2);
-  min-width: 0;
-}
-.today-house {
-  flex: none;
-  font-size: var(--t-xs);
-  color: var(--ink-4);
-  width: 82px;
 }
 
 /* ── 오른쪽 · 근거 패널 ────────────────────────────────────
    상자를 겹치지 않는다. 카드마다 테두리와 그림자를 주면 목록이 아니라
    블록 더미가 된다. 여백과 아주 옅은 바탕색만으로 나눈다. */
 .evi-panel {
-  background: var(--paper);
+  position: relative;
+  flex: 0 0 var(--panel-w);
+  background: var(--surface-sunken);
   display: flex;
   flex-direction: column;
   min-height: 0;
+  transition: flex-basis 0.16s var(--ease-out);
+  overflow: hidden;
+}
+.evi-panel.collapsed {
+  flex-basis: 44px;
 }
 .evi-head {
   flex: none;
@@ -429,6 +425,32 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--sp-5) var(--sp-5) var(--sp-4);
+}
+.evi-collapse {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  color: var(--ink-4);
+  transition: background 0.14s var(--ease), color 0.14s var(--ease);
+}
+.evi-collapse:hover {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+.evi-panel.collapsed .evi-head {
+  padding: var(--sp-5) 0;
+  justify-content: center;
+}
+.evi-panel.collapsed .evi-head > span {
+  display: none;
+}
+.evi-panel.collapsed .evi-list,
+.evi-panel.collapsed .evi-empty,
+.evi-panel.collapsed .evi-foot {
+  display: none;
 }
 .evi-empty {
   padding: var(--sp-6) var(--sp-5);
@@ -616,7 +638,7 @@
 .dchip {
   font-size: 11px;
   font-weight: 640;
-  border-radius: var(--r-full);
+  border-radius: var(--r-sm);
   padding: 3px 10px;
 }
 .dchip.up {
@@ -652,10 +674,7 @@
 
 /* ── 좁은 화면 ───────────────────────────────────────────── */
 @media (max-width: 1080px) {
-  .chat-shell {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  /* 근거 패널은 대화 아래로 내린다 */
+  /* 근거 패널은 좁은 화면에서 아예 숨긴다 */
   .evi-panel {
     display: none;
   }
@@ -683,26 +702,9 @@
    보관함 · 병렬 제시 · 알림
    ───────────────────────────────────────────────────────────── */
 
-/* 세 칸 배치 — 보관함 | 대화 | 근거 */
-.chat-shell {
-  grid-template-columns: 232px minmax(0, 1fr) var(--panel-w);
-}
-
-/* ── 왼쪽 · 보관함 ───────────────────────────────────────── */
-.vault {
-  border-right: 1px solid var(--line);
-  background: var(--paper);
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  padding: var(--sp-4);
-}
-.vault-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 4px var(--sp-3);
-}
+/* ── 대화 기록 — 이제 사이드바 안 내용물이다 ─────────────────
+   더는 독립된 칸이 아니라서 자기 배경·테두리·너비를 갖지 않는다.
+   AppSidebar가 둘러싼 상자 안에 그냥 흘러들어간다. */
 .vault-lock,
 .vault-plain {
   font-size: var(--t-xs);
@@ -719,24 +721,9 @@
   text-align: left;
   line-height: 1.6;
 }
-.vault-new {
-  width: 100%;
-  text-align: left;
-  background: var(--surface);
-  border-radius: var(--r-md);
-  padding: 10px 14px;
-  font-size: var(--t-sm);
-  font-weight: 640;
-  box-shadow: var(--shadow-xs);
-  transition: box-shadow 0.16s var(--ease);
-}
-.vault-new:hover {
-  box-shadow: var(--shadow-sm);
-}
 .vault-off,
 .vault-pin {
-  margin-top: var(--sp-5);
-  padding: 0 4px;
+  padding: 0 2px;
 }
 .vault-input {
   width: 100%;
@@ -769,9 +756,6 @@
   border-top: 1px solid var(--line);
 }
 .vault-list {
-  flex: 1;
-  overflow-y: auto;
-  margin-top: var(--sp-4);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -806,11 +790,16 @@
 }
 .vault-foot {
   flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   font-size: 10.5px;
   color: var(--ink-4);
-  padding: var(--sp-3) 4px 0;
-  border-top: 1px solid var(--line);
+  word-break: keep-all;
+  padding: var(--sp-3) 2px 0;
   margin-top: var(--sp-3);
+  border-top: 1px solid var(--line);
 }
 
 /* ── 병렬 제시 ─────────────────────────────────────────────
@@ -927,18 +916,18 @@
   height: 7px;
   border-radius: 50%;
   background: var(--gold);
-  box-shadow: 0 0 0 2px var(--paper);
+  box-shadow: 0 0 0 2px var(--surface-sunken);
 }
 .noti-pop {
   position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
+  bottom: calc(100% + 8px);
+  left: 0;
   width: 352px;
   max-width: calc(100vw - 32px);
   background: var(--surface);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-md);
   box-shadow: var(--shadow-lg);
-  z-index: 60;
+  z-index: 250;
   overflow: hidden;
 }
 .noti-head {
@@ -969,7 +958,7 @@
 .noti-type {
   font-size: 10.5px;
   font-weight: 700;
-  border-radius: var(--r-full);
+  border-radius: var(--r-xs);
   padding: 2px 9px;
 }
 .noti-type.sug {
@@ -1011,18 +1000,7 @@
   line-height: 1.6;
 }
 
-@media (max-width: 1240px) {
-  .chat-shell {
-    grid-template-columns: minmax(0, 1fr) var(--panel-w);
-  }
-  .vault {
-    display: none;
-  }
-}
 @media (max-width: 1080px) {
-  .chat-shell {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .pv-grid {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1133,7 +1111,7 @@
   font-weight: 640;
   color: var(--ink-3);
   background: var(--surface-band);
-  border-radius: var(--r-full);
+  border-radius: var(--r-sm);
   padding: 4px 12px;
   margin-left: 6px;
   transition: background 0.16s var(--ease), color 0.16s var(--ease);

@@ -1,0 +1,332 @@
+/* ─────────────────────────────────────────────────────────────
+   앱 셸 — 좌측 고정 사이드바 + 우측 메인 캔버스
+   · 상단 헤더를 걷어내고 내비게이션을 전부 왼쪽 세로 목록으로 옮겼다.
+   · 알약·캡슐은 쓰지 않는다. 각진 모서리(--r-md 이하)와 옅은 배경 차이,
+     그리고 여백만으로 구역을 나눈다 — 문서 도구에 가깝게.
+   ───────────────────────────────────────────────────────────── */
+
+.app-row {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── 좌측 사이드바 ───────────────────────────────────────── */
+/* 스크롤은 가운데 내비게이션 칸에서만 돈다 — 사이드바 통째로 overflow를
+   걸면 아래쪽 알림·계정 팝오버가 이 상자 밖으로 못 나가고 잘려 버린다. */
+.app-sidebar {
+  flex: none;
+  position: relative;
+  width: var(--sidebar-w);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-sunken);
+  border-right: 1px solid var(--line);
+  padding: var(--sp-3);
+  transition: width 0.16s var(--ease-out);
+}
+
+.side-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-2) 2px var(--sp-4);
+}
+.side-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.side-brand .brand-mark {
+  flex: none;
+  color: var(--gold);
+}
+.side-brand .brand-name {
+  font-size: 22px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.side-collapse {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  color: var(--ink-4);
+  transition: background 0.14s var(--ease), color 0.14s var(--ease);
+}
+.side-collapse:hover {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.side-nav {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.side-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: var(--r-sm);
+  font-size: var(--t-sm);
+  font-weight: 580;
+  color: var(--ink-3);
+  transition: background 0.16s var(--ease), color 0.16s var(--ease);
+}
+.side-link svg {
+  flex: none;
+  opacity: 0.75;
+}
+.side-link:hover {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+.side-link.active {
+  background: var(--surface-active);
+  color: var(--ink);
+  font-weight: 640;
+}
+.side-link.active svg {
+  opacity: 1;
+  color: var(--gold);
+}
+/* "새 대화" — 목록 맨 위, 다른 메뉴보다 한 단 굵게. 그 아래 살짝 여백을
+   두어 "이건 이동이 아니라 동작"이라는 느낌을 준다 */
+.side-newchat {
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.side-badge {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--r-xs);
+  background: var(--surface-active);
+  color: var(--ink-3);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+/* ── 대화 기록 — 남는 공간을 전부 차지하며 늘어난다 ──────────
+   이 칸이 flex:1로 늘어나기 때문에, 기록이 짧든 없든 아래 CTA·알림·계정과
+   항상 거리가 생긴다. 목록만 스크롤되고 "대화 기록" 라벨은 고정. */
+.side-history {
+  flex: 1;
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--sp-5);
+}
+.side-history-label {
+  flex: none;
+  padding: 0 10px var(--sp-2);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ink-4);
+  text-transform: uppercase;
+}
+.side-history-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 2px;
+}
+
+.side-spacer {
+  flex: 1;
+}
+
+.side-cta {
+  width: 100%;
+  margin-top: var(--sp-4);
+}
+
+.side-foot {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--line);
+}
+.side-foot .noti {
+  margin-right: 0;
+}
+
+/* ── 접힌 상태 — 아이콘 레일만 남긴다 ─────────────────────── */
+.app-sidebar.collapsed {
+  width: 60px;
+  padding: var(--sp-3) 8px;
+}
+.app-sidebar.collapsed .side-top {
+  flex-direction: column-reverse;
+  gap: 8px;
+  padding: 2px 0 var(--sp-4);
+}
+.app-sidebar.collapsed .side-brand .brand-name,
+.app-sidebar.collapsed .side-link span,
+.app-sidebar.collapsed .side-cta span {
+  display: none;
+}
+.app-sidebar.collapsed .side-link {
+  justify-content: center;
+  padding: 0;
+  position: relative;
+}
+.app-sidebar.collapsed .side-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  margin-left: 0;
+}
+.app-sidebar.collapsed .side-cta {
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.app-sidebar.collapsed .side-foot {
+  flex-direction: column;
+  align-items: center;
+}
+.app-sidebar.collapsed .acct-name {
+  display: none;
+}
+.app-sidebar.collapsed .acct,
+.app-sidebar.collapsed .acct-row {
+  flex: none;
+}
+.app-sidebar.collapsed .acct-row {
+  padding: 0;
+}
+/* 접힌 폭에서는 대화 기록 목록을 넣을 자리가 없다 — 아이콘 레일만 남기고,
+   대신 메뉴 칸을 늘려 CTA·계정이 여전히 아래쪽에 붙게 한다 */
+.app-sidebar.collapsed .side-history {
+  display: none;
+}
+.app-sidebar.collapsed .side-nav {
+  flex: 1;
+}
+
+/* 좁은 화면 — 자동으로 접힌 폭까지만 줄인다. 펼치기는 토글 버튼으로 */
+@media (max-width: 760px) {
+  .app-sidebar {
+    width: 60px;
+    padding: var(--sp-3) 8px;
+  }
+  .side-brand .brand-name,
+  .side-link span,
+  .side-cta span {
+    display: none;
+  }
+  .side-link {
+    justify-content: center;
+    padding: 0;
+  }
+  .side-history {
+    display: none;
+  }
+  .side-nav {
+    flex: 1;
+  }
+}
+
+/* ── 우측 · 사이드바 없는 페이지의 메인 캔버스 ──────────────── */
+.app-main {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   첫 세션 안내창
+   ───────────────────────────────────────────────────────────── */
+.welcome-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-6);
+  background: var(--overlay);
+  backdrop-filter: blur(3px);
+  animation: welcome-fade 0.2s var(--ease-out);
+}
+@keyframes welcome-fade {
+  from {
+    opacity: 0;
+  }
+}
+.welcome-card {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  background: var(--surface);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+  padding: var(--sp-8) var(--sp-6) var(--sp-6);
+  animation: welcome-in 0.24s var(--ease-out);
+}
+@keyframes welcome-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+.welcome-close {
+  position: absolute;
+  top: var(--sp-3);
+  right: var(--sp-3);
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  color: var(--ink-4);
+  transition: background 0.14s var(--ease), color 0.14s var(--ease);
+}
+.welcome-close:hover {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+.welcome-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.4;
+  word-break: keep-all;
+  margin-top: var(--sp-4);
+}
+.welcome-lead {
+  margin-top: var(--sp-3);
+  font-size: var(--t-sm);
+  line-height: 1.85;
+  color: var(--ink-3);
+  word-break: keep-all;
+}
+.welcome-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-6);
+}

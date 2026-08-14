@@ -5,35 +5,63 @@
  * 그 자리에서 펼쳐진다. 사용자가 대화를 떠나지 않고 근거를 확인할 수
  * 있어야 해서 모달이 아니라 인라인 아코디언으로 뒀다.
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { reportById } from '../lib/mock'
-import { IconArrowRight, IconBook } from './icons'
+import SelectionAsk from './SelectionAsk'
+import { IconArrowLeft, IconArrowRight, IconBook } from './icons'
 
 export default function EvidencePanel({ cited }: { cited: string[] }) {
   const [open, setOpen] = useState<string | null>(null)
+  /* 접기·펼치기 — 이 패널 안에서만 도는 화면 상태. 새 대화창은 접힌 채로
+     시작한다 — 아직 근거가 없는데 빈 칸을 넓게 차지할 이유가 없다. */
+  const [collapsed, setCollapsed] = useState(true)
+  /* 근거가 처음 쌓이는 순간 딱 한 번만 자동으로 펼친다. 그다음부터는
+     사용자가 접고 펴는 걸 그대로 둔다 — 매번 답이 올 때마다 튀어나오면
+     오히려 방해가 된다. 대화가 새로 시작되어 근거가 다시 0으로 돌아가면
+     다음 대화방을 위해 다시 무장된다. */
+  const wasEmpty = useRef(true)
+  useEffect(() => {
+    if (wasEmpty.current && cited.length > 0) {
+      setCollapsed(false)
+    }
+    wasEmpty.current = cited.length === 0
+  }, [cited.length])
 
-  // 대화 쪽에서 인용 칩을 누르면 해당 리포트를 펼친다
+  // 대화 쪽에서 인용 칩을 누르면 해당 리포트를 펼친다 — 패널이 접혀 있었다면
+  // 같이 펼친다. 근거를 보겠다고 누른 것이니 이때는 자동으로 열어도 된다.
   useEffect(() => {
     const onOpen = (e: Event) => {
       const id = (e as CustomEvent<string>).detail
       setOpen((cur) => (cur === id ? null : id))
+      setCollapsed(false)
     }
     window.addEventListener('quill:open-report', onOpen)
     return () => window.removeEventListener('quill:open-report', onOpen)
   }, [])
 
   return (
-    <aside className="evi-panel">
+    <aside className={`evi-panel${collapsed ? ' collapsed' : ''}`}>
       <div className="evi-head">
-        <span className="eyebrow">
-          <span className="rule-gold" />
-          근거 자료
-        </span>
-        <span className="xs faint num">{cited.length}건</span>
+        {!collapsed && (
+          <span className="eyebrow">
+            <span className="rule-gold" />
+            근거 자료
+            <span className="xs faint num" style={{ marginLeft: 6 }}>
+              {cited.length}건
+            </span>
+          </span>
+        )}
+        <button
+          className="evi-collapse"
+          onClick={() => setCollapsed((v) => !v)}
+          aria-label={collapsed ? '근거 자료 펼치기' : '근거 자료 접기'}
+        >
+          {collapsed ? <IconArrowLeft size={14} /> : <IconArrowRight size={14} />}
+        </button>
       </div>
 
-      {cited.length === 0 ? (
+      {collapsed ? null : cited.length === 0 ? (
         <div className="evi-empty">
           <IconBook size={22} style={{ color: 'var(--ink-4)' }} />
           <p className="small muted keep mt-3">
@@ -64,6 +92,7 @@ export default function EvidencePanel({ cited }: { cited: string[] }) {
                 </button>
 
                 {isOpen && (
+                  <SelectionAsk>
                   <div className="evi-body">
                     <div className="evi-sec">3줄 요약</div>
                     <ul className="evi-sum">
@@ -85,6 +114,7 @@ export default function EvidencePanel({ cited }: { cited: string[] }) {
                       </Link>
                     </div>
                   </div>
+                  </SelectionAsk>
                 )}
               </div>
             )

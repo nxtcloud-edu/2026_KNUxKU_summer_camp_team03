@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
+import { IconUser } from './icons'
 
 export default function AccountMenu() {
   const { enabled, ready, user, signOut } = useAuth()
@@ -29,10 +30,13 @@ export default function AccountMenu() {
 
   if (!user) {
     return (
-      <Link className="btn btn-soft btn-sm" to="/login">
-        로그인
-        {/* 아직 붙지 않았다는 표시. 시연 중 오해를 막는다 */}
-        {!enabled && <span className="login-off" title="인증 미설정" />}
+      <Link className="acct-row" to="/login" aria-label="로그인">
+        <span className="acct-btn acct-btn-guest">
+          <IconUser size={15} />
+          {/* 아직 붙지 않았다는 표시. 시연 중 오해를 막는다 */}
+          {!enabled && <span className="login-off" title="인증 미설정" />}
+        </span>
+        <span className="acct-name">GUEST</span>
       </Link>
     )
   }
@@ -43,12 +47,13 @@ export default function AccountMenu() {
   return (
     <div className="acct" ref={ref}>
       <button
-        className="acct-btn"
+        className="acct-row"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-label="계정 메뉴"
       >
-        {initial}
+        <span className="acct-btn">{initial}</span>
+        <span className="acct-name truncate">{email.split('@')[0]}</span>
       </button>
 
       {open && (

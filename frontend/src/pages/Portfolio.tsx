@@ -133,158 +133,165 @@ export default function Portfolio() {
         </h1>
       </div>
 
-      <div className="pf-grid">
-        {/* ── 왼쪽 · 배분 ─────────────────────────── */}
-        <div>
-          <section className="pf-card">
-            <div className="row-between wrap gap-4">
-              <div>
-                <div className="pf-card-t">위험 점수</div>
-                <div className="pf-risk num">{risk}</div>
-              </div>
-              <div className="pf-scores">
-                <span>
-                  Capacity <b className="num">{profile.capacity}</b>
-                </span>
-                <span>
-                  Tolerance <b className="num">{profile.tolerance}</b>
-                </span>
-              </div>
-            </div>
-
-            {/* 슬라이더 — 1박자 */}
-            <div className="pf-slider mt-5">
-              <input
-                type="range"
-                min={0}
-                max={100}
-                step={1}
-                value={risk}
-                onChange={(e) => setRisk(Number(e.target.value))}
-                onMouseUp={() => setOverride(risk)}
-                onTouchEnd={() => setOverride(risk)}
-                aria-label="위험 점수 조정"
-              />
-              <div className="pf-slider-scale">
-                <span>안정</span>
-                <span>공격</span>
-              </div>
-            </div>
-
-            <p className="xs faint keep mt-3" style={{ lineHeight: 1.7 }}>
-              슬라이더를 움직이면 기준 비중이 즉시 다시 계산됩니다. 손을 떼고 잠시 뒤
-              에이전트가 오늘 리포트를 다시 읽고 조정을 제안해요.
-            </p>
-          </section>
-
-          <section className="pf-card mt-4">
-            <AllocBar
-              baseline={baseline}
-              adjusted={alloc?.adjusted}
-              rejected={alloc?.rejected.length}
-            />
-
-            {reviewing && (
-              <div className="pf-reviewing">
-                <span className="spinner" />
-                에이전트가 오늘 리포트를 다시 읽고 있어요
-              </div>
-            )}
-
-            {alloc && !!alloc.applied.length && (
-              <div className="pf-reasons">
-                {alloc.applied.map((a, i) => {
-                  const r = reportById(a.evidence_report_id!)
-                  return (
-                    <div className="pf-reason" key={i}>
-                      <span
-                        className="pf-reason-dot"
-                        style={{ background: ASSET_COLOR[a.asset] }}
-                      />
-                      <div className="grow">
-                        <div className="small">
-                          <b>
-                            {ASSET_LABEL[a.asset]} {a.delta_pp > 0 ? '+' : ''}
-                            {a.delta_pp}%p
-                          </b>{' '}
-                          — {a.reason}
-                        </div>
-                        {r && (
-                          <div className="xs faint mt-1">
-                            근거 · {r.house} 「{r.title}」 ({r.date})
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {alloc && !!alloc.rejected.length && (
-              <div className="pf-rejected">
-                <IconShield size={14} />
-                <div>
-                  <b>폐기된 제안 {alloc.rejected.length}건</b>
-                  {alloc.rejected.map((r, i) => (
-                    <div className="xs" key={i}>
-                      「{r.adjustment.reason}」 — {r.reason}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <p className="pf-disc">{DISCLAIMER}</p>
-          </section>
-        </div>
-
-        {/* ── 오른쪽 · 자산군별 상품 ───────────────── */}
-        <div className="pf-side">
-          {(['cash', 'bond', 'etf'] as (keyof Weights)[]).map((k) => (
-            <section className="pf-card" key={k}>
-              <div className="row-between">
-                <div className="row gap-2">
-                  <span className="pf-dot" style={{ background: ASSET_COLOR[k] }} />
-                  <span className="strong">{ASSET_LABEL[k]}</span>
-                </div>
-                <span className="pf-pct num">{shown[k]}%</span>
-              </div>
-              <div className="xs faint mt-1">{ASSET_NOTE[k]}</div>
-
-              <div className="pf-prods">
-                {ASSET_PRODUCTS[k]
-                  .map((id) => PRODUCTS.find((p) => p.id === id))
-                  .filter(Boolean)
-                  .map((p) => (
-                    <div className="pf-prod" key={p!.id}>
-                      <div className="small strong">{p!.name}</div>
-                      <p className="xs muted keep mt-1" style={{ lineHeight: 1.7 }}>
-                        {p!.why}
-                      </p>
-                      <div className="mt-2">
-                        <SourceList ids={p!.sources} label="" />
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </section>
-          ))}
-
-          <div className="pf-params">
-            <div className="eyebrow mb-3">적용된 파라미터</div>
-            <Row k="현금 하한" v={`${ALLOCATION_PARAMS.cash_floor}%`} />
-            <Row k="조정 한도" v={`±${ALLOCATION_PARAMS.adjust_cap_pp}%p`} />
-            <Row
-              k="스코어 배합"
-              v={`capacity ${ALLOCATION_PARAMS.capacity_weight} : tolerance ${ALLOCATION_PARAMS.tolerance_weight}`}
-            />
-            <p className="xs faint keep mt-3" style={{ lineHeight: 1.7 }}>
-              이 값들은 코드가 아니라 파라미터 테이블에 있습니다. 운영 중 튜닝할 때
-              배포 없이 바꿉니다.
-            </p>
+      {/* ── 위 · 위험점수·슬라이더·배분·근거를 한 덩어리로 ──────────
+          예전엔 이 내용이 카드 두 개로 나뉘어 있었는데, 하나는 곧장
+          다른 하나를 낳는 값이라(슬라이더→배분) 따로 쪼개면 관계없는
+          두 블록처럼 보였다. 헤어라인 하나로만 안을 나눈다. */}
+      <section className="pf-summary">
+        <div className="row-between wrap gap-4">
+          <div>
+            <div className="pf-card-t">위험 점수</div>
+            <div className="pf-risk num">{risk}</div>
+          </div>
+          <div className="pf-scores">
+            <span>
+              Capacity <b className="num">{profile.capacity}</b>
+            </span>
+            <span>
+              Tolerance <b className="num">{profile.tolerance}</b>
+            </span>
           </div>
         </div>
+
+        {/* 슬라이더 — 1박자 */}
+        <div className="pf-slider mt-5">
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={risk}
+            onChange={(e) => setRisk(Number(e.target.value))}
+            onMouseUp={() => setOverride(risk)}
+            onTouchEnd={() => setOverride(risk)}
+            aria-label="위험 점수 조정"
+          />
+          <div className="pf-slider-scale">
+            <span>안정</span>
+            <span>공격</span>
+          </div>
+        </div>
+
+        <p className="xs faint keep mt-3" style={{ lineHeight: 1.7 }}>
+          슬라이더를 움직이면 기준 비중이 즉시 다시 계산됩니다. 손을 떼고 잠시 뒤
+          에이전트가 오늘 리포트를 다시 읽고 조정을 제안해요.
+        </p>
+
+        <div className="pf-alloc-block">
+          <AllocBar
+            baseline={baseline}
+            adjusted={alloc?.adjusted}
+            rejected={alloc?.rejected.length}
+          />
+
+          {reviewing && (
+            <div className="pf-reviewing">
+              <span className="spinner" />
+              에이전트가 오늘 리포트를 다시 읽고 있어요
+            </div>
+          )}
+
+          {alloc && !!alloc.applied.length && (
+            <div className="pf-reasons">
+              {alloc.applied.map((a, i) => {
+                const r = reportById(a.evidence_report_id!)
+                return (
+                  <div className="pf-reason" key={i}>
+                    <span
+                      className="pf-reason-dot"
+                      style={{ background: ASSET_COLOR[a.asset] }}
+                    />
+                    <div className="grow">
+                      <div className="small">
+                        <b>
+                          {ASSET_LABEL[a.asset]} {a.delta_pp > 0 ? '+' : ''}
+                          {a.delta_pp}%p
+                        </b>{' '}
+                        — {a.reason}
+                      </div>
+                      {r && (
+                        <div className="xs faint mt-1">
+                          근거 · {r.house} 「{r.title}」 ({r.date})
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {alloc && !!alloc.rejected.length && (
+            <div className="pf-rejected">
+              <IconShield size={14} />
+              <div>
+                <b>폐기된 제안 {alloc.rejected.length}건</b>
+                {alloc.rejected.map((r, i) => (
+                  <div className="xs" key={i}>
+                    「{r.adjustment.reason}」 — {r.reason}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <p className="pf-disc">{DISCLAIMER}</p>
+      </section>
+
+      {/* ── 아래 · 자산군 3열 ─────────────────────────────────────
+          세로로 쌓지 않는다 — 성격이 같은 셋을 나란히 놓으면 grid가
+          알아서 세 칸의 높이를 맞춰 준다. 카드 안에 또 카드를 넣지
+          않고, 상품 사이도 헤어라인으로만 나눈다. */}
+      <section className="pf-assets">
+        {/* 배분 막대(AllocBar)가 그리는 순서(현금성·ETF·채권)와 맞춘다 —
+            달랐던 예전엔 위 다이어그램과 아래 카드 순서가 서로 어긋나 보였다 */}
+        {(['cash', 'etf', 'bond'] as (keyof Weights)[]).map((k) => (
+          <div className="pf-asset" key={k}>
+            <div className="row-between">
+              <div className="row gap-2">
+                <span className="pf-dot" style={{ background: ASSET_COLOR[k] }} />
+                <span className="strong">{ASSET_LABEL[k]}</span>
+              </div>
+              <span className="pf-pct num">{shown[k]}%</span>
+            </div>
+            <div className="xs faint mt-1">{ASSET_NOTE[k]}</div>
+
+            <div className="pf-prods">
+              {ASSET_PRODUCTS[k]
+                .map((id) => PRODUCTS.find((p) => p.id === id))
+                .filter(Boolean)
+                .map((p) => (
+                  <div className="pf-prod" key={p!.id}>
+                    <div className="small strong">{p!.name}</div>
+                    <p className="xs muted keep mt-1" style={{ lineHeight: 1.7 }}>
+                      {p!.why}
+                    </p>
+                    <div className="mt-2">
+                      <SourceList ids={p!.sources} label="" />
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* ── 파라미터 — 얇은 한 줄. 이것도 굳이 카드로 안 세운다 ──── */}
+      <div className="pf-params">
+        <span className="eyebrow">적용된 파라미터</span>
+        <div className="pf-params-row">
+          <Row k="현금 하한" v={`${ALLOCATION_PARAMS.cash_floor}%`} />
+          <Row k="조정 한도" v={`±${ALLOCATION_PARAMS.adjust_cap_pp}%p`} />
+          <Row
+            k="스코어 배합"
+            v={`capacity ${ALLOCATION_PARAMS.capacity_weight} : tolerance ${ALLOCATION_PARAMS.tolerance_weight}`}
+          />
+        </div>
+        <p className="xs faint keep mt-3" style={{ lineHeight: 1.7 }}>
+          이 값들은 코드가 아니라 파라미터 테이블에 있습니다. 운영 중 튜닝할 때 배포
+          없이 바꿉니다.
+        </p>
       </div>
     </div>
   )
@@ -293,8 +300,8 @@ export default function Portfolio() {
 function Row({ k, v }: { k: string; v: string }) {
   return (
     <div className="pf-param-row">
-      <span>{k}</span>
-      <b className="num">{v}</b>
+      <span className="xs faint">{k}</span>
+      <b className="num small">{v}</b>
     </div>
   )
 }

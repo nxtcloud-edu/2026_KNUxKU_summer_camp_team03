@@ -1,55 +1,10 @@
-import { useEffect, useState } from 'react'
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { IconArrowRight, IconQuill } from './icons'
+import { useEffect, useRef } from 'react'
+import { Link, Outlet, useLocation } from 'react-router-dom'
+import { IconQuill } from './icons'
 import ChatWidget from './ChatWidget'
-import Notifications from './Notifications'
-import AccountMenu from './AccountMenu'
-import { useProfile } from '../lib/store'
+import AppSidebar from './AppSidebar'
+import SelectionAsk from './SelectionAsk'
 import { REPORTS } from '../lib/mock'
-
-export function SiteHeader() {
-  const [scrolled, setScrolled] = useState(false)
-  const { diagnosis } = useProfile()
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
-  return (
-    <header className={`site-header${scrolled ? ' scrolled' : ''}`}>
-      <div className="container">
-        <Link to="/" className="brand" aria-label="Quill 홈">
-          <IconQuill size={25} className="brand-mark" />
-          <span className="brand-name">Quill</span>
-          <span className="brand-sub">퀼</span>
-        </Link>
-
-        <nav className="nav">
-          <NavLink to="/" end>
-            대화
-          </NavLink>
-          <NavLink to="/portfolio">내 포트폴리오</NavLink>
-          <NavLink to="/library">리포트 서재</NavLink>
-          <NavLink to="/mypage">마이페이지</NavLink>
-        </nav>
-
-        <span className="spacer" />
-
-        <Notifications />
-
-        <AccountMenu />
-
-        <Link className="btn btn-primary btn-sm" to="/onboarding">
-          {diagnosis ? '조건 다시 잡기' : '성향 진단'}
-          <IconArrowRight size={15} />
-        </Link>
-      </div>
-    </header>
-  )
-}
 
 export function SiteFooter() {
   return (
@@ -103,33 +58,34 @@ export function SiteFooter() {
   )
 }
 
-/** 대화 화면 전용 셸 — 헤더만 두고 푸터와 떠 있는 챗 버튼은 뺀다.
- *  대화가 메인인 화면에서 챗 버튼을 또 띄우면 같은 기능이 두 번 보인다. */
+/** 대화 화면 전용 셸 — 대화 화면(Chat.tsx)이 사이드바까지 통째로 그린다.
+ *  대화 기록을 사이드바 안에 넣으려면 그 상태를 쥔 Chat.tsx가 사이드바도
+ *  같이 그려야 해서, 여기서는 더 얹을 게 없다. */
 export function ChatLayout() {
-  return (
-    <>
-      <SiteHeader />
-      <main>
-        <Outlet />
-      </main>
-    </>
-  )
+  return <Outlet />
 }
 
 export default function Layout() {
   const { pathname } = useLocation()
+  const mainRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'auto' })
+    mainRef.current?.scrollTo({ top: 0, behavior: 'auto' })
   }, [pathname])
 
   return (
-    <>
-      <SiteHeader />
-      <main>
-        <Outlet />
-      </main>
-      <SiteFooter />
-      <ChatWidget />
-    </>
+    <div className="app-row">
+      <AppSidebar />
+      <div className="app-main" ref={mainRef}>
+        {/* 우하단 챗봇이 뜨는 모든 화면에서 드래그 선택 → 바로 물어보기가
+            같이 되어야 한다. 페이지마다 따로 감싸지 않고 이 셸 하나에서
+            한 번에 건다 — ChatWidget이 뜨는 범위와 정확히 같아진다. */}
+        <SelectionAsk>
+          <Outlet />
+        </SelectionAsk>
+        <SiteFooter />
+        <ChatWidget />
+      </div>
+    </div>
   )
 }

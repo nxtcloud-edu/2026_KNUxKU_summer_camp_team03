@@ -94,26 +94,11 @@ export default function MyPage() {
   return (
     <div className="my-shell">
       {/* ── 머리 ─────────────────────────────────── */}
-      <header className="my-head">
-        <span className="eyebrow">
-          <span className="rule-gold" />
-          마이페이지
-        </span>
-        <h1 className="ob-title">
-          {user?.email ? (
-            <>
-              {user.email.split('@')[0]}님의 자리
-              <br />
-              <span className="muted">맡기신 것과 그 근거가 모여 있습니다.</span>
-            </>
-          ) : (
-            <>
-              내 자리
-              <br />
-              <span className="muted">맡기신 것과 그 근거가 모여 있습니다.</span>
-            </>
-          )}
+      <header className="page-head">
+        <h1 className="page-title">
+          {user?.email ? `${user.email.split('@')[0]}님` : '마이페이지'}
         </h1>
+        <p className="page-lead">내 성향 점수·배분·저장한 대화가 여기 모여 있습니다.</p>
 
         {!enabled && (
           <div className="my-notice">
@@ -133,10 +118,14 @@ export default function MyPage() {
           <section className="my-card">
             <div className="row-between">
               <h2 className="my-h">내 투자 성향</h2>
-              <Link className="my-more" to="/onboarding">
-                다시 진단
-                <IconArrowRight size={13} />
-              </Link>
+              {/* 아직 진단 전이면 이 링크는 무의미하다("다시" 잡을 조건이
+                  없다) — 그 상태는 아래 Empty가 이미 자기 CTA를 갖고 있다 */}
+              {profile && input && (
+                <Link className="my-more" to="/onboarding">
+                  조건 다시 잡기
+                  <IconArrowRight size={13} />
+                </Link>
+              )}
             </div>
 
             {profile && input ? (
@@ -201,7 +190,7 @@ export default function MyPage() {
               <Empty
                 text="진단을 마치면 기준 비중이 여기 표시됩니다."
                 to="/onboarding"
-                cta="진단하러 가기"
+                cta="성향 진단 시작"
               />
             )}
           </section>
