@@ -548,7 +548,7 @@ export default function Chat() {
         </div>
       </section>
 
-      <EvidencePanel cited={cited} />
+      <EvidencePanel cited={cited} disabled={chatMode === 'persona'} />
     </div>
     </div>
   )

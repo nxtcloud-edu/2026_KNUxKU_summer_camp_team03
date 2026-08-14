@@ -11,7 +11,7 @@ import { reportById } from '../lib/mock'
 import SelectionAsk from './SelectionAsk'
 import { IconArrowLeft, IconArrowRight, IconBook } from './icons'
 
-export default function EvidencePanel({ cited }: { cited: string[] }) {
+export default function EvidencePanel({ cited, disabled }: { cited: string[]; disabled?: boolean }) {
   const [open, setOpen] = useState<string | null>(null)
   /* 접기·펼치기 — 이 패널 안에서만 도는 화면 상태. 새 대화창은 접힌 채로
      시작한다 — 아직 근거가 없는데 빈 칸을 넓게 차지할 이유가 없다. */
@@ -22,7 +22,7 @@ export default function EvidencePanel({ cited }: { cited: string[] }) {
      다음 대화방을 위해 다시 무장된다. */
   const wasEmpty = useRef(true)
   useEffect(() => {
-    if (wasEmpty.current && cited.length > 0) {
+    if (wasEmpty.current && cited.length > 0 && !disabled) {
       setCollapsed(false)
     }
     wasEmpty.current = cited.length === 0
@@ -32,13 +32,14 @@ export default function EvidencePanel({ cited }: { cited: string[] }) {
   // 같이 펼친다. 근거를 보겠다고 누른 것이니 이때는 자동으로 열어도 된다.
   useEffect(() => {
     const onOpen = (e: Event) => {
+      if (disabled) return
       const id = (e as CustomEvent<string>).detail
       setOpen((cur) => (cur === id ? null : id))
       setCollapsed(false)
     }
     window.addEventListener('quill:open-report', onOpen)
     return () => window.removeEventListener('quill:open-report', onOpen)
-  }, [])
+  }, [disabled])
 
   return (
     <aside className={`evi-panel${collapsed ? ' collapsed' : ''}`}>
