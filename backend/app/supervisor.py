@@ -301,12 +301,20 @@ def _handle_persona(req: ChatRequest) -> ChatResponse:
     # ── 뉴스 보조 (리포트 부족 시) ──
     news = _maybe_news(req.message, tags, reports, trace)
 
-    # ── 페르소나 3명 호출 ──
-    personas_list, used_llm = persona_agent.answer_persona(
-        req.message, reports, news=news, profile_ctx=_profile_ctx(req.profile))
-    trace.append(_step("Analysis", "페르소나 3명 의견",
-                       f"근거 {len(evidence)}건 · 뉴스 {len(news) if news else 0}건 · "
-                       + ("LLM 사용" if used_llm else "LLM 실패 → 폴백"), 400 if used_llm else 8))
+    # ── 페르소나 호출 (단일 지정 or 3명 전체) ──
+    if req.target_persona:
+        personas_list, used_llm = persona_agent.answer_single_persona(
+            req.target_persona, req.message, reports, news=news,
+            profile_ctx=_profile_ctx(req.profile), history=req.persona_history)
+        trace.append(_step("Analysis", f"페르소나 1명: {req.target_persona}",
+                           f"근거 {len(evidence)}건 · "
+                           + ("LLM 사용" if used_llm else "LLM 실패 → 폴백"), 400 if used_llm else 8))
+    else:
+        personas_list, used_llm = persona_agent.answer_persona(
+            req.message, reports, news=news, profile_ctx=_profile_ctx(req.profile))
+        trace.append(_step("Analysis", "페르소나 3명 의견",
+                           f"근거 {len(evidence)}건 · 뉴스 {len(news) if news else 0}건 · "
+                           + ("LLM 사용" if used_llm else "LLM 실패 → 폴백"), 400 if used_llm else 8))
 
     # ── STM 기록 ──
     store.append(sess, "user", req.message, "persona")

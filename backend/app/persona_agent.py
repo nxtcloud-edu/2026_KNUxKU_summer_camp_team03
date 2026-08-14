@@ -131,3 +131,62 @@ def answer_persona(question: str, reports: list[dict],
         })
 
     return results, any_success
+
+
+def answer_single_persona(
+    persona_name: str,
+    question: str,
+    reports: list[dict],
+    news: list[dict] | None = None,
+    profile_ctx: str = "",
+    history: list[dict] | None = None,
+) -> tuple[list[dict], bool]:
+    """특정 페르소나 1명만 호출. 후속 대화 맥락(history) 지원.
+
+    반환 형식은 answer_persona()와 동일: (personas_list, used_llm)
+    — 단, 배열에 지정된 페르소나 1개만 담김.
+    """
+    # 페르소나 찾기
+    persona = next((p for p in ALL_PERSONAS if p["name"] == persona_name), None)
+    if not persona:
+        return [{
+            "persona": persona_name,
+            "label": "?",
+            "emoji": "❓",
+            "message": f"'{persona_name}'이라는 페르소나를 찾지 못했어요.",
+            "evidence": [],
+        }], False
+
+    # history를 컨텍스트 텍스트로 변환
+    history_ctx = ""
+    if history:
+        lines = []
+        for turn in history[-6:]:  # 최근 6턴만
+            who = "사용자" if turn.get("role") == "user" else persona_name
+            lines.append(f"{who}: {turn.get('text', '')[:200]}")
+        history_ctx = "\n".join(lines)
+
+    # 프롬프트 조립 (history 포함)
+    user_prompt = _build_user_prompt(question, reports, profile_ctx, news)
+    if history_ctx:
+        user_prompt = f"## 이전 대화\n{history_ctx}\n\n{user_prompt}"
+
+    try:
+        reply = _call_gemini_for_persona(persona["system_prompt"], user_prompt)
+        message = sanitize_output(_strip_contact_info(reply))
+        message = _re.sub(r"^##\s.*\n.*\n?", "", message).strip()
+        message = _re.sub(r"^[\*\-]\s+.*\n?", "", message, flags=_re.MULTILINE).strip()
+        used_llm = True
+    except (RuntimeError, requests.RequestException, KeyError,
+            IndexError, json.JSONDecodeError) as exc:
+        print(f"[persona_agent] {persona_name} 실패: {exc}", flush=True)
+        message = _FAIL_MSG
+        used_llm = False
+
+    return [{
+        "persona": persona["name"],
+        "label": persona["label"],
+        "emoji": persona["emoji"],
+        "message": message,
+        "evidence": [r["id"] for r in reports],
+    }], used_llm

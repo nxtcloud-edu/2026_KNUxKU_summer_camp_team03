@@ -82,9 +82,9 @@ def test_three_personas_return_different_text(mock_call):
     assert "기회비용" in personas_list[2]["message"]
 
     # 페르소나 이름 확인
-    assert personas_list[0]["persona"] == "김원칙"
-    assert personas_list[1]["persona"] == "한사이클"
-    assert personas_list[2]["persona"] == "오선점"
+    assert personas_list[0]["persona"] == "워런 버핏"
+    assert personas_list[1]["persona"] == "레이 달리오"
+    assert personas_list[2]["persona"] == "캐시 우드"
 
 
 # ── 2. sanitize_output이 한 번만 적용되는지 ──────────────────
@@ -157,7 +157,7 @@ def test_persona_session_scope_isolation():
 def test_partial_llm_failure(mock_call):
     """첫 번째 페르소나가 실패해도 나머지 둘의 응답은 포함된다."""
     mock_call.side_effect = [
-        RuntimeError("API 키 만료"),  # 김원칙 실패
+        RuntimeError("API 키 만료"),  # 워런 버핏 실패
         "사이클 관점에서 좋은 진입 시점입니다.",
         "성장 테마로 비중 확대를 고려하세요.",
     ]
@@ -168,8 +168,8 @@ def test_partial_llm_failure(mock_call):
 
     assert used_llm is True  # 하나라도 성공했으므로 True
     assert personas_list[0]["message"] == "지금 답변을 만들지 못했어요."  # 실패한 자리
-    assert "사이클 관점" in personas_list[1]["message"]  # 한사이클 성공
-    assert "성장 테마" in personas_list[2]["message"]  # 오선점 성공
+    assert "사이클 관점" in personas_list[1]["message"]  # 레이 달리오 성공
+    assert "성장 테마" in personas_list[2]["message"]  # 캐시 우드 성공
 
 
 # ── 6. 모든 LLM 실패 시 used_llm=False ──────────────────────
@@ -204,3 +204,56 @@ def test_concept_question_redirects_to_research_tab():
     assert resp.used_llm is False
     assert resp.personas == []
     assert "리서치 탭" in resp.text
+
+
+# ── 8. target_persona 단일 호출 ───────────────────────────────
+@patch("app.persona_agent._call_gemini_for_persona")
+def test_single_persona_returns_only_one(mock_call):
+    """target_persona 지정 시 해당 페르소나만 반환."""
+    mock_call.return_value = "장기채 비중은 괜찮아 보여요."
+
+    from app.persona_agent import answer_single_persona
+
+    results, used_llm = answer_single_persona(
+        "워런 버핏", "장기채 비중 어때?", _SAMPLE_REPORTS)
+
+    assert used_llm is True
+    assert len(results) == 1
+    assert results[0]["persona"] == "워런 버핏"
+    assert results[0]["label"] == "가치투자"
+    assert "괜찮아" in results[0]["message"]
+
+
+@patch("app.persona_agent._call_gemini_for_persona")
+def test_single_persona_with_history(mock_call):
+    """persona_history가 프롬프트에 반영되는지."""
+    mock_call.return_value = "이전 대화를 이어서요."
+
+    from app.persona_agent import answer_single_persona
+
+    history = [
+        {"role": "user", "text": "채권 비중 높은 거 어때?"},
+        {"role": "assistant", "text": "조금 줄이는 게 좋겠어요."},
+    ]
+    results, _ = answer_single_persona(
+        "레이 달리오", "그럼 얼마나 줄여?", _SAMPLE_REPORTS, history=history)
+
+    assert len(results) == 1
+    assert results[0]["persona"] == "레이 달리오"
+    # _call_gemini_for_persona에 전달된 프롬프트에 history가 포함되었는지
+    call_args = mock_call.call_args[0]
+    user_prompt = call_args[1]
+    assert "이전 대화" in user_prompt
+    assert "채권 비중 높은 거 어때?" in user_prompt
+
+
+def test_single_persona_unknown_name():
+    """존재하지 않는 페르소나명이면 에러 메시지."""
+    from app.persona_agent import answer_single_persona
+
+    results, used_llm = answer_single_persona(
+        "존재안함", "질문", _SAMPLE_REPORTS)
+
+    assert used_llm is False
+    assert len(results) == 1
+    assert "찾지 못했어요" in results[0]["message"]

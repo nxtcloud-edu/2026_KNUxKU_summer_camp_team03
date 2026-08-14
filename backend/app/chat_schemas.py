@@ -26,6 +26,8 @@ class ChatRequest(BaseModel):
     session_id: Optional[str] = None  # 없으면 서버가 발급해 응답에 실어 준다
     profile: Optional[ChatProfileSchema] = None
     mode: Literal["chat", "persona"] = "chat"  # 탭 구분: chat=리서치탭, persona=훈수탭
+    target_persona: Optional[str] = None  # 훈수 탭 후속 대화: 특정 페르소나 지정
+    persona_history: Optional[list[dict]] = None  # [{role, text}, ...] 이전 대화 맥락
 
 
 class TraceStepSchema(BaseModel):

@@ -49,10 +49,16 @@ interface ServerChatResponse {
   disclaimer?: string | null
 }
 
+export interface AskChatOptions {
+  targetPersona?: string
+  personaHistory?: Array<{ role: string; text: string }>
+}
+
 export async function askChat(
   message: string,
   profile?: RiskProfile,
   mode: 'chat' | 'persona' = 'chat',
+  options?: AskChatOptions,
 ): Promise<ChatAnswer> {
   try {
     const ctrl = new AbortController()
@@ -67,6 +73,8 @@ export async function askChat(
         message,
         session_id: sessionId,
         mode,
+        target_persona: options?.targetPersona ?? null,
+        persona_history: options?.personaHistory ?? null,
         profile: profile
           ? {
               capacity: profile.capacity,
