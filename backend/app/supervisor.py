@@ -32,7 +32,7 @@ from . import persona_agent, report_retriever
 from .chat_agent import answer as agent_answer
 from .chat_schemas import ChatProfileSchema, ChatRequest, ChatResponse, TraceStepSchema
 from .guardrails import (DISCLAIMER, NO_EVIDENCE_FALLBACK, OFF_TOPIC_NOTICE,
-                         check_input, is_finance_related, sanitize_output)
+                         SERVICE_CONTEXT, check_input, is_finance_related, sanitize_output)
 from .session_store import store
 
 SCHEDULE_NOTICE = (
@@ -71,7 +71,9 @@ def _llm_topic_check(message: str) -> bool:
             params={"key": key},
             json={
                 "systemInstruction": {"parts": [{"text":
-                    "너는 분류기다. 사용자 질문이 금융·투자·경제·자산배분·채권·ETF·주식시장과 "
+                    f"{SERVICE_CONTEXT}\n\n"
+                    "위 서비스 맥락을 참고해서 판단하라. "
+                    "사용자 질문이 금융·투자·경제·자산배분·채권·ETF·주식시장과 "
                     "관련 있으면 yes, 아니면 no를 한 단어로만 답하라. 다른 말 하지 마라."
                 }]},
                 "contents": [{"role": "user", "parts": [{"text": message}]}],
@@ -113,6 +115,8 @@ def _explain_concept(question: str) -> tuple[str, bool]:
             params={"key": key},
             json={
                 "systemInstruction": {"parts": [{"text":
+                    f"{SERVICE_CONTEXT}\n\n"
+                    "위 서비스 맥락을 참고해서 답하라. "
                     "너는 초보 투자자를 위한 금융 용어 해설 도우미다. "
                     "다음 규칙을 지켜라: "
                     "1) 2~3문장으로 짧고 쉽게 설명한다. "
