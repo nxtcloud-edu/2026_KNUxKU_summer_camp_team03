@@ -1204,3 +1204,10 @@
   color: var(--muted, #999);
   margin-top: 8px;
 }
+
+.persona-followup-hint {
+  font-size: 11px;
+  color: var(--muted, #999);
+  margin-top: 8px;
+  font-style: italic;
+}

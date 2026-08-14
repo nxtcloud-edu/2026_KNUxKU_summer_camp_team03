@@ -245,7 +245,27 @@ export default function Chat() {
       }
       setMsgs((m) => [...m, userMsg])
 
-      const res = await askChat(value, activeProfile ?? undefined, chatMode)
+      // 훈수 탭: 페르소나 이름 감지 + 이전 대화 맥락 구성
+      const personaNames = ['김원칙', '한사이클', '오선점']
+      let askOptions: import('../lib/api').AskChatOptions | undefined
+      if (chatMode === 'persona') {
+        const detected = personaNames.find((n) => value.includes(n))
+        if (detected) {
+          // 해당 페르소나와의 이전 대화만 필터
+          const history: Array<{ role: string; text: string }> = []
+          for (const m of msgs) {
+            if (m.role === 'user') {
+              history.push({ role: 'user', text: m.text })
+            } else if (m.data?.personas) {
+              const pMsg = m.data.personas.find((p) => p.persona === detected)
+              if (pMsg) history.push({ role: 'assistant', text: pMsg.message })
+            }
+          }
+          askOptions = { targetPersona: detected, personaHistory: history }
+        }
+      }
+
+      const res = await askChat(value, activeProfile ?? undefined, chatMode, askOptions)
       setTrace(res.trace)
 
       const think = res.trace.reduce((s, t) => s + t.ms, 0)
@@ -379,6 +399,12 @@ export default function Chat() {
                         ))}
                         {m.data.disclaimer && (
                           <p className="persona-disclaimer">{m.data.disclaimer}</p>
+                        )}
+                        {m.data.personas.length > 1 && (
+                          <p className="persona-followup-hint">
+                            특정 페르소나와 이어가려면 이름을 붙여서 질문해보세요
+                            (예: "김원칙, 그럼 지금 사도 될까요?")
+                          </p>
                         )}
                       </div>
                     ) : (
