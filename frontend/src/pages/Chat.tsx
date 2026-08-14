@@ -447,9 +447,6 @@ export default function Chat() {
                   <span className="dot" />
                   <span className="dot" />
                   <span className="dot" />
-                  <span className="small muted" style={{ marginLeft: 8 }}>
-                    리포트를 찾고 있어요
-                  </span>
                 </div>
               </div>
             )}
