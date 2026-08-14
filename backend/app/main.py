@@ -43,6 +43,22 @@ from .schemas import (
 app = FastAPI(title="맥미리 · 추천 알고리즘 API", version="0.1.0")
 
 
+@app.on_event("startup")
+def _warmup():
+    """서버 기동 시 Chroma 임베딩 모델을 미리 로드 (콜드스타트 방지)."""
+    try:
+        from .report_retriever import _chroma_collection
+        col = _chroma_collection()
+        if col:
+            # 더미 쿼리로 모델 로딩 강제
+            col.query(query_texts=["warmup"], n_results=1)
+            print("[startup] Chroma 임베딩 모델 워밍업 완료", flush=True)
+        else:
+            print("[startup] Chroma 미설정 — 키워드 검색 모드", flush=True)
+    except Exception as exc:
+        print(f"[startup] Chroma 워밍업 실패 (무시): {exc}", flush=True)
+
+
 @app.get("/")
 def root():
     return {
