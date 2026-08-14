@@ -1,5 +1,5 @@
 """
-Quill 백엔드 — 3단계 추천 알고리즘
+맥미리 백엔드 — 3단계 추천 알고리즘
 
 프론트(quant.ts)는 1~2단계를 클라이언트에서 즉시 계산한다 (슬라이더 반응성 때문).
 이 서버는:
@@ -40,14 +40,14 @@ from .schemas import (
     WeightsSchema,
 )
 
-app = FastAPI(title="Quill · 추천 알고리즘 API", version="0.1.0")
+app = FastAPI(title="맥미리 · 추천 알고리즘 API", version="0.1.0")
 
 
 @app.get("/")
 def root():
     return {
         "status": "ok",
-        "service": "Quill API",
+        "service": "맥미리 API",
         "docs": "/docs",
         "health": "/health",
     }

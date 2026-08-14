@@ -71,7 +71,7 @@ class SessionStore:
             return ""
         lines = []
         for t in recent:
-            who = "사용자" if t.role == "user" else "Quill"
+            who = "사용자" if t.role == "user" else "맥미리"
             lines.append(f"{who}: {t.text[:TURN_TRUNCATE]}")
         return "\n".join(lines)
 

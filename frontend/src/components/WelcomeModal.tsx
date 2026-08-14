@@ -27,7 +27,7 @@ export default function WelcomeModal() {
   if (!open) return null
 
   return (
-    <div className="welcome-overlay" role="dialog" aria-modal="true" aria-label="Quill 소개">
+    <div className="welcome-overlay" role="dialog" aria-modal="true" aria-label="맥미리 소개">
       <div className="welcome-card">
         <button className="welcome-close" onClick={close} aria-label="닫기">
           <IconX size={16} />
