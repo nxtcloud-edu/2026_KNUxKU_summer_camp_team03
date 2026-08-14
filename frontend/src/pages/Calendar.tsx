@@ -3,8 +3,10 @@ import { getCalendarEvents, type CalendarEvent } from '../lib/calendarApi'
 import { Badge, Empty, Spinner } from '../components/ui'
 import { IconArrowLeft, IconArrowRight } from '../components/icons'
 
-const CATEGORY_LABEL: Record<string, string> = {
-  fomc: 'FOMC',
+const CATEGORY_TONE: Record<string, 'info' | 'brand' | 'outline'> = {
+  FOMC: 'info',
+  금통위: 'brand',
+  '지수 리밸런싱': 'outline',
 }
 
 function formatRange(start: string, end: string): string {
@@ -56,7 +58,7 @@ export default function CalendarPage() {
       <div className="page-head">
         <h1 className="page-title">캘린더</h1>
         <p className="page-lead">
-          투자 판단에 영향을 주는 주요 일정입니다. 지금은 FOMC 정례회의만 반영되어 있습니다.
+          투자 판단에 영향을 주는 주요 일정입니다. 지금은 FOMC·금통위·지수 리밸런싱 일정이 반영되어 있습니다.
         </p>
       </div>
 
@@ -83,7 +85,7 @@ export default function CalendarPage() {
               <div className="cal-row-date num">{formatRange(e.date_start, e.date_end)}</div>
               <div className="cal-row-body">
                 <div className="row gap-2" style={{ alignItems: 'center' }}>
-                  <Badge tone="info">{CATEGORY_LABEL[e.category] ?? e.category}</Badge>
+                  <Badge tone={CATEGORY_TONE[e.category] ?? 'info'}>{e.category}</Badge>
                   <span className="strong">{e.title}</span>
                 </div>
                 {e.note && (
